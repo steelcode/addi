@@ -1,0 +1,236 @@
+/*
+ *  Collin's Dynamic Dalvik Instrumentation Toolkit for Android
+ *  Collin Mulliner <collin[at]mulliner.org>
+ *
+ *  (c) 2012,2013
+ *
+ *  License: LGPL v2.1
+ *
+ */
+
+#define _GNU_SOURCE
+#include <stdio.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <dlfcn.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <sys/select.h>
+#include <string.h>
+#include <termios.h>
+#include <pthread.h>
+#include <sys/epoll.h>
+
+#include <jni.h>
+#include <stdlib.h>
+
+#include "hook.h"
+#include "dexstuff.h"
+#include "dalvik_hook.h"
+#include "base.h"
+
+#undef log
+
+#define log(...) \
+        {FILE *fp = fopen("/data/local/tmp/strmon.log", "a+");\
+        fprintf(fp, __VA_ARGS__);\
+        fclose(fp);}
+
+static struct hook_t eph;
+static struct dexstuff_t d;
+static int cont = 0;
+static int debug;
+
+static void my_log(char *msg)
+{
+	log("%s",msg)
+}
+static void my_log2(char *msg)
+{
+	if (debug)
+		log("%s",msg)
+}
+
+
+static struct dalvik_hook_t sb5;
+static struct dalvik_hook_t sb20;
+static struct dalvik_hook_t sb21;
+static struct dalvik_hook_t sb1;
+
+// helper function
+void printString(JNIEnv *env, jobject str, char *l)
+{
+	char *s = (*env)->GetStringUTFChars(env, str, 0);
+	if (s) {
+		log("%s%s\n", l, s)
+		(*env)->ReleaseStringUTFChars(env, str, s); 
+	}
+}
+
+// patches
+static void* sb21_tostring(JNIEnv *env, jobject obj,jobject intent)
+{
+
+
+	log("tostring2\n")
+	log("env = 0x%x\n", env)
+	log("obj = 0x%x\n", obj)
+
+  if(cont == 0){
+    log("provo a caricare un file .dex cont vale: %d\n", cont);
+    //provo a caricare un dex
+    int val = dexstuff_loaddex(&d, "/data/local/tmp/classes.dex");
+    log("caricato cookie =  0x%x\n", val);
+    if(!val)
+      log("ERRORE CARICAMENTO DEX FILE!!!\n");
+    void *clazz = dexstuff_defineclass(&d, "com/tesi/intentsniffer/HookActivity", val);
+    log("caricato dex: clazz = 0x%x\n", clazz)
+    cont++;
+    jclass myhookclass = (*env)->FindClass(env, "com/tesi/intentsniffer/HookActivity");
+    jmethodID costruttore = (*env)->GetMethodID(env, myhookclass, "<init>","(Landroid/content/Intent)V;");
+   if(costruttore){
+    jvalue args[1];
+    args[0].l = intent;
+    log("CHIAMO NEWOBJECTA\N");
+    jobject obj = (*env)->NewObjectA(env, myhookclass, costruttore,args);
+    log("mio hook: 0x%x\n", obj);     
+    if(!obj)
+      log("errore creazione classe myhook!!!\n"); 
+   }
+   else
+    log("costruttore non trovato\n!!!");
+    }
+    else
+      log("CONTATORE DIVERSO DA ZERO!!!\n");
+   
+    
+
+  jvalue args[1];
+  args[0].l = intent;
+	dalvik_prepare(&d, &sb20, env);
+	void *res = (*env)->CallObjectMethod(env, obj, sb20.mid, args); 
+	log("success calling : %s\n", sb20.method_name)
+	dalvik_postcall(&d, &sb20);
+/*
+	char *s = (*env)->GetStringUTFChars(env, res, 0);
+	if (s) {
+		log("sb20.toString() = %s\n", s)
+		(*env)->ReleaseStringUTFChars(env, res, s); 
+	}	
+*/
+	return res;
+}
+
+static void* sb20_tostring(JNIEnv *env, jobject obj)
+{
+
+
+	log("tostring\n")
+	log("env = 0x%x\n", env)
+	log("obj = 0x%x\n", obj)
+
+	dalvik_prepare(&d, &sb20, env);
+	void *res = (*env)->CallObjectMethod(env, obj, sb20.mid); 
+	log("success calling : %s\n", sb20.method_name)
+	dalvik_postcall(&d, &sb20);
+
+	char *s = (*env)->GetStringUTFChars(env, res, 0);
+	if (s) {
+		log("sb20.toString() = %s\n", s)
+		(*env)->ReleaseStringUTFChars(env, res, s); 
+	}	
+
+	return res;
+}
+static void* sb1_miometodo(JNIEnv *env, jobject obj, jobject bundle){
+
+  dalvik_prepare(&d, &sb1, env);
+  log("\nYUPPI YUPPI\n");
+  dalvik_postcall(&d, &sb1);
+ 
+}
+static void* sb5_getmethod(JNIEnv *env, jobject obj, jobject str, jobject cls)
+{
+/*
+	log("getmethod\n")
+	log("env = 0x%x\n", env)
+	log("obj = 0x%x\n", obj)
+	log("str = 0x%x\n", str)
+	log("cls = 0x%x\n", cls)
+*/
+
+	jvalue args[2];
+	args[0].l = str;
+	args[1].l = cls;
+	dalvik_prepare(&d, &sb5, env);
+	void *res = (*env)->CallObjectMethodA(env, obj, sb5.mid, args); 
+	log("success calling : %s\n", sb5.method_name)
+	dalvik_postcall(&d, &sb5);
+
+	if (str) {
+		char *s = (*env)->GetStringUTFChars(env, str, 0);
+		if (s) {
+			log("sb5.getmethod = %s\n", s)
+			(*env)->ReleaseStringUTFChars(env, str, s); 
+		}
+	}
+
+	return res;
+}
+
+void do_patch()
+{
+	log("do_patch()\n")
+  
+  dalvik_hook_setup(&sb21, "Landroid/content/ContextWrapper;",  "startActivity",  "(Landroid/content/Intent)V;", 2, sb21_tostring);
+  dalvik_hook(&d, &sb21);
+  
+	dalvik_hook_setup(&sb20, "Ljava/lang/StringBuilder;",  "toString",  "()Ljava/lang/String;", 1, sb20_tostring);
+	dalvik_hook(&d, &sb20);
+
+	//dalvik_hook_setup(&sb1, "Lapp/android/Activity;",  "onCreate",  "(Landroid/os/Bundle)V;", 1, sb1_miometodo);
+	//dalvik_hook(&d, &sb1);
+
+	//dalvik_hook_setup(&sb5, "Ljava/lang/Class;", "getMethod", "(Ljava/lang/String;[Ljava/lang/Class;)Ljava/lang/reflect/Method;", 3, sb5_getmethod);
+	//dalvik_hook(&d, &sb5);
+}
+
+static int my_epoll_wait(int epfd, struct epoll_event *events, int maxevents, int timeout)
+{
+	int (*orig_epoll_wait)(int epfd, struct epoll_event *events, int maxevents, int timeout);
+	orig_epoll_wait = (void*)eph.orig;
+	// remove hook for epoll_wait
+	hook_precall(&eph);
+
+	// resolve symbols from DVM
+	dexstuff_resolv_dvm(&d);
+	// insert hooks
+	do_patch();
+	
+	// call dump class (demo)
+	dalvik_dump_class(&d, "Ljava/lang/String;");
+   // dalvik_dump_class(&d, "Landroid/content/ContextWrapper;");
+  
+	// call original function
+	int res = orig_epoll_wait(epfd, events, maxevents, timeout);    
+	return res;
+}
+
+// set my_init as the entry point
+void __attribute__ ((constructor)) my_init(void);
+
+void my_init(void)
+{
+	log("libstrmon: started\n")
+ 
+ 	// set to 1 to turn on, this will be noisy
+	debug = 0;
+
+ 	// set log function for  libbase (very important!)
+	set_logfunction(my_log2);
+	// set log function for libdalvikhook (very important!)
+	dalvikhook_set_logfunction(my_log2);
+
+    hook(&eph, getpid(), "libc.", "epoll_wait", my_epoll_wait, 0);
+}
