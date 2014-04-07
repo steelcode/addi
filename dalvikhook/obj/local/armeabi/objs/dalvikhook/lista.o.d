@@ -1,5 +1,5 @@
-/media/truecrypt1/Hacking/AndroidSpace/TESI/ddi/dalvikhook/obj/local/armeabi/objs/dalvikhook/lista.o: \
- /media/truecrypt1/Hacking/AndroidSpace/TESI/ddi/dalvikhook/jni/lista.c \
+/media/truecrypt1/Hacking/AndroidSpace/TESI/repos/advanceddalvikhook-framework/dalvikhook/obj/local/armeabi/objs/dalvikhook/lista.o: \
+ /media/truecrypt1/Hacking/AndroidSpace/TESI/repos/advanceddalvikhook-framework/dalvikhook/jni/lista.c \
  /opt/ANDROIDE/android-ndk-r9b/platforms/android-3/arch-arm/usr/include/stdlib.h \
  /opt/ANDROIDE/android-ndk-r9b/platforms/android-3/arch-arm/usr/include/sys/cdefs.h \
  /opt/ANDROIDE/android-ndk-r9b/platforms/android-3/arch-arm/usr/include/sys/cdefs_elf.h \
@@ -22,10 +22,10 @@
  /opt/ANDROIDE/android-ndk-r9b/platforms/android-3/arch-arm/usr/include/machine/kernel.h \
  /opt/ANDROIDE/android-ndk-r9b/platforms/android-3/arch-arm/usr/include/sys/sysmacros.h \
  /opt/ANDROIDE/android-ndk-r9b/platforms/android-3/arch-arm/usr/include/memory.h \
- /media/truecrypt1/Hacking/AndroidSpace/TESI/ddi/dalvikhook/jni/lista.h \
- /media/truecrypt1/Hacking/AndroidSpace/TESI/ddi/dalvikhook/jni/dalvik_hook.h \
+ /media/truecrypt1/Hacking/AndroidSpace/TESI/repos/advanceddalvikhook-framework/dalvikhook/jni/lista.h \
+ /media/truecrypt1/Hacking/AndroidSpace/TESI/repos/advanceddalvikhook-framework/dalvikhook/jni/dalvik_hook.h \
  /opt/ANDROIDE/android-ndk-r9b/platforms/android-3/arch-arm/usr/include/jni.h \
- /media/truecrypt1/Hacking/AndroidSpace/TESI/ddi/dalvikhook/jni/dexstuff.h \
+ /media/truecrypt1/Hacking/AndroidSpace/TESI/repos/advanceddalvikhook-framework/dalvikhook/jni/dexstuff.h \
  /opt/ANDROIDE/android-ndk-r9b/platforms/android-3/arch-arm/usr/include/stdio.h \
  /opt/ANDROIDE/android-ndk-r9b/platforms/android-3/arch-arm/usr/include/fcntl.h \
  /opt/ANDROIDE/android-ndk-r9b/platforms/android-3/arch-arm/usr/include/linux/fcntl.h \
@@ -51,7 +51,7 @@
  /opt/ANDROIDE/android-ndk-r9b/platforms/android-3/arch-arm/usr/include/linux/capability.h \
  /opt/ANDROIDE/android-ndk-r9b/platforms/android-3/arch-arm/usr/include/pathconf.h \
  /opt/ANDROIDE/android-ndk-r9b/platforms/android-3/arch-arm/usr/include/dlfcn.h \
- /media/truecrypt1/Hacking/AndroidSpace/TESI/ddi/dalvikhook/jni/Common.h \
+ /media/truecrypt1/Hacking/AndroidSpace/TESI/repos/advanceddalvikhook-framework/dalvikhook/jni/Common.h \
  /opt/ANDROIDE/android-ndk-r9b/platforms/android-3/arch-arm/usr/include/assert.h \
  /opt/ANDROIDE/android-ndk-r9b/platforms/android-3/arch-arm/usr/include/pthread.h \
  /opt/ANDROIDE/android-ndk-r9b/platforms/android-3/arch-arm/usr/include/time.h \
@@ -101,13 +101,13 @@
 
 /opt/ANDROIDE/android-ndk-r9b/platforms/android-3/arch-arm/usr/include/memory.h:
 
-/media/truecrypt1/Hacking/AndroidSpace/TESI/ddi/dalvikhook/jni/lista.h:
+/media/truecrypt1/Hacking/AndroidSpace/TESI/repos/advanceddalvikhook-framework/dalvikhook/jni/lista.h:
 
-/media/truecrypt1/Hacking/AndroidSpace/TESI/ddi/dalvikhook/jni/dalvik_hook.h:
+/media/truecrypt1/Hacking/AndroidSpace/TESI/repos/advanceddalvikhook-framework/dalvikhook/jni/dalvik_hook.h:
 
 /opt/ANDROIDE/android-ndk-r9b/platforms/android-3/arch-arm/usr/include/jni.h:
 
-/media/truecrypt1/Hacking/AndroidSpace/TESI/ddi/dalvikhook/jni/dexstuff.h:
+/media/truecrypt1/Hacking/AndroidSpace/TESI/repos/advanceddalvikhook-framework/dalvikhook/jni/dexstuff.h:
 
 /opt/ANDROIDE/android-ndk-r9b/platforms/android-3/arch-arm/usr/include/stdio.h:
 
@@ -159,7 +159,7 @@
 
 /opt/ANDROIDE/android-ndk-r9b/platforms/android-3/arch-arm/usr/include/dlfcn.h:
 
-/media/truecrypt1/Hacking/AndroidSpace/TESI/ddi/dalvikhook/jni/Common.h:
+/media/truecrypt1/Hacking/AndroidSpace/TESI/repos/advanceddalvikhook-framework/dalvikhook/jni/Common.h:
 
 /opt/ANDROIDE/android-ndk-r9b/platforms/android-3/arch-arm/usr/include/assert.h:
 

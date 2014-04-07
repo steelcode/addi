@@ -1,5 +1,5 @@
-/media/truecrypt1/Hacking/AndroidSpace/TESI/ddi/examples/strmon/obj/local/armeabi/objs/strmon/mon.o: \
- /media/truecrypt1/Hacking/AndroidSpace/TESI/ddi/examples/strmon/jni/mon.c \
+/media/truecrypt1/Hacking/AndroidSpace/TESI/repos/advanceddalvikhook-framework/examples/strmon/obj/local/armeabi/objs/strmon/mon.o: \
+ /media/truecrypt1/Hacking/AndroidSpace/TESI/repos/advanceddalvikhook-framework/examples/strmon/jni/mon.c \
  /opt/ANDROIDE/android-ndk-r9b/platforms/android-3/arch-arm/usr/include/stdio.h \
  /opt/ANDROIDE/android-ndk-r9b/platforms/android-3/arch-arm/usr/include/sys/cdefs.h \
  /opt/ANDROIDE/android-ndk-r9b/platforms/android-3/arch-arm/usr/include/sys/cdefs_elf.h \

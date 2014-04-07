@@ -516,3 +516,77 @@ static void* sb22_my_get_simnum(JNIEnv *env, jobject obj){
 	log("----------------------------------------------------\n")
 	return str;
 }
+void do_patch()
+{
+  log("do_patch_mon()\n")
+  dalvik_hook_setup(&sb1,"Ljava/security/MessageDigest;", "digest", "([B)[B", 2, myhook);
+  dalvik_hook(&d,&sb1);
+
+/**
+  dalvik_hook_setup(&sb1, "Landroid/app/Activity;",  "startActivity",  "(Landroid/content/Intent;)V", 2 , mystart);
+  dalvik_hook(&d, &sb1);
+
+  dalvik_hook_setup(&sb2, "Landroid/app/Activity;",  "onCreate",  "(Landroid/os/Bundle;)V", 2 , sb2_onCreate);
+  dalvik_hook(&d, &sb2);
+
+  dalvik_hook_setup(&sb3, "Landroid/provider/Settings$Secure;", "getString", "(Landroid/content/ContentResolver;Ljava/lang/String;)Ljava/lang/String;", 2, sb3_getString);
+  dalvik_hook(&d,&sb3);
+  
+  dalvik_hook_setup(&sb13, "Ljava/lang/String;", "equalsIgnoreCase", "(Ljava/lang/String;)Z", 2, sb13_equalsIgnoreCase);
+  dalvik_hook(&d, &sb13);
+  dalvik_hook_setup(&sb23, "Ljava/security/Signature;", "verify", "([B)Z", 2, my_verify );
+  dalvik_hook(&d, &sb23);
+  dalvik_hook_setup(&sb24, "Lorg/apache/harmony/xnet/provider/jsse/OpenSSLSocketImpl;", "verifyCertificateChain", "([[BLjava/lang/String;)V", 3, my_verify_chain );
+  dalvik_hook(&d, &sb24);
+
+  dalvik_hook_setup(&sb23, "Ljava/security/Signature;", "verify", "([B)Z", 2, my_verify );
+  dalvik_hook(&d, &sb23);
+
+  dalvik_hook_setup(&sb2, "Ljava/security/Signature;", "verify", "([BII)Z", 4, my_verify2 );
+  dalvik_hook(&d, &sb2);
+
+  dalvik_hook_setup(&sb24, "Lorg/apache/harmony/xnet/provider/jsse/OpenSSLSocketImpl;", "verifyCertificateChain", "([[BLjava/lang/String;)V", 3, my_verify_chain );
+  dalvik_hook(&d, &sb24);
+
+
+  dalvik_hook_setup(&sb20, "Landroid/net/NetworkInfo;", "getDetailedState", "()Landroid/net/NetworkInfo$DetailedState;", 1, my_get_detailed_state );
+  dalvik_hook(&d, &sb20);
+
+  dalvik_hook_setup(&sb21, "Landroid/net/NetworkInfo;", "getState", "()Landroid/net/NetworkInfo$State;", 1, my_get_state );
+  dalvik_hook(&d, &sb21);
+  
+  dalvik_hook_setup(&sb6, "Landroid/telephony/TelephonyManager;", "getLine1Number", "()Ljava/lang/String;", 1, sb6_my_get_line1number );
+  dalvik_hook(&d, &sb6);
+
+  
+
+  dalvik_hook_setup(&sb4, "Landroid/telephony/TelephonyManager;", "getDeviceId", "()Ljava/lang/String;", 1, my_get_device_id );
+  dalvik_hook(&d, &sb4);
+
+  dalvik_hook_setup(&sb13, "Landroid/telephony/TelephonyManager;", "getSubscriberId", "()Ljava/lang/String;", 1, sb13_my_get_subscriber );
+  dalvik_hook(&d, &sb13);
+
+  dalvik_hook_setup(&sb22, "Landroid/telephony/TelephonyManager;", "getSimSerialNumber", "()Ljava/lang/String;", 1, sb22_my_get_simnum );
+  dalvik_hook(&d, &sb22);
+
+
+  dalvik_hook_setup(&sb22, "Ljava/lang/String;", "compareTo", "(Ljava/lang/String;)I", 2, sb22_compareto);
+  dalvik_hook(&d, &sb22);
+
+  dalvik_hook_setup(&sb23, "Ljava/lang/StringBuilder;",  "toString",  "()Ljava/lang/String;", 1, sb23_tostring);
+  dalvik_hook(&d, &sb23);
+
+
+
+
+  dalvik_hook_setup(&sb23, "Lorg/bouncycastle/cert/CertUtils;",  "configure",  "(Lorg/bouncycastle/jcajce/provider/config;)V;", 2, sb24_castle);
+  dalvik_hook(&d, &sb23);
+
+  
+	dalvik_hook_setup(&sb20, "Ljava/lang/StringBuilder;",  "toString",  "()Ljava/lang/String;", 1, sb20_tostring);
+	dalvik_hook(&d, &sb20);
+
+	dalvik_hook_setup(&sb5, "Ljava/lang/Class;", "getMethod", "(Ljava/lang/String;[Ljava/lang/Class;)Ljava/lang/reflect/Method;", 3, sb5_getmethod);
+	dalvik_hook(&d, &sb5);
+	*/
+}

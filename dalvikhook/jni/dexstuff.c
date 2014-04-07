@@ -24,6 +24,28 @@ static void* mydlsym(void *hand, const char *name)
 	return ret;
 }
 
+
+void dvmDotToSlash(char* str)
+{
+    //char* newStr = strdup(str);
+    //char* cp = newStr;
+    char* cp = str;
+
+    if (str == NULL)
+        return NULL;
+
+    while (*cp != '\0') {
+        if (*cp == '/') {
+            assert(false);
+            return NULL;
+        }
+        if (*cp == '.')
+            *cp = '/';
+        cp++;
+    }
+
+  //  return newStr;
+}
 void dexstuff_resolv_dvm(struct dexstuff_t *d)
 {
 	d->dvm_hand = dlopen("libdvm.so", RTLD_NOW);
@@ -133,9 +155,11 @@ void * get_jni_for_thread(struct dexstuff_t *dex){
 
 void * get_method(struct dexstuff_t *dex, char* name, char * desc){
 	Method* h = dex->dvmGetCurrentJNIMethod_fnPtr();
-	strcpy(name,h->name);
+	strcpy(name,h->clazz->descriptor);
+	strcat(name,h->name);
 	char *str = dex->dexProtoCopyMethodDescriptor_fnPtr(&h->prototype);
 	log("XXX get_method NAME = %s, DESCRIPTOR = %s\n", h->name, str)
+	log("XXX4 prova = %s\n", h->clazz->descriptor)
 	strcpy(desc,str);
 }
 

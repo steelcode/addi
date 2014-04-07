@@ -3,9 +3,9 @@
 #define LISTA_H
 
 
-typedef int Bool;
-#define TRUE 1
-#define FALSE 0
+//typedef int Bool;
+//#define TRUE 1
+//#define FALSE 0
 
 typedef struct nodo_lista *lista;
 struct nodo_lista {
@@ -18,6 +18,7 @@ struct nodo_lista {
 };
 
 int inserisci(lista*, void *, char*, char*, char*,char*);
+//int inserisci(lista*, void *,char*);
 void cancella(lista*, void *);
 void * cerca(lista p_L, char *hash);
 

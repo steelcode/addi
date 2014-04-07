@@ -2,7 +2,7 @@
 #include "lista.h"
 #include "dalvik_hook.h"
 
-int inserisci(lista *p_L, void* d, char *cls, char *meth, char *sign, char *hash){
+int inserisci(lista *p_L, void* d, char *cls, char* meth, char * sign, char *hash){
 	lista tmp;
 	//struct dalvik_hook_t* dhtmp = (struct dalvik_hook_t*) malloc(sizeof(struct dalvik_hook_t*));
 	//memcpy(dhtmp, d, sizeof(struct dalvik_hook_t));

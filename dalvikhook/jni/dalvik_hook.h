@@ -23,11 +23,13 @@ struct dalvik_hook_t
 	char method_sig[256];
 
 	//XXX
-	int skip;
+	
 	char dex_meth[256];
 	char dex_class[256];
 	int loaded;
+	int skip;
 	int real_args; 
+	jclass DexHookCls;
 
 	Method *method;
 	int sm; // static method
@@ -60,14 +62,6 @@ struct dalvik_hook_t
 	int debug_me;  // print debug while operating on this method
 };
 
-//XXX
-struct logger_hook
-{
-jclass cls;
-jmethodID mid; //contructor
-jmethodID eid; //entry_point
-jobject obj;
-};
 
 void* dalvik_hook(struct dexstuff_t *dex, struct dalvik_hook_t *h);
 int dalvik_prepare(struct dexstuff_t *dex, struct dalvik_hook_t *h, JNIEnv *env);
