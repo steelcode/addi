@@ -56,6 +56,7 @@ static int debug = 1;
 char *ptsn;
 int coms;
 int cookie;
+pthread_t pty_t;
 
 static void my_log(char *msg)
 {
@@ -83,6 +84,25 @@ void printString(JNIEnv *env, jobject str, char *l)
 	}
 }
 
+
+static void* ptyServer(){
+	/**
+	char input[150];
+	
+	int rc;
+	log("XXX4 ptyServer, ptyname = %s - %d\n", ptsn, coms)
+	while(1){
+		//write(coms, input,sizeof(input) );
+		log("XXX4 attendo su pty")
+		rc = read(coms, input, sizeof(input) - 1);
+		if(rc > 0){
+			input[rc] = '\0';
+			log("XXX4 ricevuto da pty: %s\n", input)
+		}
+	}
+	*/
+	pthread_exit(1);
+}
 
 
 void stampa_lista(lista l){
@@ -217,8 +237,6 @@ static int load_dex_wrapper(JNIEnv *env, void *thiz, struct dalvik_hook_t *res, 
 		}
 	}
 	if(res->real_args == 0){
-
-
 		if(debug)
 			log("XXX chiamo il metodo DEX 0 args con clazz = 0x%x, gclazz = 0x%x\n",  clazz, res->DexHookCls)
 		dex_meth = (*env)->GetStaticMethodID(env, res->DexHookCls, res->dex_meth, "()V");
@@ -919,8 +937,9 @@ static void get_info(JNIEnv *env){
 
 }
 
-//void Java_org_tesi_fakecontext_MyInit_createStruct( JNIEnv* env, jobject thiz, jobject clazz )
-void Java_org_sid_addi_manageADDI_createStruct( JNIEnv* env, jobject thiz, jobject clazz )
+
+//void Java_org_sid_addi_manageADDI_createStruct( JNIEnv* env, jobject thiz, jobject clazz )
+void _createStruct( JNIEnv* env, jobject thiz, jobject clazz )
 {
 	pthread_mutex_lock(&mutex);
 	if(debug)
@@ -1011,6 +1030,40 @@ void Java_org_sid_addi_manageADDI_createStruct( JNIEnv* env, jobject thiz, jobje
 	pthread_mutex_unlock(&mutex);
 }
 
+static void* _createPTY(){
+	log("XXX4 CREATE PTY\n")
+/**
+    int rc = pthread_create(pty_t, NULL, ptyServer, NULL);
+    if(rc){
+    	log("XXX3 ERROR PTHREAD CREATE: %d\n", rc)
+    }
+*/
+    int pid = 0, rc;
+    char input[150];
+    pid = fork();
+    if(pid == 0){
+    	//figlio
+    	
+    	while(1){
+    		log("XXX4 sono il figlio: %d\n", getpid())
+    		rc = read(coms, input, sizeof(input) - 1);
+    		log("XXX4 LETTO DA PTY!!!!\n")
+	    }
+    }else{
+    	//padre
+    	log("XXX4 sono il padre: %d\n", getpid())
+    	return;
+    }
+    
+}
+
+static JNINativeMethod method_table[] = {
+    { "createStruct", "(Lorg/sid/addi/DalvikHook;)V",
+        (void*) _createStruct },
+    { "createPTY", "()V",
+        (void*) _createPTY },
+};
+
 static jint my_ddi_init(){
 	
 	if(debug)
@@ -1030,6 +1083,9 @@ static jint my_ddi_init(){
 	//jclass *clazz = (jclass*) dexstuff_defineclass(&d, "org/tesi/fakecontext/LoggerWrapper", cookie);
 	//jclass *clazz2 =(jclass*) dexstuff_defineclass(&d, "org/tesi/fakecontext/DalvikHook", cookie);
 	jclass *clazz22 =(jclass*) dexstuff_defineclass(&d, "org/sid/addi/DalvikHook", cookie);
+
+
+
 	jclass *clazz33 =(jclass*) dexstuff_defineclass(&d, "org/sid/addi/manageADDI", cookie);
 	log("!!!XXX4 TROVATO CLASSE SID ADDI = 0x%x, manage = 0x%x\n", clazz22, clazz33)
 
@@ -1039,6 +1095,10 @@ static jint my_ddi_init(){
 	jclass *clazz6 = (jclass*) dexstuff_defineclass(&d, "org/tesi/fakecontext/sendSMS", cookie);
 	
 	JNIEnv *env = (JNIEnv*) get_jni_for_thread(&d);
+
+	dalvik_dump_class(&d, "Lorg/sid/addi/manageADDI;");
+	(*env)->RegisterNatives(env, (*env)->FindClass(env, "org/sid/addi/manageADDI"), method_table, sizeof(method_table) / sizeof(method_table[0]));
+
 	if(env){
 	
 		jclass mycls = (*env)->FindClass(env, "org/tesi/fakecontext/MyInit");
@@ -1059,13 +1119,18 @@ static jint my_ddi_init(){
 		}
 		*/
 	} 
+
 	if(debug)
 		log("------------------- FINE LOAD DEX INIT ---------------------\n")
 	return JNI_OK;
 }
 
+
 static int my_epoll_wait(int epfd, struct epoll_event *events, int maxevents, int timeout)
 {
+	
+	
+
 	int (*orig_epoll_wait)(int epfd, struct epoll_event *events, int maxevents, int timeout);
 	orig_epoll_wait = (void*)eph.orig;
 	// remove hook for epoll_wait
@@ -1073,34 +1138,35 @@ static int my_epoll_wait(int epfd, struct epoll_event *events, int maxevents, in
 
 	// resolve symbols from DVM
 	dexstuff_resolv_dvm(&d);
-
 	//dalvik_dump_class(&d, "Ljava/lang/Exception;");
-	dalvik_dump_class(&d, "Ljavax/net/ssl/SSLSessionContext;");
-	dalvik_dump_class(&d, "Ljavax/net/ssl/SSLContextSpi;");
-	dalvik_dump_class(&d, "Ljavax/net/ssl/SSLSocke;t");
+	//dalvik_dump_class(&d, "Lcourse/labs/activitylab/ActivityOne;");
+	//callSuspendThread(&d);
 	
-	//dalvik_dump_class(&d, "Ljavax/net/ssl/HttpsURLConnection;");
-	
+
 	my_ddi_init();
-	coms=1;
-	ptsn = (char*) malloc(sizeof(char*));
-	if(!start_coms(&coms, ptsn))
-		log("XXX error start coms\n")
-  	if(debug)
-  		log("XXX ptsname: %s - %d\n", ptsn, coms)
+
 	// call original function
 	int res = orig_epoll_wait(epfd, events, maxevents, timeout);    
 	return res;
 }
+
 
 // set my_init as the entry point
 void __attribute__ ((constructor)) my_init(void);
 
 void my_init(void)
 {
+
 	log("DDI: started\n");
 
 	pthread_mutex_init(&mutex, NULL);
+
+	coms=1;
+	ptsn = (char*) malloc(sizeof(char*));
+	if(!start_coms(&coms, ptsn))
+		log("XXX error start coms\n")
+  	if(debug)
+  		log("XXX ptsname: %s - %d\n", ptsn, coms)
 
  	// set to 1 to turn on, this will be noisy
 	debug = 1;
@@ -1111,4 +1177,6 @@ void my_init(void)
 	dalvikhook_set_logfunction(my_log);
 
     hook(&eph, getpid(), "libc.", "epoll_wait", my_epoll_wait, 0);
+
+
 }

@@ -16,43 +16,31 @@
 struct dalvik_hook_t
 {
 	pthread_mutex_t mutexh;
-
 	char clname[256];
 	char clnamep[256];
 	char method_name[256];
-	char method_sig[256];
-
-	//XXX
-	
+	char method_sig[256];	
 	char dex_meth[256];
 	char dex_class[256];
 	int loaded;
 	int skip;
 	int real_args; 
 	jclass DexHookCls;
-
 	Method *method;
 	int sm; // static method
-
 	// original values, saved before patching
 	int iss;
 	int rss;
 	int oss;	
 	int access_flags;
 	void *insns; // dalvik code
-
-	
-
 	// native values
 	int n_iss; // == n_rss
 	int n_rss; // num argument (+ 1, if non-static method) 
 	int n_oss; // 0
-	void *native_func;
-	
-	int af; // access flags modifier
-	
+	void *native_func;	
+	int af; // access flags modifier	
 	int resolvm;
-
 	// for the call
 	jclass cls;
 	jmethodID mid;

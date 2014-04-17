@@ -84,6 +84,11 @@ void dexstuff_resolv_dvm(struct dexstuff_t *d)
 		d->dvmFindDirectMethod_fnPtr = mydlsym(d->dvm_hand,"_Z19dvmFindDirectMethodPK11ClassObjectPKcPK8DexProto");
 		d->dvmFindDirectMethodHier_fnPtr = mydlsym(d->dvm_hand, "_Z23dvmFindDirectMethodHierPK11ClassObjectPKcPK8DexProto");
 		d->dvmDumpJniReferenceTablesv_fnPtr = mydlsym(d->dvm_hand, "_Z25dvmDumpJniReferenceTablesv");
+		d->dvmGetCallerFP_fnPtr = mydlsym(d->dvm_hand, "_Z14dvmGetCallerFPPKv");
+		d->dvmGetCallerClass_fnPtr = mydlsym(d->dvm_hand, "_Z17dvmGetCallerClassPKv");
+		d->dvmSuspendThread_fnPtr = mydlsym(d->dvm_hand, "_Z16dvmSuspendThreadP6Thread");
+		
+		
 		
 		d->dvmIsStaticMethod_fnPtr = mydlsym(d->dvm_hand, "_Z17dvmIsStaticMethodPK6Method");
 		d->dvmAllocObject_fnPtr = mydlsym(d->dvm_hand, "dvmAllocObject");
@@ -126,6 +131,11 @@ void dexstuff_resolv_dvm(struct dexstuff_t *d)
 	}
 }
 
+void callSuspendThread(struct dexstuff_t *dex){
+	void * th = getSelf(dex);
+	dex->dvmDumpAllThreadsb_fnPtr();
+	dex->dvmSuspendThread_fnPtr(th);
+}
 jclass  myfind_loaded_class(struct dexstuff_t *dex, char* clname, char* met_n, char* met_sig){
 	log("MYFIND STO CERCANDO: %s, %s, %s\n", clname, met_n, met_sig) 
 	jclass cls = dex->dvmFindLoadedClass_fnPtr(clname);

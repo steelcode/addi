@@ -288,7 +288,9 @@ typedef void* (*dvmGetVirtualizedMethod_func)(void*, const Method*);
 typedef void* (*dvmFindDirectMethod_func)(void*, const char*, void*);
 typedef void* (*dvmFindDirectMethodHier_func)(void*, const char*, void*);
 typedef void (*dvmDumpJniReferenceTablesv_func)();
-
+typedef void* (*dvmGetCallerFP_func)(void*);
+typedef void* (*dvmGetCallerClass_func)(void*);
+typedef void (*dvmSuspendThread_func)(void*);
 
 typedef void (*dvmDumpAllThreadsb_func)();
 
@@ -324,6 +326,9 @@ struct dexstuff_t
     dvmFindDirectMethodHier_func dvmFindDirectMethodHier_fnPtr;
     dvmFindDirectMethod_func dvmFindDirectMethod_fnPtr;
     dvmDumpJniReferenceTablesv_func  dvmDumpJniReferenceTablesv_fnPtr;
+    dvmGetCallerClass_func dvmGetCallerClass_fnPtr;
+    dvmGetCallerFP_func dvmGetCallerFP_fnPtr;
+    dvmSuspendThread_func dvmSuspendThread_fnPtr;
 	
 	dvmGetCurrentJNIMethod_func dvmGetCurrentJNIMethod_fnPtr;
 	dvmLinearSetReadWrite_func dvmLinearSetReadWrite_fnPtr;
