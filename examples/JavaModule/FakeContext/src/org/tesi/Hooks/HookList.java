@@ -2,7 +2,7 @@ package org.tesi.Hooks;
 
 //import org.tesi.fakecontext.DalvikHookImpl;
 
-import org.tesi.fakecontext.DalvikHookImpl;
+import org.tesi.core.DalvikHookImpl;
 
 
 public class HookList {

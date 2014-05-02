@@ -1,4 +1,4 @@
-package org.tesi.fakecontext;
+package org.tesi.core;
 
 import org.sid.addi.core.*;
 

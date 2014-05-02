@@ -5,7 +5,7 @@ import java.util.Stack;
 import javax.crypto.Cipher;
 
 import org.sid.addi.core.manageADDI;
-import org.tesi.fakecontext.DalvikHookImpl;
+import org.tesi.core.DalvikHookImpl;
 
 import android.util.Log;
 

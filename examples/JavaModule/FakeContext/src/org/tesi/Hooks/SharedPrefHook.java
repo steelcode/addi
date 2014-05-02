@@ -1,7 +1,7 @@
 package org.tesi.Hooks;
 
-import org.tesi.fakecontext.AppContextConfig;
-import org.tesi.fakecontext.DalvikHookImpl;
+import org.tesi.core.DalvikHookImpl;
+import org.tesi.utils.AppContextConfig;
 
 import android.util.Log;
 //import org.tesi.fakecontext.DalvikHook;

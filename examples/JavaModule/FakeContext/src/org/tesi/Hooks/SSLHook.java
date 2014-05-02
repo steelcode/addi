@@ -6,7 +6,7 @@ import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 
 import org.apache.http.conn.ssl.SSLSocketFactory;
-import org.tesi.fakecontext.DalvikHookImpl;
+import org.tesi.core.DalvikHookImpl;
 
 import android.util.Log;
 
