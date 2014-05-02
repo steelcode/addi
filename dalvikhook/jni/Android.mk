@@ -18,7 +18,7 @@ include $(CLEAR_VARS)
 
 LOCAL_MODULE    := libdalvikhook
 LOCAL_INCLUDE   := ../../../adbi/instruments/base/hook.h
-LOCAL_SRC_FILES := dexstuff.c.arm dalvik_hook.c lista.c
+LOCAL_SRC_FILES := dexstuff.c.arm lista.c.arm Misc.c.arm dalvik_hook.c 
 LOCAL_LDLIBS    := -L./libs -ldl -ldvm ../../../adbi/instruments/base/obj/local/armeabi/libbase.a 
 
 LOCAL_STATIC_LIBRARIES := ../../../adbi/instruments/base/obj/local/armeabi/libbase.a 

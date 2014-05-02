@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include "lista.h"
 #include "dalvik_hook.h"
+#include "log.h"
 
 int inserisci(lista *p_L, void* d, char *cls, char* meth, char * sign, char *hash){
 	lista tmp;
@@ -47,4 +48,19 @@ void * cerca(lista l, char *hash){
 
 void cancella(lista *p_L, void * d){
 
+}
+void stampa_lista(lista l){
+	struct dalvik_hook_t* dd;
+	while((l) != NULL){
+		dd = (struct dalvik_hook_t *)(l)->dh;
+		log("+++++++++++++++++++++++++++++++++++++++++++\n")
+		//log("clname = %s\n", (l)->clname)
+		//log("meth_name = %s\n", (l)->meth_name)
+		//log("meth_sign = %s\n", (l)->meth_sig)
+		log("hash = %s\n", (l)->hashvalue)
+		log("real num args = %d\n", dd->real_args)
+		log("DALVIK HOOK = 0x%x\n", (unsigned int) dd->method)
+		log("+++++++++++++++++++++++++++++++++++++++++++\n")
+		(l) = (l)->next;
+	}
 }

@@ -4,6 +4,9 @@
  *
  *  (c) 2012,2013
  *
+ *	Sid's Advanced DDI
+ *	(c) 2014
+ *
  *  License: LGPL v2.1
  *
  */
@@ -16,6 +19,9 @@
 #include "dexstuff.h"
 
 #include "log.h"
+
+
+static void* tself;
 
 static void* mydlsym(void *hand, const char *name)
 {
@@ -32,12 +38,12 @@ void dvmDotToSlash(char* str)
     char* cp = str;
 
     if (str == NULL)
-        return NULL;
+        return;
 
     while (*cp != '\0') {
         if (*cp == '/') {
             assert(false);
-            return NULL;
+            return;
         }
         if (*cp == '.')
             *cp = '/';
@@ -49,7 +55,7 @@ void dvmDotToSlash(char* str)
 void dexstuff_resolv_dvm(struct dexstuff_t *d)
 {
 	d->dvm_hand = dlopen("libdvm.so", RTLD_NOW);
-	log("dvm_hand = 0x%x\n", d->dvm_hand)
+	log("dvm_hand = 0x%x\n", (unsigned int)d->dvm_hand)
 	
 	if (d->dvm_hand) {
 		d->dvm_dalvik_system_DexFile = (DalvikNativeMethod*) mydlsym(d->dvm_hand, "dvm_dalvik_system_DexFile");
@@ -87,8 +93,14 @@ void dexstuff_resolv_dvm(struct dexstuff_t *d)
 		d->dvmGetCallerFP_fnPtr = mydlsym(d->dvm_hand, "_Z14dvmGetCallerFPPKv");
 		d->dvmGetCallerClass_fnPtr = mydlsym(d->dvm_hand, "_Z17dvmGetCallerClassPKv");
 		d->dvmSuspendThread_fnPtr = mydlsym(d->dvm_hand, "_Z16dvmSuspendThreadP6Thread");
-		
-		
+		d->dvmSuspendSelf_fnPtr = mydlsym(d->dvm_hand, "_Z14dvmSuspendSelfb");
+		d->dvmResumeThread_fnPtr = mydlsym(d->dvm_hand, "_Z15dvmResumeThreadP6Thread");
+		d->dvmTryLockThreadList_fnPtr = mydlsym(d->dvm_hand, "_Z20dvmTryLockThreadListv");
+		d->dvmUnlockThreadList_fnPtr = mydlsym(d->dvm_hand, "_Z19dvmUnlockThreadListv");
+		d->dvmSuspendAllThreads_fnPtr = mydlsym(d->dvm_hand, "_Z20dvmSuspendAllThreads12SuspendCause");
+		d->dvmResumeAllThreads_fnPtr = mydlsym(d->dvm_hand, "_Z19dvmResumeAllThreads12SuspendCause");
+		d->dvmAttachCurrentThread_fnPtr = mydlsym(d->dvm_hand, "_Z22dvmAttachCurrentThreadPK16JavaVMAttachArgsb");
+		d->dvmMterpPrintMethod_fnPtr = mydlsym(d->dvm_hand, "dvmMterpPrintMethod");
 		
 		d->dvmIsStaticMethod_fnPtr = mydlsym(d->dvm_hand, "_Z17dvmIsStaticMethodPK6Method");
 		d->dvmAllocObject_fnPtr = mydlsym(d->dvm_hand, "dvmAllocObject");
@@ -130,12 +142,50 @@ void dexstuff_resolv_dvm(struct dexstuff_t *d)
 		d->gDvm = mydlsym(d->dvm_hand, "gDvm");
 	}
 }
-
-void callSuspendThread(struct dexstuff_t *dex){
-	void * th = getSelf(dex);
-	dex->dvmDumpAllThreadsb_fnPtr();
-	dex->dvmSuspendThread_fnPtr(th);
+void* _mterprintmethod(struct dexstuff_t *dex){
+	Method* m = dex->dvmGetCurrentJNIMethod_fnPtr();
+	dex->dvmMterpPrintMethod_fnPtr(m);
 }
+
+void* _attachCurrentT(struct dexstuff_t  *dex){
+	return dex->dvmAttachCurrentThread_fnPtr(NULL,1);
+}
+
+void _suspendAllT(struct dexstuff_t *dex){
+	dex->dvmSuspendAllThreads_fnPtr(SUSPEND_FOR_DEBUG);
+}
+void _dumpAllT(struct dexstuff_t *dex){
+	dex->dvmDumpAllThreadsb_fnPtr();
+}
+void _resumeAllT(struct dexstuff_t *dex){
+	dex->dvmResumeAllThreads_fnPtr(SUSPEND_FOR_DEBUG);
+	//dex->dvmDumpAllThreadsb_fnPtr();
+}
+
+void* _tryLockThreadList(struct dexstuff_t *dex){
+	return dex->dvmTryLockThreadList_fnPtr();
+}
+void _unlockThreadList(struct dexstuff_t *dex){
+	dex->dvmUnlockThreadList_fnPtr();
+}
+void _callSuspendThread(struct dexstuff_t *dex){
+	tself = getSelf(dex);
+	//dex->dvmDumpAllThreadsb_fnPtr();
+	log("XXX5 sto sospendendo @0x%x\n", tself)
+	dex->dvmSuspendThread_fnPtr(tself);
+	//dex->dvmDumpAllThreadsb_fnPtr();
+}
+
+void _suspendSelf(struct dexstuff_t *dex){
+	dex->dvmSuspendSelf_fnPtr();
+}
+
+void _resumeThread(struct dexstuff_t *dex){
+	void * th = getSelf(dex);
+	log("XXX4 resume di @0x%x, tself @0x%x\n", th, tself)
+	dex->dvmResumeThread_fnPtr(tself);
+}
+
 jclass  myfind_loaded_class(struct dexstuff_t *dex, char* clname, char* met_n, char* met_sig){
 	log("MYFIND STO CERCANDO: %s, %s, %s\n", clname, met_n, met_sig) 
 	jclass cls = dex->dvmFindLoadedClass_fnPtr(clname);
@@ -219,9 +269,16 @@ void* dexstuff_defineclass(struct dexstuff_t *d, char *name, int cookie)
 	return ret;
 }
 
+void* _setSelf(struct dexstuff_t*dex){
+	tself = dex->dvmThreadSelf_fnPtr();
+}
+
 void* getSelf(struct dexstuff_t *d)
 {
-	return d->dvmThreadSelf_fnPtr();
+	void* self  = d->dvmThreadSelf_fnPtr();
+	log("XXX5 THREAD SELF VALE 0x%x\n", self)
+	return self;
+	//return tself;
 }
 
 void dalvik_dump_class(struct dexstuff_t *dex, char *clname)

@@ -4,6 +4,9 @@
  *
  *  (c) 2012,2013
  *
+ *  Sid's Advanced DDI
+ *  (c) 2014
+ *
  *  License: LGPL v2.1
  *
  */
@@ -291,7 +294,14 @@ typedef void (*dvmDumpJniReferenceTablesv_func)();
 typedef void* (*dvmGetCallerFP_func)(void*);
 typedef void* (*dvmGetCallerClass_func)(void*);
 typedef void (*dvmSuspendThread_func)(void*);
-
+typedef void (*dvmResumeThread_func)(void *);
+typedef void (*dvmSuspendSelf_func)();
+typedef void* (*dvmTryLockThreadList_func)();
+typedef void (*dvmUnlockThreadList_func)();
+typedef void (*dvmSuspendAllThreads_func)(void *);
+typedef void (*dvmResumeAllThreads_func)(void *);
+typedef void* (*dvmAttachCurrentThread_func)(void *,  void*);
+typedef void* (*dvmMterpPrintMethod_func)(void*);
 typedef void (*dvmDumpAllThreadsb_func)();
 
 struct dexstuff_t
@@ -329,7 +339,15 @@ struct dexstuff_t
     dvmGetCallerClass_func dvmGetCallerClass_fnPtr;
     dvmGetCallerFP_func dvmGetCallerFP_fnPtr;
     dvmSuspendThread_func dvmSuspendThread_fnPtr;
-	
+    dvmResumeThread_func  dvmResumeThread_fnPtr;
+    dvmSuspendSelf_func dvmSuspendSelf_fnPtr;
+    dvmUnlockThreadList_func dvmUnlockThreadList_fnPtr;
+    dvmTryLockThreadList_func dvmTryLockThreadList_fnPtr;
+    dvmResumeAllThreads_func dvmResumeAllThreads_fnPtr;
+    dvmSuspendAllThreads_func dvmSuspendAllThreads_fnPtr;
+    dvmAttachCurrentThread_func dvmAttachCurrentThread_fnPtr;
+	dvmMterpPrintMethod_func dvmMterpPrintMethod_fnPtr;
+
 	dvmGetCurrentJNIMethod_func dvmGetCurrentJNIMethod_fnPtr;
 	dvmLinearSetReadWrite_func dvmLinearSetReadWrite_fnPtr;
 	
@@ -349,6 +367,24 @@ struct dexstuff_t
 	void *gDvm; // dvm globals !
 	
 	int done;
+};
+
+enum SuspendCause {
+    SUSPEND_NOT = 0,
+    SUSPEND_FOR_GC,
+    SUSPEND_FOR_DEBUG,
+    SUSPEND_FOR_DEBUG_EVENT,
+    SUSPEND_FOR_STACK_DUMP,
+    SUSPEND_FOR_DEX_OPT,
+    SUSPEND_FOR_VERIFY,
+    SUSPEND_FOR_HPROF,
+    SUSPEND_FOR_SAMPLING,
+#if defined(WITH_JIT)
+    SUSPEND_FOR_TBL_RESIZE,  // jit-table resize
+    SUSPEND_FOR_IC_PATCH,    // polymorphic callsite inline-cache patch
+    SUSPEND_FOR_CC_RESET,    // code-cache reset
+    SUSPEND_FOR_REFRESH,     // Reload data cached in interpState
+#endif
 };
 
 #endif
