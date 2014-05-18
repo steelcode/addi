@@ -1,4 +1,11 @@
+/*******************************************************************************
+ * Advanced Dalvik Dynamic Instrumentation Android Library
+ * 
+ * (c) 2014, 
+ ******************************************************************************/
 package org.sid.addi.Logs;
+
+import org.sid.addi.core.DEXHook;
 
 import android.util.Log;
 
@@ -51,9 +58,11 @@ public class LogToDB extends LogTraces {
 				_pListFooter;
 	}
 	
-	protected void _logInDB(String logType) {
+	protected void _logInDB(String logType, DEXHook dexh) {
 		try {
 			LogToSQLite db = LogToSQLite.getInstance();
+			if(db == null)
+				Log.i(_TAG, "!!!!!!!!!!!!!!DB NULL");
 			db.open();
 			
 			db.createRow(
@@ -62,19 +71,22 @@ public class LogToDB extends LogTraces {
 					//_config.getClassName(), 
 					//_config.getMethodName(),
 					"MYTYPE",
-					_config.get_clname(),
-					_config.get_method_name(),
-					_config.get_method_sig(),
+					dexh.get_className(),
+					dexh.get_methodName(),
+					"SIGNATURE",
 					_logCreatePlistArgs(), 
-					logType,
-//					(logType.equalsIgnoreCase("W") ? _notes : ""),
+					//logType,
+					(logType.equalsIgnoreCase("W") ? _notes : ""),
+///					"",
+//					"");
 					_escapeXMLChars(_notes),
 					_escapeXMLChars(_traces));
 			
 			db.close();
 		}
 		catch (Exception e)  {
-			Log.w(_TAG_ERROR, "--> Error with DB: " + e);				
+			Log.w(_TAG_ERROR, "--> Error with DB: " + e);
+			Log.w(_TAG_ERROR, e.toString());
 		}
 	}
 	

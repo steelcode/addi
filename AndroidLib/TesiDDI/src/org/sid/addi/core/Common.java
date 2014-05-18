@@ -1,3 +1,8 @@
+/*******************************************************************************
+ * Advanced Dalvik Dynamic Instrumentation Android Library
+ * 
+ * (c) 2014, 
+ ******************************************************************************/
 package org.sid.addi.core;
 
 import java.io.Serializable;
@@ -176,10 +181,7 @@ public class Common {
 
 	}
 	
-	static {
-		System.loadLibrary("mstring");
-	}
-	
+
 	private static native String native_strings(String path);
 	
 	public static ArrayList<String> strings(String path) {

@@ -1,3 +1,8 @@
+/*******************************************************************************
+ * Advanced Dalvik Dynamic Instrumentation Android Library
+ * 
+ * (c) 2014, 
+ ******************************************************************************/
 package org.sid.addi.core;
 
 
@@ -32,7 +37,7 @@ public class Session {
 	
 	
 	public Session(String request, String response){
-		Log.i(_TAG,  "------------ DENTRO SESSION");
+		Log.i(_TAG,  "------------ DENTRO SESSION con req = " +request+" e res = "+response);
 		
 			//req = new File(request);
 			//res = new File(response);
@@ -77,7 +82,7 @@ public class Session {
 	}
 	public void start(){
 		Log.i(_TAG, "------------DENTRO START");
-		manageADDI.suspendALL();
+		//manageADDI.suspendALL();
 		String line = null;
 		for(;;){
 			try {
@@ -86,7 +91,7 @@ public class Session {
 				input = new BufferedReader(new FileReader(new File(req)));
 				output = new BufferedWriter(new FileWriter(new File(res)));
 				for(;;){
-					
+					Log.i(_TAG, "============== SERVER IN ASCOLTO ==================");
 					line = input.readLine();
 					if(line != null)
 						data.append(line);
@@ -99,11 +104,13 @@ public class Session {
 				//input.close();
 			//	output.close();
 			} catch (FileNotFoundException e) {
+				System.out.println("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA");
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
+				System.out.println("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA");
 			}
 		}
 	}
@@ -163,7 +170,7 @@ public class Session {
 		
   }
 	public boolean send(String data, boolean isbase64){
-		Log.i(_TAG, "inivio data "+data+" size = "+data.length());
+		//Log.i(_TAG, "inivio data "+data+" size = "+data.length());
 		
 //		byte[] arr = data.getBytes();
 		try

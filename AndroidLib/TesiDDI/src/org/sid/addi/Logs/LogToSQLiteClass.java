@@ -1,3 +1,8 @@
+/*******************************************************************************
+ * Advanced Dalvik Dynamic Instrumentation Android Library
+ * 
+ * (c) 2014, 
+ ******************************************************************************/
 package org.sid.addi.Logs;
 
 public class LogToSQLiteClass {

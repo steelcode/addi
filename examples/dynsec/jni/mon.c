@@ -30,6 +30,8 @@
 
 #include <jni.h>
 
+#include <arpa/inet.h> //inet_addr
+#include <sys/socket.h> 
 
 #include <stdlib.h>
 #include <errno.h>
@@ -53,6 +55,7 @@
         fclose(fp);}
 
 static struct hook_t eph;
+static struct hook_t eph2;
 
 static struct dalvik_hook_t sb1;
 static int debug = 0;
@@ -133,15 +136,27 @@ JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM* vm, void* reserved)
     return JNI_VERSION_1_6;
 }
 
+static void my_connect(int socket, struct sockaddr *address, socklen_t length){
+	log("chiamato connect!!!\n")
+	int (*orig_connect)(int socket, struct sockaddr *address, socklen_t length);
+	orig_connect = (void*)eph2.orig;
+	if(address->sa_family == AF_INET){
+		struct sockaddr_in *address_in = address;
+		log("sinport = 0x%x\n", address_in->sin_port)
+	}
+	orig_connect(socket, address,  length);
+
+}
 static int my_epoll_wait(int epfd, struct epoll_event *events, int maxevents, int timeout)
 {
 	int (*orig_epoll_wait)(int epfd, struct epoll_event *events, int maxevents, int timeout);
 	orig_epoll_wait = (void*)eph.orig;
 	// remove hook for epoll_wait
 	hook_precall(&eph);
-	log("XXX5 dio boia %d\n", getpid())
+	log("XXX5 MYPID %d\n", getpid())
 	my_ddi_init();
 	_createPTY();
+
 	// call original function
 	int res = orig_epoll_wait(epfd, events, maxevents, timeout);    
 	return res;
@@ -169,6 +184,15 @@ void my_init(void)
 	set_logfunction(my_log);
 	// set log function for libdalvikhook (very important!)
 	dalvikhook_set_logfunction(my_log);
+	/**
+	char* oldClassPath = getenv("CLASSPATH");
+	log("XXX5 classpath = %s\n", oldClassPath)
+	if(oldClassPath == NULL){
+		setenv("CLASSPATH", "/data/local/tmp/tesiddi.jar" ,1);
+	}
+	*/
 
     hook(&eph, getpid(), "libc.", "epoll_wait", my_epoll_wait, 0);
+   // hook(&eph2, getpid(), "libwhatsapp.", "connect", my_connect	, 0);
+
 }

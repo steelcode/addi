@@ -1,15 +1,20 @@
+/*******************************************************************************
+ * Advanced Dalvik Dynamic Instrumentation Android Library
+ * 
+ * (c) 2014, 
+ ******************************************************************************/
 package org.sid.addi.core;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
 
-public abstract class DalvikHook extends LogWrapper{
+public abstract class DalvikHook extends StringHelper{
 
-	//protected final static String _TAG ="Hooks";
-	//protected final static String _ETAG = "HooksErrors";
 
 	protected String _clname = null;
 	protected String _clnamep = null;
@@ -24,20 +29,22 @@ public abstract class DalvikHook extends LogWrapper{
 	protected int debugme;
 	protected int _loaded;
 	protected int _skip; 
-	private int _myargs;
+	protected int dexAfter;
+	protected int _myargs;
+	protected Object thiz = null;
+	protected DEXHook _dexhook;
+	protected DalvikHook _mythiz = null;
 	
-	/**
-	protected Object thiz = null; 
+	public void setThiz(Object t){
+		this.thiz = t;
+	}
+	public Object getThiz(){
+		return this.thiz;
+	}
+	public DEXHook getDexFunc(){
+		return _dexhook;
+	}
 	
-	public Object getThiz() {
-		return thiz;
-	}
-
-	public void setThiz(Object thiz) {
-		this.thiz = thiz;
-	}
-	*/
-
 	public String get_dex_class() {
 		return _dex_class;
 	}
@@ -46,17 +53,13 @@ public abstract class DalvikHook extends LogWrapper{
 		this._dex_class = _dex_class;
 	}
 
-
-	
 	public int isSkip() {
 		return _skip;
 	}
 
 	public void setSkip(int skip) {
 		this._skip = skip;
-	}
-
-	
+	}	
 	
 	public int get_myargs() {
 		return _myargs;
@@ -88,21 +91,70 @@ public abstract class DalvikHook extends LogWrapper{
 	}
 */
 	public DalvikHook(){}
-	public DalvikHook(String clname, String method_name, String method_sig, String dex_method, String dex_class,int num_args, int mya, int skip){
+	public DalvikHook(String clname, String method_name, String method_sig, String dex_method, String dex_class, DEXHook ih, int num_args, int mya, int skip){
 		this._clname = clname;
 		this._method_name = method_name;
 		this._method_sig = method_sig;
 		this._dex_method = dex_method;
 		this._dex_class = dex_class;
 		this.ns = num_args;
+		this._dexhook = ih;
 		//the hash value is: clname+method_name+method_descriptor clname is without L e ;
 		//this._hashvalue = removeFirstChar(clname.replace(";", ""))+method_name+method_sig;
 		this._hashvalue = clname+method_name+method_sig;
 		this._loaded = 0;
 		this._myargs = mya;
 		this._skip = skip;
+		this._mythiz = this;
+		
 	}
-
+	public void initFunc(){
+		_dexhook.init(this);
+	}
+	public void myexecute(Object... args){
+		try {
+			System.out.println("CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC");
+			System.out.println("DUMP: dex_method = "+get_dex_method()+" DEXLASS = " + get_dex_class()+" CLSNAME = "+get_clname());
+			Method m = _dexhook.getClass().getDeclaredMethod(get_dex_method(), Object[].class);
+			System.out.println("CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC" + _clname + " paranoica " + m.getName());
+			Object[] myargs = new Object[]{
+					args
+			};
+			m.invoke(_dexhook, myargs);
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (NoSuchMethodException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IllegalArgumentException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+	public void myexecute(){
+		try {
+			System.out.println("CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC");
+			Method m = _dexhook.getClass().getDeclaredMethod(get_dex_method());
+			System.out.println("CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC" + _clname + " paranoica " + m.getName());
+			m.invoke(_dexhook);
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (NoSuchMethodException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IllegalArgumentException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
 
 	public String get_dex_method() {
 		return _dex_method;
@@ -131,50 +183,53 @@ public abstract class DalvikHook extends LogWrapper{
 	public String get_method_name() {
 		return _method_name;
 	}
-
 	public void set_method_name(String _method_name) {
 		this._method_name = _method_name;
 	}
-
 	public String get_method_sig() {
 		return _method_sig;
 	}
-
 	public void set_method_sig(String _method_sig) {
 		this._method_sig = _method_sig;
 	}
-
 	public int getNs() {
 		return ns;
 	}
-
 	public void setNs(int rss) {
 		this.ns = rss;
 	}
-
 	public int getDump() {
 		return dump;
 	}
-
 	public void setDump(int dump) {
 		this.dump = dump;
 	}
-
 	public int getDebugme() {
 		return debugme;
 	}
-
 	public void setDebugme(int debugme) {
 		this.debugme = debugme;
 	}
-	public String toXML(){
+	public void toXML(){
 		StringBuilder xml = null;
 		Class<?> c = DalvikHook.class;
 		List<Field> currentClassFields = new ArrayList<Field>(Arrays.asList(c.getDeclaredFields()));
 		for (Field f : currentClassFields){
 			System.out.println(f.getName());
 		}
-		return "";
+		//return xml.toString();
 	}
-	
+	public boolean isHooked(){
+		if(manageADDI.searchHookHash(_hashvalue))
+			return true;
+		else 
+			return false;
+	}
+	public void myunhook(){
+		System.out.println("--------------  JAVA UNHOOK "+_hashvalue);
+		manageADDI.unhookWrap(_hashvalue);
+	}
+	public void myrehook(){
+		manageADDI.rehookWrap(_hashvalue);
+	}
 }

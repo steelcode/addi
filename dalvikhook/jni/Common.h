@@ -26,6 +26,7 @@
 #include <stdio.h>
 #include <assert.h>
 
+
 #if !defined(NDEBUG) && defined(WITH_DALVIK_ASSERT)
 # undef assert
 # define assert(x) \

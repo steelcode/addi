@@ -78,6 +78,7 @@ C:/Users/bellone/Dropbox/MasterThesis/repos/advanceddalvikhook-framework/example
  C:/ANDROID/android-ndk-r9d-windows-x86_64/android-ndk-r9d/platforms/android-3/arch-arm/usr/include/sched.h \
  C:/ANDROID/android-ndk-r9d-windows-x86_64/android-ndk-r9d/platforms/android-3/arch-arm/usr/include/sys/epoll.h \
  C:/ANDROID/android-ndk-r9d-windows-x86_64/android-ndk-r9d/platforms/android-3/arch-arm/usr/include/jni.h \
+ C:/ANDROID/android-ndk-r9d-windows-x86_64/android-ndk-r9d/platforms/android-3/arch-arm/usr/include/arpa/inet.h \
  C:/ANDROID/android-ndk-r9d-windows-x86_64/android-ndk-r9d/platforms/android-3/arch-arm/usr/include/stdlib.h \
  C:/ANDROID/android-ndk-r9d-windows-x86_64/android-ndk-r9d/platforms/android-3/arch-arm/usr/include/alloca.h \
  C:/ANDROID/android-ndk-r9d-windows-x86_64/android-ndk-r9d/platforms/android-3/arch-arm/usr/include/strings.h \
@@ -250,6 +251,8 @@ C:/ANDROID/android-ndk-r9d-windows-x86_64/android-ndk-r9d/platforms/android-3/ar
 C:/ANDROID/android-ndk-r9d-windows-x86_64/android-ndk-r9d/platforms/android-3/arch-arm/usr/include/sys/epoll.h:
 
 C:/ANDROID/android-ndk-r9d-windows-x86_64/android-ndk-r9d/platforms/android-3/arch-arm/usr/include/jni.h:
+
+C:/ANDROID/android-ndk-r9d-windows-x86_64/android-ndk-r9d/platforms/android-3/arch-arm/usr/include/arpa/inet.h:
 
 C:/ANDROID/android-ndk-r9d-windows-x86_64/android-ndk-r9d/platforms/android-3/arch-arm/usr/include/stdlib.h:
 

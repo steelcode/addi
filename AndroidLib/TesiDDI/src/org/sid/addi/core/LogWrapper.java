@@ -1,3 +1,8 @@
+/*******************************************************************************
+ * Advanced Dalvik Dynamic Instrumentation Android Library
+ * 
+ * (c) 2014, 
+ ******************************************************************************/
 package org.sid.addi.core;
 
 import org.sid.addi.Logs.Logger;
@@ -14,19 +19,19 @@ private static Logger _l = new Logger();
 		_l.logLine(line);
 	}
 	
-	protected static void _logFlush_I(String notes) {
-		_l.logFlush_I(notes);
+	protected static void _logFlush_I(String notes,DEXHook dexh) {
+		_l.logFlush_I(notes,dexh);
 	}
-	protected static void _logFlush_W(String notes) {
-		_l.logFlush_W(notes);
-	}
-	
-	protected static void _logFlush_I() {
-		_l.logFlush_I();
+	protected static void _logFlush_W(String notes,DEXHook dexh) {
+		_l.logFlush_W(notes,dexh);
 	}
 	
-	protected static void _logFlush_W() {
-		_l.logFlush_W();
+	protected static void _logFlush_I(DEXHook dexh) {
+		_l.logFlush_I(dexh);
+	}
+	
+	protected static void _logFlush_W(DEXHook dexh) {
+		_l.logFlush_W(dexh);
 	}
 	
 	protected static void _logParameter(String name, String value) {

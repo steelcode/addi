@@ -1,16 +1,29 @@
+/*******************************************************************************
+ * Advanced Dalvik Dynamic Instrumentation Android Library
+ * 
+ * (c) 2014, 
+ ******************************************************************************/
 package org.sid.addi.core;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import org.sid.addi.core.CommandWrapper;
 import android.os.Debug;
+import android.util.Log;
 
 public class Commands {
 	public static Class<?> c = Commands.class;
 	
 	public Commands(){
 		
+	}
+	
+	public static void execute(Object...args){
+		System.out.println("+++++++++++++++++++++++++++++ EXECUTE COMMANDS");
+		//manageADDI.suspendALL();
+		manageADDI.unhook((String) args[0]);
+		System.out.println("+++++++++++++++++++++++++++++ EXECUTE COMMANDS FATTO UNHOOK");
+		//manageADDI.resumeALL();
 	}
 
 	public static void pong(Object... args){
@@ -24,15 +37,25 @@ public class Commands {
 		List<ArgumentWrapper> argsArray = (List<ArgumentWrapper>)args[0];
 		Session currentSession = (Session)args[1];
 		manageADDI.suspendALL();
+		
+		Log.i("Hooks", "++++++++++++++++++++++++++++++++++++++++=CHIAMATO SUSPENDALL");
+		
 		// TODO Auto-generated method stub
 		currentSession.sendFullTransmission("suspendok", "");
+		
+		Log.i("Hooks", "++++++++++++++++++++++++++++++++++++++++ INVIATA RISPOSTA SUSPENDALL");
 	}
 	public static void resumeAll(Object... args){
 		List<ArgumentWrapper> argsArray = (List<ArgumentWrapper>)args[0];
 		Session currentSession = (Session)args[1];
 		// TODO Auto-generated method stub
 		manageADDI.resumeALL();
+		
+		Log.i("Hooks", "++++++++++++++++++++++++++++++++++++++++=CHIAMATO RESUMEALL");
+		
 		currentSession.sendFullTransmission("resumeok", "");
+		
+		Log.i("Hooks", "++++++++++++++++++++++++++++++++++++++++ INVIATA RISPOSTA RESUMEALL");
 			
 	}
 	public static void startDump(Object... args){	
@@ -52,8 +75,25 @@ public class Commands {
 		Session currentSession = (Session)args[1];
 		String hook = Common.getParamString(argsArray, "hook");
 		System.out.println("-------- HO RICEVUTO HOOK "+hook);
-		manageADDI.unhook(hook);
+		manageADDI.unhookWrap(hook);
 		currentSession.sendFullTransmission("unhookOk", "");
+	}
+	public static void newThread(Object... args){
+		List<ArgumentWrapper> argsArray = (List<ArgumentWrapper>)args[0];
+		Session currentSession = (Session)args[1];
+		//String dexp = Common.getParamString(argsArray, "dexpath");
+		//String clsn = Common.getParamString(argsArray, "clsname");
+		String dexp = "/data/local/blabla";
+		String clsn = "ClassNameBLaBla";
+		manageADDI.startNewThread(dexp, clsn);
+		currentSession.sendFullTransmission("newThreadOK", "");
+	}
+	public static void dumpJavaClass(Object... args){
+		List<ArgumentWrapper> argsArray = (List<ArgumentWrapper>)args[0];
+		Session currentSession = (Session)args[1];
+		String clsn = Common.getParamString(argsArray, "clsname");
+		manageADDI.dumpJavaClass(clsn);
+		currentSession.sendFullTransmission("newThreadOK", "");
 	}
 	/**
 static CommandWrapper[] commandList = new CommandWrapper[]{
@@ -80,6 +120,8 @@ static CommandWrapper[] commandList = new CommandWrapper[]{
 		commandList.add(new CommandWrapper("core", "startDump", c.getMethod("startDump", Object[].class)));
 		commandList.add(new CommandWrapper("core", "stopDump", c.getMethod("stopDump", Object[].class)));
 		commandList.add(new CommandWrapper("core", "unhook", c.getMethod("unhook", Object[].class)));
+		commandList.add(new CommandWrapper("core", "newThread", c.getMethod("newThread", Object[].class)));
+		commandList.add(new CommandWrapper("core", "dumpJavaClass", c.getMethod("dumpJavaClass", Object[].class)));
 	} catch (NoSuchMethodException e) {
 		// TODO Auto-generated catch block
 		e.printStackTrace();

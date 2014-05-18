@@ -1,8 +1,16 @@
+/*******************************************************************************
+ * Advanced Dalvik Dynamic Instrumentation Android Library
+ * 
+ * (c) 2014, 
+ ******************************************************************************/
 package org.sid.addi.Logs;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import org.sid.addi.utils.AppContextConfig;
+
+import android.app.Application;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
@@ -119,10 +127,13 @@ public class LogToSQLite {
 		  }
 	
 	public static LogToSQLite getInstance() {
+		Context c = AppContextConfig.get_app();
+		if(c  == null)
+			c = AppContextConfig.getcon();
 		if (_instance  == null) {
-			_instance = new 
+			_instance = new LogToSQLite(c); 
 					//LogToSQLite(AppContextConfig.getContext());
-					LogToSQLite(null);
+					//LogToSQLite(null);
 		}
 		return _instance;
 	}

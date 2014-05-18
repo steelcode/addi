@@ -59,6 +59,10 @@ void dexstuff_resolv_dvm(struct dexstuff_t *d)
 	
 	if (d->dvm_hand) {
 		d->dvm_dalvik_system_DexFile = (DalvikNativeMethod*) mydlsym(d->dvm_hand, "dvm_dalvik_system_DexFile");
+		d->dvm_dalvik_system_VMStack = (DalvikNativeMethod*) mydlsym(d->dvm_hand, "dvm_dalvik_system_VMStack");
+		d->dvm_java_lang_VMClassLoader = (DalvikNativeMethod*) mydlsym(d->dvm_hand, "dvm_java_lang_VMClassLoader");
+
+
 		d->dvm_java_lang_Class = (DalvikNativeMethod*) mydlsym(d->dvm_hand, "dvm_java_lang_Class");
 		
 		d->dvmThreadSelf_fnPtr = mydlsym(d->dvm_hand, "_Z13dvmThreadSelfv");
@@ -92,6 +96,8 @@ void dexstuff_resolv_dvm(struct dexstuff_t *d)
 		d->dvmDumpJniReferenceTablesv_fnPtr = mydlsym(d->dvm_hand, "_Z25dvmDumpJniReferenceTablesv");
 		d->dvmGetCallerFP_fnPtr = mydlsym(d->dvm_hand, "_Z14dvmGetCallerFPPKv");
 		d->dvmGetCallerClass_fnPtr = mydlsym(d->dvm_hand, "_Z17dvmGetCallerClassPKv");
+		d->dvmGetCaller2Class_fnPtr = mydlsym(d->dvm_hand, "_Z18dvmGetCaller2ClassPKv");
+		d->dvmGetCaller3Class_fnPtr = mydlsym(d->dvm_hand, "_Z18dvmGetCaller3ClassPKv");
 		d->dvmSuspendThread_fnPtr = mydlsym(d->dvm_hand, "_Z16dvmSuspendThreadP6Thread");
 		d->dvmSuspendSelf_fnPtr = mydlsym(d->dvm_hand, "_Z14dvmSuspendSelfb");
 		d->dvmResumeThread_fnPtr = mydlsym(d->dvm_hand, "_Z15dvmResumeThreadP6Thread");
@@ -100,48 +106,70 @@ void dexstuff_resolv_dvm(struct dexstuff_t *d)
 		d->dvmSuspendAllThreads_fnPtr = mydlsym(d->dvm_hand, "_Z20dvmSuspendAllThreads12SuspendCause");
 		d->dvmResumeAllThreads_fnPtr = mydlsym(d->dvm_hand, "_Z19dvmResumeAllThreads12SuspendCause");
 		d->dvmAttachCurrentThread_fnPtr = mydlsym(d->dvm_hand, "_Z22dvmAttachCurrentThreadPK16JavaVMAttachArgsb");
-		d->dvmMterpPrintMethod_fnPtr = mydlsym(d->dvm_hand, "dvmMterpPrintMethod");
-		
+		d->dvmMterpPrintMethod_fnPtr = mydlsym(d->dvm_hand, "dvmMterpPrintMethod");		
 		d->dvmIsStaticMethod_fnPtr = mydlsym(d->dvm_hand, "_Z17dvmIsStaticMethodPK6Method");
 		d->dvmAllocObject_fnPtr = mydlsym(d->dvm_hand, "dvmAllocObject");
 		d->dvmCallMethodV_fnPtr = mydlsym(d->dvm_hand, "_Z14dvmCallMethodVP6ThreadPK6MethodP6ObjectbP6JValueSt9__va_list");
 		d->dvmCallMethodA_fnPtr = mydlsym(d->dvm_hand, "_Z14dvmCallMethodAP6ThreadPK6MethodP6ObjectbP6JValuePK6jvalue");
 		d->dvmAddToReferenceTable_fnPtr = mydlsym(d->dvm_hand, "_Z22dvmAddToReferenceTableP14ReferenceTableP6Object");
-
-
-		
 		d->dvmSetNativeFunc_fnPtr = mydlsym(d->dvm_hand, "_Z16dvmSetNativeFuncP6MethodPFvPKjP6JValuePKS_P6ThreadEPKt");
 		d->dvmUseJNIBridge_fnPtr = mydlsym(d->dvm_hand, "_Z15dvmUseJNIBridgeP6MethodPv");
 		if (!d->dvmUseJNIBridge_fnPtr)
 			d->dvmUseJNIBridge_fnPtr = mydlsym(d->dvm_hand, "dvmUseJNIBridge");
-		
 		d->dvmDecodeIndirectRef_fnPtr =  mydlsym(d->dvm_hand, "_Z20dvmDecodeIndirectRefP6ThreadP8_jobject");
-		
 		d->dvmLinearSetReadWrite_fnPtr = mydlsym(d->dvm_hand, "_Z21dvmLinearSetReadWriteP6ObjectPv");
-		
 		d->dvmGetCurrentJNIMethod_fnPtr = mydlsym(d->dvm_hand, "_Z22dvmGetCurrentJNIMethodv");
-		
 		d->dvmFindInstanceField_fnPtr = mydlsym(d->dvm_hand, "_Z20dvmFindInstanceFieldPK11ClassObjectPKcS3_");
-		
 		//d->dvmCallJNIMethod_fnPtr = mydlsym(d->dvm_hand, "_Z21dvmCheckCallJNIMethodPKjP6JValuePK6MethodP6Thread");
-		d->dvmCallJNIMethod_fnPtr = mydlsym(d->dvm_hand, "_Z16dvmCallJNIMethodPKjP6JValuePK6MethodP6Thread");
-		
+		d->dvmCallJNIMethod_fnPtr = mydlsym(d->dvm_hand, "_Z16dvmCallJNIMethodPKjP6JValuePK6MethodP6Thread");		
 		d->dvmDumpAllClasses_fnPtr = mydlsym(d->dvm_hand, "_Z17dvmDumpAllClassesi");
 		d->dvmDumpClass_fnPtr = mydlsym(d->dvm_hand, "_Z12dvmDumpClassPK11ClassObjecti");
-		
 		d->dvmFindLoadedClass_fnPtr = mydlsym(d->dvm_hand, "_Z18dvmFindLoadedClassPKc");
 		if (!d->dvmFindLoadedClass_fnPtr)
 			d->dvmFindLoadedClass_fnPtr = mydlsym(d->dvm_hand, "dvmFindLoadedClass");
-		
 		d->dvmHashTableLock_fnPtr = mydlsym(d->dvm_hand, "_Z16dvmHashTableLockP9HashTable");
 		d->dvmHashTableUnlock_fnPtr = mydlsym(d->dvm_hand, "_Z18dvmHashTableUnlockP9HashTable");
 		d->dvmHashForeach_fnPtr = mydlsym(d->dvm_hand, "_Z14dvmHashForeachP9HashTablePFiPvS1_ES1_");
-	
 		d->dvmInstanceof_fnPtr = mydlsym(d->dvm_hand, "_Z13dvmInstanceofPK11ClassObjectS1_");
-		
 		d->gDvm = mydlsym(d->dvm_hand, "gDvm");
 	}
 }
+
+//problemi con il passaggio del parametro objName di tipo StringObject*
+void*  _loadClass(struct dexstuff_t *d, jobject clsname){
+	log("XXX7 sono dentro LOADCLASS = 0x%x\n", &clsname)
+	log("DEBUG VMCLASSLOADER = %s\n", d->dvm_java_lang_VMClassLoader[6].name)
+	u4 args[2] = { (struct StringObject*) &clsname, (u4)0x0};
+	JValue pResult;
+	void* res = NULL;
+	d->dvm_java_lang_VMClassLoader[6].fnPtr( args , &pResult );
+	res = (void*) pResult.l;
+	if(res){
+		log("XXX7 TROVATA CLS = 0x%x\n", res)
+	}
+}
+struct ClassObject* _getCallerClass(struct dexstuff_t* dex){
+	Thread* t = getSelf(dex);
+	//log("XXX5 THREAD = 0x%x, field = 0x%x\n", t, t->interpSave.curFrame);
+	struct ClassObject* co = dex->dvmGetCallerClass_fnPtr(t->interpSave.curFrame);
+	return co;
+}
+struct ClassObject* _getCaller2Class(struct dexstuff_t* dex){
+	Thread* t = getSelf(dex);
+	//log("XXX5 THREAD = 0x%x, field = 0x%x\n", t, t->interpSave.curFrame);
+	struct ClassObject* co = dex->dvmGetCaller2Class_fnPtr(t->interpSave.curFrame);
+	return co;
+}
+struct ClassObject* _getCaller3Class(struct dexstuff_t* dex){
+	Thread* t = getSelf(dex);
+	//log("XXX5 THREAD = 0x%x, field = 0x%x\n", t, t->interpSave.curFrame);
+	struct ClassObject* co = dex->dvmGetCaller3Class_fnPtr(t->interpSave.curFrame);
+	return co;
+}
+void _dvmCallMethodV(struct dexstuff_t* dex, void* th, struct Method* m, struct Object *thiz, JValue result, va_list l){
+	dex->dvmCallMethodV_fnPtr(th, m, thiz, 0, &result, l);
+}
+
 void* _mterprintmethod(struct dexstuff_t *dex){
 	Method* m = dex->dvmGetCurrentJNIMethod_fnPtr();
 	dex->dvmMterpPrintMethod_fnPtr(m);
@@ -212,7 +240,6 @@ void * get_jni_for_thread(struct dexstuff_t *dex){
 		return -1;
 
 }
-
 void * get_method(struct dexstuff_t *dex, char* name, char * desc){
 	Method* h = dex->dvmGetCurrentJNIMethod_fnPtr();
 	strcpy(name,h->clazz->descriptor);
@@ -222,12 +249,9 @@ void * get_method(struct dexstuff_t *dex, char* name, char * desc){
 	log("XXX4 prova = %s\n", h->clazz->descriptor)
 	strcpy(desc,str);
 }
-
 int is_static(struct dexstuff_t *dex, Method *m){
 	return dex->dvmIsStaticMethod_fnPtr(m);
 }
-
-
 int dexstuff_loaddex(struct dexstuff_t *d, char *path)
 {
 	jvalue pResult;
@@ -236,7 +260,7 @@ int dexstuff_loaddex(struct dexstuff_t *d, char *path)
 	log("dexstuff_loaddex, path = 0x%x\n", path)
 	void *jpath = d->dvmStringFromCStr_fnPtr(path, strlen(path), ALLOC_DEFAULT);
 	u4 args[2] = { (u4)jpath, (u4)NULL };
-	
+	log("XXX5 NOME0 = %s\n", d->dvm_dalvik_system_DexFile[0].name)
 	d->dvm_dalvik_system_DexFile[0].fnPtr(args, &pResult);
 	result = (jint) pResult.l;
 	log("cookie = 0x%x\n", pResult.l)
@@ -244,6 +268,13 @@ int dexstuff_loaddex(struct dexstuff_t *d, char *path)
 	return result;
 }
 
+void* dexstuff_getStackClass2(struct dexstuff_t *d){
+	jvalue pResult;
+	u4 args[0] = {};	
+	d->dvm_dalvik_system_VMStack[1].fnPtr(args, &pResult);
+	jobject* ret = pResult.l;
+	return ret;
+}
 void* dexstuff_defineclass(struct dexstuff_t *d, char *name, int cookie)
 {
 	u4 *nameObj = (u4*) name;
@@ -258,9 +289,10 @@ void* dexstuff_defineclass(struct dexstuff_t *d, char *name, int cookie)
 	
 	void *jname = d->dvmStringFromCStr_fnPtr(name, strlen(name), ALLOC_DEFAULT);
 	//log("called string...\n")
-	
+
 	u4 args[3] = { (u4)jname, (u4) m->clazz->classLoader, (u4) cookie };
 	d->dvm_dalvik_system_DexFile[3].fnPtr( args , &pResult );
+	log("cur m classloader = 0x%x\n", m->clazz->classLoader)
 
 	jobject *ret = pResult.l;
 	
@@ -273,9 +305,9 @@ void* _setSelf(struct dexstuff_t*dex){
 	tself = dex->dvmThreadSelf_fnPtr();
 }
 
-void* getSelf(struct dexstuff_t *d)
+Thread* getSelf(struct dexstuff_t *d)
 {
-	void* self  = d->dvmThreadSelf_fnPtr();
+	Thread* self  = d->dvmThreadSelf_fnPtr();
 	log("XXX5 THREAD SELF VALE 0x%x\n", self)
 	return self;
 	//return tself;
@@ -287,6 +319,9 @@ void dalvik_dump_class(struct dexstuff_t *dex, char *clname)
 		void *target_cls = dex->dvmFindLoadedClass_fnPtr(clname);
 		if (target_cls)
 			dex->dvmDumpClass_fnPtr(target_cls, (void*)1);
+		else{
+			log("XXX6 targecls = 0x%x\n", target_cls)
+		}
 	}
 	else {
 		dex->dvmDumpAllClasses_fnPtr(0);

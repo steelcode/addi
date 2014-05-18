@@ -18,9 +18,23 @@ include $(CLEAR_VARS)
 
 LOCAL_MODULE    := libdalvikhook
 LOCAL_INCLUDE   := ../../../adbi/instruments/base/hook.h
-LOCAL_SRC_FILES := dexstuff.c.arm lista.c.arm Misc.c.arm dalvik_hook.c 
+LOCAL_SRC_FILES := dexstuff.c.arm lista.c.arm Misc.c.arm dalvik_hook.c
 LOCAL_LDLIBS    := -L./libs -ldl -ldvm ../../../adbi/instruments/base/obj/local/armeabi/libbase.a 
 
 LOCAL_STATIC_LIBRARIES := ../../../adbi/instruments/base/obj/local/armeabi/libbase.a 
+LOCAL_SHARED_LIBRARIES := \
+	libcutils \
+	libutils \
+	libbinder \
+	libandroid_runtime \
+	libdvm \
+	libstlport \
+	libdl
 
+LOCAL_C_INCLUDES += dalvik \
+                    dalvik/vm \
+                    external/stlport/stlport \
+                    bionic \
+                    bionic/libstdc++/include
+                    
 include $(BUILD_STATIC_LIBRARY)

@@ -1,3 +1,8 @@
+#-------------------------------------------------------------------------------
+# Advanced Dalvik Dynamic Instrumentation Android Library
+# 
+# (c) 2014, 
+#-------------------------------------------------------------------------------
 # To enable ProGuard in your project, edit project.properties
 # to define the proguard.config property as described in that file.
 #

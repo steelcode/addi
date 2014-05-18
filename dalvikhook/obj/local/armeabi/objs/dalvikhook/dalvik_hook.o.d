@@ -59,12 +59,12 @@ C:/Users/bellone/Dropbox/MasterThesis/repos/advanceddalvikhook-framework/dalvikh
  C:/ANDROID/android-ndk-r9d-windows-x86_64/android-ndk-r9d/platforms/android-3/arch-arm/usr/include/linux/capability.h \
  C:/ANDROID/android-ndk-r9d-windows-x86_64/android-ndk-r9d/platforms/android-3/arch-arm/usr/include/pathconf.h \
  C:/ANDROID/android-ndk-r9d-windows-x86_64/android-ndk-r9d/platforms/android-3/arch-arm/usr/include/dlfcn.h \
- C:/Users/bellone/Dropbox/MasterThesis/repos/advanceddalvikhook-framework/dalvikhook//jni/Common.h \
- C:/ANDROID/android-ndk-r9d-windows-x86_64/android-ndk-r9d/platforms/android-3/arch-arm/usr/include/assert.h \
- C:/Users/bellone/Dropbox/MasterThesis/repos/advanceddalvikhook-framework/dalvikhook//jni/dalvik_hook.h \
  C:/ANDROID/android-ndk-r9d-windows-x86_64/android-ndk-r9d/platforms/android-3/arch-arm/usr/include/pthread.h \
  C:/ANDROID/android-ndk-r9d-windows-x86_64/android-ndk-r9d/platforms/android-3/arch-arm/usr/include/time.h \
  C:/ANDROID/android-ndk-r9d-windows-x86_64/android-ndk-r9d/platforms/android-3/arch-arm/usr/include/sched.h \
+ C:/Users/bellone/Dropbox/MasterThesis/repos/advanceddalvikhook-framework/dalvikhook//jni/Common.h \
+ C:/ANDROID/android-ndk-r9d-windows-x86_64/android-ndk-r9d/platforms/android-3/arch-arm/usr/include/assert.h \
+ C:/Users/bellone/Dropbox/MasterThesis/repos/advanceddalvikhook-framework/dalvikhook//jni/dalvik_hook.h \
  C:/Users/bellone/Dropbox/MasterThesis/repos/advanceddalvikhook-framework/dalvikhook//jni/lista.h \
  C:/Users/bellone/Dropbox/MasterThesis/repos/advanceddalvikhook-framework/dalvikhook//jni/Misc.h \
  C:/Users/bellone/Dropbox/MasterThesis/repos/advanceddalvikhook-framework/dalvikhook//jni/log.h
@@ -187,17 +187,17 @@ C:/ANDROID/android-ndk-r9d-windows-x86_64/android-ndk-r9d/platforms/android-3/ar
 
 C:/ANDROID/android-ndk-r9d-windows-x86_64/android-ndk-r9d/platforms/android-3/arch-arm/usr/include/dlfcn.h:
 
-C:/Users/bellone/Dropbox/MasterThesis/repos/advanceddalvikhook-framework/dalvikhook//jni/Common.h:
-
-C:/ANDROID/android-ndk-r9d-windows-x86_64/android-ndk-r9d/platforms/android-3/arch-arm/usr/include/assert.h:
-
-C:/Users/bellone/Dropbox/MasterThesis/repos/advanceddalvikhook-framework/dalvikhook//jni/dalvik_hook.h:
-
 C:/ANDROID/android-ndk-r9d-windows-x86_64/android-ndk-r9d/platforms/android-3/arch-arm/usr/include/pthread.h:
 
 C:/ANDROID/android-ndk-r9d-windows-x86_64/android-ndk-r9d/platforms/android-3/arch-arm/usr/include/time.h:
 
 C:/ANDROID/android-ndk-r9d-windows-x86_64/android-ndk-r9d/platforms/android-3/arch-arm/usr/include/sched.h:
+
+C:/Users/bellone/Dropbox/MasterThesis/repos/advanceddalvikhook-framework/dalvikhook//jni/Common.h:
+
+C:/ANDROID/android-ndk-r9d-windows-x86_64/android-ndk-r9d/platforms/android-3/arch-arm/usr/include/assert.h:
+
+C:/Users/bellone/Dropbox/MasterThesis/repos/advanceddalvikhook-framework/dalvikhook//jni/dalvik_hook.h:
 
 C:/Users/bellone/Dropbox/MasterThesis/repos/advanceddalvikhook-framework/dalvikhook//jni/lista.h:
 

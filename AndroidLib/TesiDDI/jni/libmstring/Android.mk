@@ -1,3 +1,8 @@
+#-------------------------------------------------------------------------------
+# Advanced Dalvik Dynamic Instrumentation Android Library
+# 
+# (c) 2014, 
+#-------------------------------------------------------------------------------
 #
 # Copyright (C) 2008 The Android Open Source Project
 #

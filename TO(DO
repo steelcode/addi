@@ -1,0 +1,18 @@
+
+
++	capire bene  hook_precall e hook_postcall
++	da java devo avere una referenza al this della chiamata (FATTO)
++	capire se posso in auto caricare tutte le classi presenti in un dex (da nativo preferibilmente) se no da nativo carico solo  una classe statica da cui carico tutte le altre.
++	possa usare lo shorty, il primo elemento e' il valore di ritorno
++	posso calcolare in auto il numero di argomenti degli hook?
++ ho problemi con la classe javax.crypto.Cipher, provare a usare _Z12dvmFindClassPKcP6Object. sembra che questa classe non venga caricata tra quelle di sistema.
+
++anche  con 
+I/System.out( 3960): CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
+I/System.out( 3960): CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCLandroid/database/sqlite/SQLiteDatabase; paranoica sql_intro
+I/Hooks   ( 3960): -> [BEGIN EXCLUSIVE;]
+W/dalvikvm( 3960): Invalid indirect reference 0x2000 in decodeIndirectRef
+
+
+dopo hook_precall le chiamate non passano dalla mia funzione nativa, quindi se dal dex devo chiamare lo stesso metodo hookato non ci sono problemi, se pero' devi chiamare altri metodi hookati devo prima fare unhook.  Ora unhook deve  essere in mutex?
+

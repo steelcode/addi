@@ -12,8 +12,10 @@
  */
 
 #include <jni.h>
-#include "dexstuff.h"
 #include <pthread.h>
+#include "dexstuff.h"
+
+
 
 
 struct dalvik_hook_t
@@ -26,9 +28,13 @@ struct dalvik_hook_t
 	char dex_meth[256];
 	char dex_class[256];
 	int loaded;
+	int ok;
 	int skip;
 	int real_args; 
+	int dexAfter;
+
 	jclass DexHookCls;
+	jobject ref;
 	Method *method;
 	int sm; // static method
 	// original values, saved before patching
@@ -54,12 +60,12 @@ struct dalvik_hook_t
 };
 
 
-void* dalvik_hook(struct dexstuff_t *dex, struct dalvik_hook_t *h);
+int dalvik_hook(struct dexstuff_t *dex, struct dalvik_hook_t *h);
 int dalvik_prepare(struct dexstuff_t *dex, struct dalvik_hook_t *h, JNIEnv *env);
 void dalvik_postcall(struct dexstuff_t *dex, struct dalvik_hook_t *h);
 int dalvik_hook_setup(struct dalvik_hook_t *h, char *cls, char *meth, char *sig, int ns, void *func);
-void _createStruct( JNIEnv* env, jobject thiz, jobject clazz );
-void* onetoall(JNIEnv *env, jobject obj, ...);
+//void _createStruct( JNIEnv* env, jobject thiz, jobject clazz );
+void* onetoall(JNIEnv *env, jobject, ...);
 jlong jlong_wrapper(JNIEnv *env, jobject obj, ...);
 jfloat jfloat_wrapper(JNIEnv *env, jobject obj, ...);
 int load_dex_wrapper(JNIEnv *env, void *thiz, struct dalvik_hook_t *res, va_list lhook, char*desc);

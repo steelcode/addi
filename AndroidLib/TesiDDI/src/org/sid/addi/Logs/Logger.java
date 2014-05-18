@@ -1,6 +1,14 @@
+/*******************************************************************************
+ * Advanced Dalvik Dynamic Instrumentation Android Library
+ * 
+ * (c) 2014, 
+ ******************************************************************************/
 package org.sid.addi.Logs;
 
+import org.sid.addi.core.DEXHook;
 import org.sid.addi.core.DalvikHook;
+
+import android.util.Log;
 
 public class Logger extends LogToDB{
 	private void clean() {
@@ -23,33 +31,34 @@ public class Logger extends LogToDB{
 		_out += line + "\n";
 	}
 	
-	public void logFlush_I(String notes) {
+	public void logFlush_I(String notes, DEXHook dexh) {
 		_notes = notes;
 		_out += notes;
-		logFlush_I();
+		logFlush_I(dexh);
 	}
-	public void logFlush_W(String notes) {
+	public void logFlush_W(String notes,DEXHook dexh) {
 		_notes = notes;
 		_out += "-> !!! " + notes;
-		logFlush_W();
+		logFlush_W(dexh);
 	}
 	
 	// use a static ref to synchronize across threads
-	public void logFlush_I() {
+	public void logFlush_I(DEXHook dexh) {
 		_addTraces();
 		synchronized (_TAG) {
 			if (_enableDB)
-				_logInDB("I");
-			//Log.i(_TAG, _out);
+				_logInDB("I", dexh);
+			else
+				Log.i(_TAG, _out);
 		}
 		clean();
 	}
 	
-	public void logFlush_W() {
+	public void logFlush_W(DEXHook dexh) {
 		_addTraces();
 		synchronized (_TAG) {
 			if (_enableDB)
-				_logInDB("W");
+				_logInDB("W", dexh);
 			//Log.w(_TAG, _out);
 		}
 		clean();

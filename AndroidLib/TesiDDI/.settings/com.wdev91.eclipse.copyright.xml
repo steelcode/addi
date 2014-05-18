@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<project>
+	<owner></owner>
+	<copyright><![CDATA[Advanced Dalvik Dynamic Instrumentation Android Library
+
+(c) 2014, ${owner}]]></copyright>
+	<header contentId="org.eclipse.ant.core.antBuildFile" excluded="true" />
+	<header contentId="org.eclipse.jdt.core.JARManifest" excluded="true" />
+	<header contentId="org.eclipse.jdt.core.javaSource" postBlankLines="0" lineFormat="false" preserveFirstLine="false">
+		<beginLine><![CDATA[/*******************************************************************************]]></beginLine>
+		<linePrefix><![CDATA[ * ]]></linePrefix>
+		<endLine><![CDATA[ ******************************************************************************/]]></endLine>
+	</header>
+	<header contentId="org.eclipse.core.runtime.text" postBlankLines="0" lineFormat="true" preserveFirstLine="false">
+		<beginLine><![CDATA[#-------------------------------------------------------------------------------]]></beginLine>
+		<linePrefix><![CDATA[# ]]></linePrefix>
+		<endLine><![CDATA[#-------------------------------------------------------------------------------]]></endLine>
+	</header>
+	<header contentId="org.eclipse.ui.views.log.log" excluded="true" />
+	<header contentId="org.eclipse.core.runtime.xml" postBlankLines="0" lineFormat="false" preserveFirstLine="true">
+		<beginLine><![CDATA[<!--]]></beginLine>
+		<linePrefix><![CDATA[  ]]></linePrefix>
+		<endLine><![CDATA[-->]]></endLine>
+		<firstLinePattern><![CDATA[<\?xml version=.*\?>]]></firstLinePattern>
+	</header>
+</project>

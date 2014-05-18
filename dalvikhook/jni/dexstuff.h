@@ -16,8 +16,10 @@
 #include <stdio.h>
 #include <fcntl.h>
 #include <dlfcn.h>
+#include <pthread.h>
 
 #include "Common.h"
+
 
 
 #ifndef __dexstuff_h__
@@ -238,6 +240,31 @@ typedef struct Method {
 	
 } Method;
 
+
+
+
+/*
+ * Array objects have these additional fields.
+ *
+ * We don't currently store the size of each element.  Usually it's implied
+ * by the instruction.  If necessary, the width can be derived from
+ * the first char of obj->clazz->descriptor.
+ */
+struct ArrayObject  {
+    struct Object o;
+    /* number of elements; immutable after init */
+    u4              length;
+
+    /*
+     * Array contents; actual size is (length * sizeof(type)).  This is
+     * declared as u8 so that the compiler inserts any necessary padding
+     * (e.g. for EABI); the actual allocation may be smaller than 8 bytes.
+     */
+    u8              contents[1];
+}ArrayObject;
+
+
+
 typedef void (*DalvikNativeFunc)(const u4* args, jvalue* pResult);
 
 typedef struct DalvikNativeMethod_t {
@@ -245,6 +272,251 @@ typedef struct DalvikNativeMethod_t {
     const char* signature;
     DalvikNativeFunc  fnPtr;
 } DalvikNativeMethod;
+
+
+typedef struct InterpSaveState {
+    const u2*       pc;         // Dalvik PC
+    u4*             curFrame;   // Dalvik frame pointer
+    const Method    *method;    // Method being executed
+    //DvmDex*         methodClassDex;
+    void*         methodClassDex;
+    JValue          retval;
+    void*           bailPtr;
+#if defined(WITH_TRACKREF_CHECKS)
+    int             debugTrackedRefStart;
+#else
+    int             unused;        // Keep struct size constant
+#endif
+    struct InterpSaveState* prev;  // To follow nested activations
+}InterpSaveState;
+
+
+
+/*
+ * Interpreter control struction.  Packed into a long long to enable
+ * atomic updates.
+ */
+union InterpBreak {
+    volatile int64_t   all;
+    struct {
+        uint16_t   subMode;
+        uint8_t    breakFlags;
+        int8_t     unused;   /* for future expansion */
+#ifndef DVM_NO_ASM_INTERP
+        void* curHandlerTable;
+#else
+        int32_t    unused1;
+#endif
+    } ctl;
+}typedef InterpBreak;
+
+
+/*
+ * Current status; these map to JDWP constants, so don't rearrange them.
+ * (If you do alter this, update the strings in dvmDumpThread and the
+ * conversion table in VMThread.java.)
+ *
+ * Note that "suspended" is orthogonal to these values (so says JDWP).
+ */
+enum ThreadStatus {
+    THREAD_UNDEFINED    = -1,       /* makes enum compatible with int32_t */
+
+    /* these match up with JDWP values */
+    THREAD_ZOMBIE       = 0,        /* TERMINATED */
+    THREAD_RUNNING      = 1,        /* RUNNABLE or running now */
+    THREAD_TIMED_WAIT   = 2,        /* TIMED_WAITING in Object.wait() */
+    THREAD_MONITOR      = 3,        /* BLOCKED on a monitor */
+    THREAD_WAIT         = 4,        /* WAITING in Object.wait() */
+    /* non-JDWP states */
+    THREAD_INITIALIZING = 5,        /* allocated, not yet running */
+    THREAD_STARTING     = 6,        /* started, not yet on thread list */
+    THREAD_NATIVE       = 7,        /* off in a JNI native method */
+    THREAD_VMWAIT       = 8,        /* waiting on a VM resource */
+    THREAD_SUSPENDED    = 9,        /* suspended, usually by GC or debugger */
+}typedef ThreadStatus;
+
+
+
+/*
+ * Our per-thread data.
+ *
+ * These are allocated on the system heap.
+ */
+typedef struct Thread {
+    /*
+     * Interpreter state which must be preserved across nested
+     * interpreter invocations (via JNI callbacks).  Must be the first
+     * element in Thread.
+     */
+    InterpSaveState interpSave;
+
+    /* small unique integer; useful for "thin" locks and debug messages */
+    u4          threadId;
+
+    /*
+     * Begin interpreter state which does not need to be preserved, but should
+     * be located towards the beginning of the Thread structure for
+     * efficiency.
+     */
+
+    /*
+     * interpBreak contains info about the interpreter mode, as well as
+     * a count of the number of times the thread has been suspended.  When
+     * the count drops to zero, the thread resumes.
+     */
+    InterpBreak interpBreak;
+    /*
+     * "dbgSuspendCount" is the portion of the suspend count that the
+     * debugger is responsible for.  This has to be tracked separately so
+     * that we can recover correctly if the debugger abruptly disconnects
+     * (suspendCount -= dbgSuspendCount).  The debugger should not be able
+     * to resume GC-suspended threads, because we ignore the debugger while
+     * a GC is in progress.
+     *
+     * Both of these are guarded by gDvm.threadSuspendCountLock.
+     *
+     * Note the non-debug component will rarely be other than 1 or 0 -- (not
+     * sure it's even possible with the way mutexes are currently used.)
+     */
+
+    int suspendCount;
+    int dbgSuspendCount;
+
+    u1*         cardTable;
+
+    /* current limit of stack; flexes for StackOverflowError */
+    const u1*   interpStackEnd;
+
+    /* FP of bottom-most (currently executing) stack frame on interp stack */
+    void*       XcurFrame;
+    /* current exception, or NULL if nothing pending */
+    struct Object*     exception;
+
+    bool        debugIsMethodEntry;
+    /* interpreter stack size; our stacks are fixed-length */
+    int         interpStackSize;
+    bool        stackOverflowed;
+
+    /* thread handle, as reported by pthread_self() */
+    pthread_t   handle;
+
+    /* Assembly interpreter handler tables */
+#ifndef DVM_NO_ASM_INTERP
+    void*       mainHandlerTable;   // Table of actual instruction handler
+    void*       altHandlerTable;    // Table of breakout handlers
+#else
+    void*       unused0;            // Consume space to keep offsets
+    void*       unused1;            //   the same between builds with
+#endif
+
+    /*
+     * singleStepCount is a countdown timer used with the breakFlag
+     * kInterpSingleStep.  If kInterpSingleStep is set in breakFlags,
+     * singleStepCount will decremented each instruction execution.
+     * Once it reaches zero, the kInterpSingleStep flag in breakFlags
+     * will be cleared.  This can be used to temporarily prevent
+     * execution from re-entering JIT'd code or force inter-instruction
+     * checks by delaying the reset of curHandlerTable to mainHandlerTable.
+     */
+    int         singleStepCount;
+
+
+    /* JNI local reference tracking */
+   // IndirectRefTable jniLocalRefTable;
+
+    /*
+     * Thread's current status.  Can only be changed by the thread itself
+     * (i.e. don't mess with this from other threads).
+     */
+    volatile ThreadStatus status;
+
+    /* thread ID, only useful under Linux */
+    pid_t       systemTid;
+
+    /* start (high addr) of interp stack (subtract size to get malloc addr) */
+    u1*         interpStackStart;
+
+    /* the java/lang/Thread that we are associated with */
+    struct Object*     threadObj;
+
+    /* the JNIEnv pointer associated with this thread */
+    JNIEnv*     jniEnv;
+
+    /* internal reference tracking */
+   // ReferenceTable  internalLocalRefTable;
+
+
+    /* JNI native monitor reference tracking (initialized on first use) */
+   // ReferenceTable  jniMonitorRefTable;
+
+    /* hack to make JNI_OnLoad work right */
+    struct Object*     classLoaderOverride;
+
+    /* mutex to guard the interrupted and the waitMonitor members */
+    pthread_mutex_t    waitMutex;
+
+    /* pointer to the monitor lock we're currently waiting on */
+    /* guarded by waitMutex */
+    /* TODO: consider changing this to Object* for better JDWP interaction */
+  //  Monitor*    waitMonitor;
+
+    /* thread "interrupted" status; stays raised until queried or thrown */
+    /* guarded by waitMutex */
+    bool        interrupted;
+
+    /* links to the next thread in the wait set this thread is part of */
+    struct Thread*     waitNext;
+
+    /* object to sleep on while we are waiting for a monitor */
+    pthread_cond_t     waitCond;
+
+    /*
+     * Set to true when the thread is in the process of throwing an
+     * OutOfMemoryError.
+     */
+    bool        throwingOOME;
+
+    /* links to rest of thread list; grab global lock before traversing */
+    struct Thread* prev;
+    struct Thread* next;
+
+    /* used by threadExitCheck when a thread exits without detaching */
+    int         threadExitCheckCount;
+
+    /* JDWP invoke-during-breakpoint support */
+  //  DebugInvokeReq  invokeReq;
+
+    /* base time for per-thread CPU timing (used by method profiling) */
+    bool        cpuClockBaseSet;
+    u8          cpuClockBase;
+
+    /* previous stack trace sample and length (used by sampling profiler) */
+    const Method** stackTraceSample;
+    size_t stackTraceSampleLength;
+
+    /* memory allocation profiling state */
+ //   AllocProfState allocProf;
+
+#ifdef WITH_JNI_STACK_CHECK
+    u4          stackCrc;
+#endif
+
+#if WITH_EXTRA_GC_CHECKS > 1
+    /* PC, saved on every instruction; redundant with StackSaveArea */
+    const u2*   currentPc2;
+#endif
+
+    /* Safepoint callback state */
+    pthread_mutex_t   callbackMutex;
+ //   SafePointCallback callback;
+    void*             callbackArg;
+
+#if defined(ARCH_IA32) && defined(WITH_JIT)
+    u4 spillRegion[MAX_SPILL_JIT_IA];
+#endif
+}Thread;
+
+
 
 typedef void* (*dvmCreateStringFromCstr_func)(const char* utf8Str, int len, int allocFlags);
 typedef void* (*dvmGetSystemClassLoader_func)(void);
@@ -256,7 +528,7 @@ typedef void* (*dvmFindVirtualMethodHierByDescriptor_func)(void*,const char*, co
 typedef void* (*dvmFindDirectMethodByDescriptor_func)(void*,const char*, const char*);
 typedef void* (*dvmIsStaticMethod_func)(void*);
 typedef void* (*dvmAllocObject_func)(void*, unsigned int);
-typedef void* (*dvmCallMethodV_func)(void*,void*,void*,void*,va_list);
+typedef void* (*dvmCallMethodV_func)(void*,void*,void*,void*,void*,va_list);
 typedef void* (*dvmCallMethodA_func)(void*,void*,void*,bool,void*,jvalue*);
 typedef void* (*dvmAddToReferenceTable_func)(void*,void*);
 typedef void (*dvmDumpAllClasses_func)(int);
@@ -293,6 +565,8 @@ typedef void* (*dvmFindDirectMethodHier_func)(void*, const char*, void*);
 typedef void (*dvmDumpJniReferenceTablesv_func)();
 typedef void* (*dvmGetCallerFP_func)(void*);
 typedef void* (*dvmGetCallerClass_func)(void*);
+typedef void* (*dvmGetCaller2Class_func)(void*);
+typedef void* (*dvmGetCaller3Class_func)(void*);
 typedef void (*dvmSuspendThread_func)(void*);
 typedef void (*dvmResumeThread_func)(void *);
 typedef void (*dvmSuspendSelf_func)();
@@ -303,6 +577,20 @@ typedef void (*dvmResumeAllThreads_func)(void *);
 typedef void* (*dvmAttachCurrentThread_func)(void *,  void*);
 typedef void* (*dvmMterpPrintMethod_func)(void*);
 typedef void (*dvmDumpAllThreadsb_func)();
+
+
+typedef void (*DalvikNativeFuncToHook)(struct DalvikNativeMethodToHook*, ...);
+
+typedef struct DalvikNativeMethodToHook_t {
+    const char* name;
+    const char* signature;
+    const size_t args_size;
+    DalvikNativeFuncToHook  fnPtr;
+} DalvikNativeMethodToHook;
+
+struct my_dexstuff_t {
+    DalvikNativeMethodToHook* amethod;
+};
 
 struct dexstuff_t
 {	
@@ -337,6 +625,8 @@ struct dexstuff_t
     dvmFindDirectMethod_func dvmFindDirectMethod_fnPtr;
     dvmDumpJniReferenceTablesv_func  dvmDumpJniReferenceTablesv_fnPtr;
     dvmGetCallerClass_func dvmGetCallerClass_fnPtr;
+    dvmGetCaller2Class_func dvmGetCaller2Class_fnPtr;
+    dvmGetCaller3Class_func dvmGetCaller3Class_fnPtr;
     dvmGetCallerFP_func dvmGetCallerFP_fnPtr;
     dvmSuspendThread_func dvmSuspendThread_fnPtr;
     dvmResumeThread_func  dvmResumeThread_fnPtr;
@@ -363,6 +653,8 @@ struct dexstuff_t
 	
 	DalvikNativeMethod *dvm_dalvik_system_DexFile;
 	DalvikNativeMethod *dvm_java_lang_Class;
+    DalvikNativeMethod *dvm_dalvik_system_VMStack;
+    DalvikNativeMethod *dvm_java_lang_VMClassLoader;
 		
 	void *gDvm; // dvm globals !
 	
@@ -392,7 +684,7 @@ enum SuspendCause {
 void dexstuff_resolv_dvm(struct dexstuff_t *d);
 int dexstuff_loaddex(struct dexstuff_t *d, char *path);
 void* dexstuff_defineclass(struct dexstuff_t *d, char *name, int cookie);
-void* getSelf(struct dexstuff_t *d);
+Thread* getSelf(struct dexstuff_t *d);
 void dalvik_dump_class(struct dexstuff_t *dex, char *clname);
 int is_static(struct dexstuff_t *, Method *);
 void * get_method(struct dexstuff_t *, char* , char * );

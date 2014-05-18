@@ -1,3 +1,8 @@
+/*******************************************************************************
+ * Advanced Dalvik Dynamic Instrumentation Android Library
+ * 
+ * (c) 2014, 
+ ******************************************************************************/
 package org.sid.addi.core;
 
 import android.util.Base64;
@@ -61,5 +66,8 @@ public class StringHelper {
 		else
 			out = _byteArrayToReadableStr(input);
 		return out;
+	}
+	public  String _dalvikToDot(String s){
+		return s.replaceAll("/", ".");
 	}
 }
