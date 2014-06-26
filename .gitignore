@@ -95,3 +95,4 @@ $RECYCLE.BIN/
 .directory
 
 dalvikhook/obj
+*.cache
