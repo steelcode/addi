@@ -93,7 +93,8 @@ typedef union JValue {
     s8      j;
     float   f;
     double  d;
-    void*   l;
+    struct Object*   l;
+    //void* l;
 } JValue;
 
 /*

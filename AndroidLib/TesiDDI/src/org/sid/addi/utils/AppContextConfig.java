@@ -112,26 +112,8 @@ public class AppContextConfig extends DEXHook{
 				   res = app.getApplicationContext();
 				   setContext(app.getApplicationContext());
 				   set_appinfo(app.getApplicationInfo());
-				   _packageName = _appinfo.packageName;
-				   /**
-				   System.out.println("------------------ "+ app.getPackageName());
-				   PackageManager p = app.getApplicationContext().getPackageManager(); 					
-				   try {
-					PackageInfo pi = p.getPackageInfo(app.getPackageName(), PackageManager.GET_PERMISSIONS);
-					   String[] rp = pi.requestedPermissions;
-					   if(rp != null){
-					         for (int i = 0; i < rp.length; i++) {
-					             Log.i("Hooks", rp[i]);
-					          }
-					   }
-					   else{
-						   Log.i("Hooks", "PERMISSION NULL!!!!!!!!!!!!!!!!!!!!");
-					   }
-				} catch (NameNotFoundException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-				*/				   
+				   setPackageName(_appinfo.packageName);	
+				   Log.i("Hooks","++++++++++++++++++++++++++++++++ PRESO CONTEXT ++++++++++++++++++++++++++++++++++++++++");
 			    }
 			    else{
 			    	System.out.println("getcon == null :-(");

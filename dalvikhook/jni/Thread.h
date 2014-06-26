@@ -72,6 +72,18 @@ struct InterpSaveState {
     struct InterpSaveState* prev;  // To follow nested activations
 } __attribute__ ((__packed__));
 
+/* args for internal thread creation */
+struct InternalStartArgs {
+    /* inputs */
+    InternalThreadStart func;
+    void*       funcArg;
+    char*       name;
+    struct Object*     group;
+    bool        isDaemon;
+    /* result */
+    volatile Thread** pThread;
+    volatile int*     pCreateStatus;
+};
 
 /*
  * Our per-thread data.

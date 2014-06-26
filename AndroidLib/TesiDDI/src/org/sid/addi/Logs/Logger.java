@@ -84,12 +84,12 @@ public class Logger extends LogToDB{
 			_logDBReturnValue(name, "" + value);
 	}
 	
-	public void logBasicInfo() {
-		/*
-		_log("### "+ _config.getCategory()+" ### " + 
-				ApplicationConfig.getPackageName() + 
-				" - " + _config.getClassName() + "->" 
-				+ _config.getMethodName() + "()\n");
-				*/
+	public void logBasicInfo(DEXHook dexh) {
+		
+		_log("### "+ "CATEGORY"+" ### " + 
+				dexh.get_className()+ 
+				" - " + dexh.get_className() + "->" 
+				+ dexh.get_methodName() + "()\n");
+				
 	}
 }

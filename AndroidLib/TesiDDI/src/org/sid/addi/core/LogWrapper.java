@@ -50,8 +50,8 @@ private static Logger _l = new Logger();
 		_l.logReturnValue(name, "" + value);
 	}
 	
-	protected static void _logBasicInfo() {
-		_l.logBasicInfo();
+	protected static void _logBasicInfo(DEXHook  dexh) {
+		_l.logBasicInfo(dexh);
 	}
 	
 	protected static String _getFullTraces() {

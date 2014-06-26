@@ -1,6 +1,7 @@
 package org.sid.addi.core;
 
 import org.sid.addi.Logs.LoggerConfig;
+import org.sid.addi.utils.AppContextConfig;
 
 import android.util.Log;
 
@@ -31,6 +32,9 @@ public class DEXHook extends LogWrapper {
 	public void set_methodName(String _methodName) {
 		this._methodName = _methodName;
 	}
+	public String get_packageName(){
+		return _packageName;
+	}
 
 	protected DEXHook(){}
 	public void init(DalvikHook d){
@@ -39,8 +43,10 @@ public class DEXHook extends LogWrapper {
 		_methodName = d.get_method_name();
 		_hash = d.get_hashvalue();
 		_thiz = d.getThiz();
-		Log.i(_TAG, "DEXHOOK INIT SONO "+_className+" nome metodo: "+_methodName);
+		_packageName = AppContextConfig.getPackageName();
+		Log.i(_TAG, "DEXHOOK INIT SONO "+_className+" nome metodo: "+_methodName+" con hash: "+_hash);
 		_logInit(d);
+		Log.i(_TAG,"FINE DEXHOOKINIT");
 		
 	}
 

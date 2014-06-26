@@ -43,9 +43,9 @@ public class LoggerConfig extends StringHelper{
 	protected boolean _enableDB = true;
 	
 	// this can be enabled via the _config file
-	protected boolean _stackTraces = false;
+	protected boolean _stackTraces = true;
 	
 	// change this value to get full traces
-	protected boolean _fullTraces = false;
+	protected boolean _fullTraces = true;
 	
 }

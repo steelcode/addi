@@ -10,10 +10,10 @@
 typedef struct nodo_lista *lista;
 struct nodo_lista {
 	void * dh;
-	char clname[256];
-	char meth_name[256];
-	char meth_sig[256];
-	char hashvalue[512];
+	char clname[1024];
+	char meth_name[1024];
+	char meth_sig[1024];
+	char hashvalue[2048];
 	lista next;
 };
 

@@ -64,16 +64,15 @@ public class LogToDB extends LogTraces {
 			if(db == null)
 				Log.i(_TAG, "!!!!!!!!!!!!!!DB NULL");
 			db.open();
-			
 			db.createRow(
 					//_config.getType(),
 					//_config.getSubType(),
 					//_config.getClassName(), 
 					//_config.getMethodName(),
 					"MYTYPE",
+					"SUBTYPE",
 					dexh.get_className(),
 					dexh.get_methodName(),
-					"SIGNATURE",
 					_logCreatePlistArgs(), 
 					//logType,
 					(logType.equalsIgnoreCase("W") ? _notes : ""),

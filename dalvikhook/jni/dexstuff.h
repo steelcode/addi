@@ -19,7 +19,7 @@
 #include <pthread.h>
 
 #include "Common.h"
-
+#include "dexfilestuff.h"
 
 
 #ifndef __dexstuff_h__
@@ -31,22 +31,53 @@
 struct StringObject;
 struct ArrayObject;
 
-typedef struct DexProto {
-    u4* dexFile;     /* file the idx refers to */
-    u4 protoIdx;                /* index into proto_ids table of dexFile */
-} DexProto;
-
-
 typedef void (*DalvikBridgeFunc)(const u4* args, void* pResult,
     const void* method, void* self);
 
+
+/*
+ * Generic field header.  We pass this around when we want a generic Field
+ * pointer (e.g. for reflection stuff).  Testing the accessFlags for
+ * ACC_STATIC allows a proper up-cast.
+ */
 struct Field {
-   void*    clazz;          /* class in which the field is declared */
+    struct ClassObject*    clazz;          /* class in which the field is declared */
     const char*     name;
     const char*     signature;      /* e.g. "I", "[C", "Landroid/os/Debug;" */
     u4              accessFlags;
-};
+}Field;
 
+/*
+ * Static field.
+ */
+struct StaticField {
+    struct Field f; 
+    JValue          value;          /* initially set from DEX for primitives */
+}StaticField;
+
+/*
+ * Instance field.
+ */
+struct InstField {
+    struct Field f; 
+    /*
+     * This field indicates the byte offset from the beginning of the
+     * (Object *) to the actual instance data; e.g., byteOffset==0 is
+     * the same as the object pointer (bug!), and byteOffset==4 is 4
+     * bytes farther.
+     */
+    int             byteOffset;
+};
+struct InterfaceEntry {
+    /* pointer to interface class */
+    struct ClassObject*    clazz;
+
+    /*
+     * Index into array of vtable offsets.  This points into the ifviPool,
+     * which holds the vtables for all interfaces declared by this class.
+     */
+    int*            methodIndexArray;
+};
 
 struct Method;
 struct ClassObject;
@@ -82,7 +113,7 @@ enum PrimitiveType {
     PRIM_LONG       = 7,
     PRIM_FLOAT      = 8,
     PRIM_DOUBLE     = 9,
-} typedef PrimitiveType;
+}typedef PrimitiveType;
 
 enum ClassStatus {
     CLASS_ERROR         = -1,
@@ -117,7 +148,7 @@ struct ClassObject {
 
     /* DexFile from which we came; needed to resolve constant pool entries */
     /* (will be NULL for VM-generated, e.g. arrays and primitive classes) */
-    void*         pDvmDex;
+    struct DvmDex*         pDvmDex;
 
     /* state of class initialization */
     ClassStatus     status;
@@ -170,15 +201,74 @@ struct ClassObject {
     int             vtableCount;
     struct Method**        vtable;
 
+    /*
+     * Interface table (iftable), one entry per interface supported by
+     * this class.  That means one entry for each interface we support
+     * directly, indirectly via superclass, or indirectly via
+     * superinterface.  This will be null if neither we nor our superclass
+     * implement any interfaces.
+     *
+     * Why we need this: given "class Foo implements Face", declare
+     * "Face faceObj = new Foo()".  Invoke faceObj.blah(), where "blah" is
+     * part of the Face interface.  We can't easily use a single vtable.
+     *
+     * For every interface a concrete class implements, we create a list of
+     * virtualMethod indices for the methods in the interface.
+     */
+    int             iftableCount;
+    struct InterfaceEntry* iftable;
+
+    /*
+     * The interface vtable indices for iftable get stored here.  By placing
+     * them all in a single pool for each class that implements interfaces,
+     * we decrease the number of allocations.
+     */
+    int             ifviPoolCount;
+    int*            ifviPool;
+
+    /* instance fields
+     *
+     * These describe the layout of the contents of a DataObject-compatible
+     * Object.  Note that only the fields directly defined by this class
+     * are listed in ifields;  fields defined by a superclass are listed
+     * in the superclass's ClassObject.ifields.
+     *
+     * All instance fields that refer to objects are guaranteed to be
+     * at the beginning of the field list.  ifieldRefCount specifies
+     * the number of reference fields.
+     */
+    int             ifieldCount;
+    int             ifieldRefCount; // number of fields that are object refs
+    struct InstField*      ifields;
+
+    /* bitmap of offsets of ifields */
+    u4 refOffsets;
+
+    /* source file name, if known */
+    const char*     sourceFile;
+
+    /* static fields */
+    int             sfieldCount;
+    struct StaticField     sfields[0]; /* MUST be last item */
+
 };
 	
+/*
+ * Data objects have an Object header followed by their instance data.
+ */
+struct DataObject  {
+    struct Object o;
+    /* variable #of u4 slots; u8 uses 2 slots */
+    u4              instanceData[1];
+};
+    
 typedef struct Method {
-	struct ClassObject *clazz;
-	u4 a; // accessflags
-	
-	u2             methodIndex;
-	
-	u2              registersSize;  /* ins + locals */
+    struct ClassObject *clazz;
+    u4 a; // accessflags
+    
+    u2             methodIndex;
+    
+    u2              registersSize;  /* ins + locals */
     u2              outsSize;
     u2              insSize;
 
@@ -206,8 +296,8 @@ typedef struct Method {
 
     /* the actual code */
     const u2*       insns;      
-	
-	 /* cached JNI argument and return-type hints */
+    
+     /* cached JNI argument and return-type hints */
     int             jniArgInfo;
 
     /*
@@ -237,7 +327,7 @@ typedef struct Method {
      */
     bool noRef;
 
-	
+    
 } Method;
 
 
@@ -277,7 +367,7 @@ typedef struct DalvikNativeMethod_t {
 typedef struct InterpSaveState {
     const u2*       pc;         // Dalvik PC
     u4*             curFrame;   // Dalvik frame pointer
-    const Method    *method;    // Method being executed
+    const struct Method    *method;    // Method being executed
     //DvmDex*         methodClassDex;
     void*         methodClassDex;
     JValue          retval;
@@ -335,6 +425,20 @@ enum ThreadStatus {
     THREAD_SUSPENDED    = 9,        /* suspended, usually by GC or debugger */
 }typedef ThreadStatus;
 
+/* start point for an internal thread; mimics pthread args */
+typedef void* (*InternalThreadStart)(void* arg);
+/* args for internal thread creation */
+struct InternalStartArgs {
+    /* inputs */
+    InternalThreadStart func;
+    void*       funcArg;
+    char*       name;
+    struct Object*     group;
+    bool        isDaemon;
+    /* result */
+    volatile struct Thread** pThread;
+    volatile int*     pCreateStatus;
+};
 
 
 /*
@@ -491,7 +595,7 @@ typedef struct Thread {
     u8          cpuClockBase;
 
     /* previous stack trace sample and length (used by sampling profiler) */
-    const Method** stackTraceSample;
+    const struct Method** stackTraceSample;
     size_t stackTraceSampleLength;
 
     /* memory allocation profiling state */
@@ -518,6 +622,7 @@ typedef struct Thread {
 
 
 
+
 typedef void* (*dvmCreateStringFromCstr_func)(const char* utf8Str, int len, int allocFlags);
 typedef void* (*dvmGetSystemClassLoader_func)(void);
 typedef void* (*dvmThreadSelf_func)(void);
@@ -530,13 +635,14 @@ typedef void* (*dvmIsStaticMethod_func)(void*);
 typedef void* (*dvmAllocObject_func)(void*, unsigned int);
 typedef void* (*dvmCallMethodV_func)(void*,void*,void*,void*,void*,va_list);
 typedef void* (*dvmCallMethodA_func)(void*,void*,void*,bool,void*,jvalue*);
+typedef void* (*dvmCallMethod_func)(void*,void*,void*,bool,void*,...);
 typedef void* (*dvmAddToReferenceTable_func)(void*,void*);
 typedef void (*dvmDumpAllClasses_func)(int);
 typedef void* (*dvmFindLoadedClass_func)(const char*);
 
 typedef void (*dvmUseJNIBridge_func)(void*, void*);
 
-typedef void* (*dvmDecodeIndirectRef_func)(void*,void*);
+typedef void* (*dvmDecodeIndirectRef_func)(Thread*,jobject);
 
 typedef void* (*dvmGetCurrentJNIMethod_func)();
 
@@ -559,7 +665,7 @@ typedef int (*dvmInstanceof_func)(void*,void*);
 typedef void* (*dvmGetJNIEnvForThreadv_func)();
 typedef void* (*dexProtoCopyMethodDescriptor_func)();
 typedef void* (*dvmFindDirectMethodHierByDescriptor_func)(void*, const char*,  const char*);
-typedef void* (*dvmGetVirtualizedMethod_func)(void*, const Method*);
+typedef void* (*dvmGetVirtualizedMethod_func)(void*, const struct Method*);
 typedef void* (*dvmFindDirectMethod_func)(void*, const char*, void*);
 typedef void* (*dvmFindDirectMethodHier_func)(void*, const char*, void*);
 typedef void (*dvmDumpJniReferenceTablesv_func)();
@@ -577,7 +683,37 @@ typedef void (*dvmResumeAllThreads_func)(void *);
 typedef void* (*dvmAttachCurrentThread_func)(void *,  void*);
 typedef void* (*dvmMterpPrintMethod_func)(void*);
 typedef void (*dvmDumpAllThreadsb_func)();
-
+typedef void* (*dvmDexFileOpenFromFd_func)(void*, void**);
+typedef void* (*sysChangeMapAccess_func)(void*,void*,void*,void*);
+typedef  void* (*dvmDexChangeDex1_func)(void* , void*, void*);
+typedef void* (*dvmFindStaticField_func)(void*,void*,void*);
+typedef void*(*dvmInvokeMethod_func)(void*,void*,void*,void*,void*,bool);
+typedef void* (*dvmCreateCstrFromString_func)(void*);
+typedef void (*dvmDumpObject_func)(void*);
+typedef void* (*dvmGetStaticFieldObject_func)(void*);
+typedef void* (*dvmFindClass_func)(void*,void*);
+typedef void (*dvmFreeClassInnards_func)(void*);
+typedef void* (*dvmComputeMethodArgsSize_func)(void*);
+typedef void* (*dvmDexGetResolvedMethod_func)(void*,void*);
+typedef void* (*dexReadAndVerifyClassData_func)(void*,void*);
+typedef void*  (*dvmAllocArrayByClass_func)(struct ClassObject*  arrayClass, size_t length, int allocFlags);
+typedef void* (*dvmFindArrayClass_func)(char* desc, void* loader);
+typedef void* (*dvmBoxPrimitive_func)(JValue, struct ClassObject*);
+typedef void* (*dvmFindPrimitiveClass_func)(void*);
+typedef void (*dvmReleaseTrackedAlloc_func)(struct Object*, struct Thread*);
+typedef void (*dvmWriteBarrierArray_func)(void*, void*, void*);
+typedef void (*dvmLogExceptionStackTrace_func)();
+typedef bool (*dvmCheckException_func)(void*);
+typedef bool (*dvmIsNativeMethod_func)(void*);
+typedef void* (*dvmFindSystemClass_func)(void*);
+typedef void* (*dvmGetBoxedTypeDescriptor_func)(PrimitiveType);
+typedef void* (*dvmGetBoxedReturnType_func)(struct Method*);
+typedef void* (*dvmUnboxPrimitive_func)(struct Object*, struct ClassObject*, JValue*);
+typedef void* (*dvmIsPrimitiveClass_func)(struct ClassObject*);
+typedef int (*dvmConvertPrimitiveValue_func)(PrimitiveType, PrimitiveType, s4*, s4*);
+typedef void* (*dvmCreateInternalThread_func)(pthread_t*,char*,InternalThreadStart, void*);
+typedef void* (*dvmMalloc_func)(size_t,int);
+typedef void* (*dvmLinearAlloc_func)(void*, size_t);
 
 typedef void (*DalvikNativeFuncToHook)(struct DalvikNativeMethodToHook*, ...);
 
@@ -608,6 +744,7 @@ struct dexstuff_t
 	dvmAllocObject_func dvmAllocObject_fnPtr;
 	dvmCallMethodV_func dvmCallMethodV_fnPtr;
 	dvmCallMethodA_func dvmCallMethodA_fnPtr;
+    dvmCallMethod_func dvmCallMethod_fnPtr;
 	dvmAddToReferenceTable_func dvmAddToReferenceTable_fnPtr;
 	dvmDecodeIndirectRef_func dvmDecodeIndirectRef_fnPtr;
 	dvmUseJNIBridge_func dvmUseJNIBridge_fnPtr;
@@ -637,6 +774,37 @@ struct dexstuff_t
     dvmSuspendAllThreads_func dvmSuspendAllThreads_fnPtr;
     dvmAttachCurrentThread_func dvmAttachCurrentThread_fnPtr;
 	dvmMterpPrintMethod_func dvmMterpPrintMethod_fnPtr;
+    dvmDexFileOpenFromFd_func dvmDexFileOpenFromFd_fnPtr;
+    sysChangeMapAccess_func sysChangeMapAccess_fnPtr;
+    dvmDexChangeDex1_func  dvmDexChangeDex1_fnPtr;
+    dvmFindStaticField_func dvmFindStaticField_fnPtr;
+    dvmInvokeMethod_func dvmInvokeMethod_fnPtr;
+    dvmCreateCstrFromString_func    dvmCreateCstrFromString_fnPtr;
+    dvmDumpObject_func dvmDumpObject_fnPtr;
+    dvmGetStaticFieldObject_func dvmGetStaticFieldObject_fnPtr;
+    dvmFindClass_func dvmFindClass_fnPtr;
+    dvmFreeClassInnards_func  dvmFreeClassInnards_fnPtr;
+    dvmComputeMethodArgsSize_func dvmComputeMethodArgsSize_fnPtr;
+    dvmDexGetResolvedMethod_func dvmDexGetResolvedMethod_fnPtr;
+    dexReadAndVerifyClassData_func dexReadAndVerifyClassData_fnPtr;
+    dvmAllocArrayByClass_func dvmAllocArrayByClass_fnPtr;
+    dvmFindArrayClass_func dvmFindArrayClass_fnPtr;
+    dvmBoxPrimitive_func dvmBoxPrimitive_fnPtr;
+    dvmFindPrimitiveClass_func dvmFindPrimitiveClass_fnPtr;
+    dvmReleaseTrackedAlloc_func dvmReleaseTrackedAlloc_fnPtr;
+    dvmWriteBarrierArray_func dvmWriteBarrierArray_fnPtr;
+    dvmLogExceptionStackTrace_func dvmLogExceptionStackTrace_fnPtr;
+    dvmCheckException_func dvmCheckException_fnPtr;
+    dvmIsNativeMethod_func dvmIsNativeMethod_fnPtr;
+    dvmFindSystemClass_func dvmFindSystemClass_fnPtr;
+    dvmGetBoxedTypeDescriptor_func dvmGetBoxedTypeDescriptor_fnPtr;
+    dvmGetBoxedReturnType_func dvmGetBoxedReturnType_fnPtr;
+    dvmUnboxPrimitive_func dvmUnboxPrimitive_fnPtr;
+    dvmIsPrimitiveClass_func dvmIsPrimitiveClass_fnPtr;
+    dvmConvertPrimitiveValue_func dvmConvertPrimitiveValue_fnPtr;
+    dvmCreateInternalThread_func dvmCreateInternalThread_fnPtr;
+    dvmMalloc_func dvmMalloc_fnPtr;
+    dvmLinearAlloc_func dvmLinearAlloc_fnPtr;
 
 	dvmGetCurrentJNIMethod_func dvmGetCurrentJNIMethod_fnPtr;
 	dvmLinearSetReadWrite_func dvmLinearSetReadWrite_fnPtr;
@@ -682,10 +850,10 @@ enum SuspendCause {
 #endif
 
 void dexstuff_resolv_dvm(struct dexstuff_t *d);
-int dexstuff_loaddex(struct dexstuff_t *d, char *path);
+void* dexstuff_loaddex(struct dexstuff_t *d, char *path);
 void* dexstuff_defineclass(struct dexstuff_t *d, char *name, int cookie);
 Thread* getSelf(struct dexstuff_t *d);
 void dalvik_dump_class(struct dexstuff_t *dex, char *clname);
-int is_static(struct dexstuff_t *, Method *);
+int is_static(struct dexstuff_t *, struct Method *);
 void * get_method(struct dexstuff_t *, char* , char * );
 void * get_jni_for_thread(struct dexstuff_t *);

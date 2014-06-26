@@ -18,6 +18,30 @@
 #include "log.h"
 #include "Misc.h"
 
+/*
+ * Return a newly-allocated string in which all occurrences of '.' have
+ * been changed to '/'.  If we find a '/' in the original string, NULL
+ * is returned to avoid ambiguity.
+ */
+char* dvmDotToSlash(char* str)
+{
+    char* newStr = strdup(str);
+    char* cp = newStr;
+
+    if (newStr == NULL)
+        return NULL;
+
+    while (*cp != '\0') {
+        if (*cp == '/') {
+            return NULL;
+        }
+        if (*cp == '.')
+            *cp = '/';
+        cp++;
+    }
+
+    return newStr;
+}
 
 void* get_caller_class(JNIEnv *env, jobject obj, char *c){
 
@@ -65,7 +89,6 @@ char* parse_signature(char *src){
 	return c;
 }
 
-
 void parse_descriptor(char *desc, char *res){
 	log("XXX5 ricevuto: %s\n", desc)
 	int i =0;
@@ -87,6 +110,7 @@ void parse_descriptor(char *desc, char *res){
 	}
 	res[i] = '\0';
 }
+
 void printStackTrace(JNIEnv *env) {
 char *buf;
 log("###################################################################################printStackTrace{\n");

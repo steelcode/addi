@@ -19,22 +19,19 @@ public class HashHook extends DEXHook{
 	//chiamato su update()
 	public void hook_hash(Object... args) {
 		Log.i(_TAG, "DENTRO HOOK HASH!! BBBB");
-		
+		String _out = "";
 	    StackTraceElement[] ste = Thread.currentThread().getStackTrace();
-	   // Log.i(_TAG,"INCROCIA LE DITA");
 	    
 	    // this is called within apps and is super noisy so not displaying it
 	    if (ste[7].toString().contains("com.crashlytics."))
 	    	return;
 
-	   // Log.i(_TAG,"INCROCIA LE DITA1");
 	    StringBuilder sb = new StringBuilder();
 	    for (StackTraceElement element : ste) {
 	        sb.append(element.toString());
 	        sb.append("\n");
 	    }
-	 //   Log.i(_TAG,"INCROCIA LE DITA2");
-	    Log.i(_TAG,sb.toString());
+	    //Log.i(_TAG,sb.toString());
 	    
 		if (args[0] != null) {
 			Log.i(_TAG, "DENTRO HOOK HASH!! ARGS[0] NOT NULL");
@@ -58,7 +55,7 @@ public class HashHook extends DEXHook{
 				   	         sb1.append(Integer.toString((byteData[i] & 0xff) + 0x100, 16).substring(1));
 				   	        }
 				   	        */
-				   			
+				   			/*
                             Class<?> cls = Class.forName("java.security.MessageDigest");
                             MessageDigest obj = (MessageDigest) _thiz;
                          
@@ -78,6 +75,7 @@ public class HashHook extends DEXHook{
                             s_output = Base64.encodeToString(sb2.toString().getBytes(), Base64.DEFAULT);
                             //s_output = _getReadableByteArr(output);
                             Log.i(_TAG, "DENTRO HOOK HASH finito mie cose");
+                            */
                     }
                     catch (Exception e) {
                     	Log.w(_TAG_ERROR, "Error in Hash func: " + e);
@@ -89,6 +87,7 @@ public class HashHook extends DEXHook{
 
             // use reflection to call a method from this instance
             String algoName = null;
+            /**
             try {
                     Class<?> cls = Class.forName("java.security.MessageDigest");
                     Object obj =_thiz;
@@ -99,12 +98,12 @@ public class HashHook extends DEXHook{
             catch (Exception e) {
                     algoName = "error: " + e;        
             }
-            //Log.i(_TAG,"HO CALCOLATO UN HASH");
+            //
             //Log.i(_TAG, " HASH of : [ " + input + "] is : ["+s_output +"],  alg: [" + algoName+"]");
             
            _logLine("-> Hash of : [" + input + "] is: [" + 
                             s_output +"] , Algo: [" + algoName + "]");
-            
+            _out += input+s_output+algoName;
            _logParameter("Input", input);
            _logParameter("Algo", algoName);
            _logReturnValue("Output", s_output);
@@ -113,9 +112,10 @@ public class HashHook extends DEXHook{
                     _logFlush_W("MD5 used, this hashing algo " +
                     		"is broken and should not be used", this);
             }
-            else
-                    _logFlush_I(this);
-            
+            //_logFlush_I(this);
+            _logFlush_I(_out,this);
+            */
+            Log.i(_TAG,"HO CALCOLATO UN HASH");
 		}
 	}
 

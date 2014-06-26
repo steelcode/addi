@@ -46,6 +46,8 @@
 #include "base.h"
 #include "lista.h"
 #include "Misc.h"
+#include "coffeecatch.h"
+#include "coffeecatch.h"
  
 #undef log
 
@@ -56,12 +58,15 @@
 
 static struct hook_t eph;
 static struct hook_t eph2;
+static struct hook_t addTraceh;
 
 static struct dalvik_hook_t sb1;
 static int debug = 0;
 
 static const JNIEnv *env = NULL;
 static JavaVM* g_JavaVM = NULL;
+
+pthread_mutex_t hookm;
 
 /**
 char *ptsn;
@@ -147,6 +152,35 @@ static void my_connect(int socket, struct sockaddr *address, socklen_t length){
 	orig_connect(socket, address,  length);
 
 }
+//static void my_add_trace(void* self, void* method, int action, u4 cpuClockDiff, u4 wallClockDiff){
+static void my_add_trace(void* self, void* method, int action){
+	pthread_mutex_lock(&hookm);
+	void (*origin_add_trace)(void* self, void* method, int action);
+	origin_add_trace = (void*) addTraceh.orig;	
+	log("XXX7 chiamato add trace\n")
+			hook_precall(&addTraceh);
+		origin_add_trace(self,method,action);
+	/**
+	if(tryMagic(method)){
+		hook_precall(&addTraceh);
+		origin_add_trace(self,method,action);
+		hook_postcall(&addTraceh);	
+	}
+	*/
+	log("XXX7 fine add trace\n")
+	pthread_mutex_unlock(&hookm);
+	return;
+}
+static bool my_dvmInitClass(jclass* clazz){
+	log("XXX7 dentro hook dvminitclass = %p\n", clazz)
+	bool (*origin_dvmInitClass)(jclass*);
+	origin_dvmInitClass = (void*)eph2.orig;
+	hook_precall(&eph2);
+	bool res = origin_dvmInitClass(clazz);
+	hook_postcall(&eph2);
+	log("XXX7 esco da hook dvminitclass %p, %x\n",res,res)
+	return res;
+}
 static int my_epoll_wait(int epfd, struct epoll_event *events, int maxevents, int timeout)
 {
 	int (*orig_epoll_wait)(int epfd, struct epoll_event *events, int maxevents, int timeout);
@@ -168,7 +202,7 @@ void __attribute__ ((constructor)) my_init(void);
 void my_init(void)
 {
 	log("DDI: started\n");
-	//pthread_mutex_init(&mutex, NULL);
+	pthread_mutex_init(&hookm, NULL);
 /**
 	coms=1;
 	ptsn = (char*) malloc(sizeof(char*));
@@ -178,7 +212,7 @@ void my_init(void)
   		log("XXX ptsname: %s - %d\n", ptsn, coms)
 */
  	// set to 1 to turn on, this will be noisy
-	debug = 1;
+	debug = 0;
 
  	// set log function for  libbase (very important!)
 	set_logfunction(my_log);
@@ -191,8 +225,10 @@ void my_init(void)
 		setenv("CLASSPATH", "/data/local/tmp/tesiddi.jar" ,1);
 	}
 	*/
-
+	//hook(&addTraceh, getpid(), "libdvm.", "_Z17dvmMethodTraceAddP6ThreadPK6Methodi", my_add_trace, my_add_trace);
     hook(&eph, getpid(), "libc.", "epoll_wait", my_epoll_wait, 0);
+   // hook(&eph2, getpid(), "libdvm.", "dvmInitClass", 0, my_dvmInitClass);
+    
    // hook(&eph2, getpid(), "libwhatsapp.", "connect", my_connect	, 0);
 
 }

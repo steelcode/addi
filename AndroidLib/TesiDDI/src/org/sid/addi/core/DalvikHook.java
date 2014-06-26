@@ -24,13 +24,25 @@ public abstract class DalvikHook extends StringHelper{
 	protected String _hashvalue = null ;
 	protected String _dex_method = null;
 	protected String _dex_class = null;
+	public int getNs() {
+		return ns;
+	}
+	public void setNs(int ns) {
+		this.ns = ns;
+	}
+	public int get_myargs() {
+		return _myargs;
+	}
+	public void set_myargs(int _myargs) {
+		this._myargs = _myargs;
+	}
 	protected int ns; //args+ ?static
+	protected int _myargs;
 	protected int dump;
 	protected int debugme;
 	protected int _loaded;
 	protected int _skip; 
 	protected int dexAfter;
-	protected int _myargs;
 	protected Object thiz = null;
 	protected DEXHook _dexhook;
 	protected DalvikHook _mythiz = null;
@@ -61,13 +73,6 @@ public abstract class DalvikHook extends StringHelper{
 		this._skip = skip;
 	}	
 	
-	public int get_myargs() {
-		return _myargs;
-	}
-
-	public void set_myargs(int _myargs) {
-		this._myargs = _myargs;
-	}
 
 	public String get_hashvalue() {
 		return _hashvalue;
@@ -91,19 +96,19 @@ public abstract class DalvikHook extends StringHelper{
 	}
 */
 	public DalvikHook(){}
-	public DalvikHook(String clname, String method_name, String method_sig, String dex_method, String dex_class, DEXHook ih, int num_args, int mya, int skip){
+	public DalvikHook(String clname, String method_name, String method_sig, String dex_method, String dex_class, DEXHook ih,int skip){
 		this._clname = clname;
 		this._method_name = method_name;
 		this._method_sig = method_sig;
 		this._dex_method = dex_method;
 		this._dex_class = dex_class;
-		this.ns = num_args;
+		//this.ns = num_args;
 		this._dexhook = ih;
 		//the hash value is: clname+method_name+method_descriptor clname is without L e ;
 		//this._hashvalue = removeFirstChar(clname.replace(";", ""))+method_name+method_sig;
 		this._hashvalue = clname+method_name+method_sig;
 		this._loaded = 0;
-		this._myargs = mya;
+		//this._myargs = mya;
 		this._skip = skip;
 		this._mythiz = this;
 		
@@ -115,11 +120,15 @@ public abstract class DalvikHook extends StringHelper{
 		try {
 			System.out.println("CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC");
 			System.out.println("DUMP: dex_method = "+get_dex_method()+" DEXLASS = " + get_dex_class()+" CLSNAME = "+get_clname());
+			System.out.println("DEBUG DEXHOOK,  "+_dexhook._methodName);
 			Method m = _dexhook.getClass().getDeclaredMethod(get_dex_method(), Object[].class);
+			System.out.println("QUESTA E UNA STAMPA CASUALE");
+			System.out.println("RICEVUTO NUM ARGS = "+args.length + args.toString());
 			System.out.println("CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC" + _clname + " paranoica " + m.getName());
 			Object[] myargs = new Object[]{
 					args
 			};
+			System.out.println("INVOKO IL METODO!!!");
 			m.invoke(_dexhook, myargs);
 		} catch (IllegalAccessException e) {
 			// TODO Auto-generated catch block
@@ -134,6 +143,7 @@ public abstract class DalvikHook extends StringHelper{
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+		
 	}
 	public void myexecute(){
 		try {
@@ -191,12 +201,6 @@ public abstract class DalvikHook extends StringHelper{
 	}
 	public void set_method_sig(String _method_sig) {
 		this._method_sig = _method_sig;
-	}
-	public int getNs() {
-		return ns;
-	}
-	public void setNs(int rss) {
-		this.ns = rss;
 	}
 	public int getDump() {
 		return dump;

@@ -14,7 +14,7 @@ public class SSLHook extends DEXHook{
 
 	public  void check_trust_manager(Object... args){
 		Log.i(_TAG," -------- CHECK TRUST MANAGER CHIAMATO");
-		_logBasicInfo();
+		_logBasicInfo(this);
 		TrustManager[] tm_arr = (TrustManager[]) args[1];
 		// check the trust manager
 		if (tm_arr != null && tm_arr[0] != null) {
@@ -42,7 +42,7 @@ public class SSLHook extends DEXHook{
 		// should only display data when there is a potential issue
 		
 		// check not implemented yet
-		_logBasicInfo();
+		_logBasicInfo(this);
 		_logFlush_W("Use of a custom SSLSocketFactory, " +
 				"the app may do cert. pinning OR validate any cert", this);
 	}
@@ -52,7 +52,7 @@ public class SSLHook extends DEXHook{
 		// this only display data when there is a potential issue
 		if ((org.apache.http.conn.ssl.X509HostnameVerifier)args[0] == 
 				SSLSocketFactory.ALLOW_ALL_HOSTNAME_VERIFIER) {
-			_logBasicInfo();
+			_logBasicInfo(this);
 			_logParameter("SSLSocketFactory", "ALLOW_ALL_HOSTNAME_VERIFIER");
 			_logFlush_W("HostNameVerifier set to accept ANY hostname", this);
 		}	
@@ -64,7 +64,7 @@ public class SSLHook extends DEXHook{
 		// arg0 is a uri (string or uri (this may not actually work))
 		String uri = (String) args[0];
 		if (uri.contains("http:")) {
-			_logBasicInfo();
+			_logBasicInfo(this);
 			_logParameter("URI", uri);
 			_logFlush_W("No SSL: ["+uri+"]", this);
 		}

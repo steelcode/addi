@@ -6,6 +6,7 @@
 
 package org.sid.addi.core;
 
+import java.lang.reflect.Member;
 import java.util.List;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -61,7 +62,9 @@ public abstract class manageADDI {
 	
 	public static native int loadDex(String d);
 	
-	public static native void dumpJavaClass(String cls);
+	public static native void dumpJavaClass(String cls,String sname);
+	
+	//public static native int hookMethodNative(Member method, Class<?> declaringClass, int slot, Class<?>[] parameterTypes, Class<?> returnType);
 	
 	
 	
@@ -143,6 +146,8 @@ public abstract class manageADDI {
 	}
 	
 	public static void _init(DalvikHook d){
+		
+		//try xposed way
 		createStruct(d);
 	}
 	

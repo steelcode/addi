@@ -124,10 +124,10 @@ public class LogToSQLite {
 		    // make sure to close the cursor
 		    cursor.close();
 		    return Rows;
-		  }
-	
+		  }  
+	//XXX
 	public static LogToSQLite getInstance() {
-		Context c = AppContextConfig.get_app();
+		Context c = AppContextConfig.getContext();
 		if(c  == null)
 			c = AppContextConfig.getcon();
 		if (_instance  == null) {

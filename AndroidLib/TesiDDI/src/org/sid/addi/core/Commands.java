@@ -12,8 +12,6 @@ import android.os.Debug;
 import android.util.Log;
 
 public class Commands {
-	public static Class<?> c = Commands.class;
-	
 	public Commands(){
 		
 	}
@@ -92,7 +90,8 @@ public class Commands {
 		List<ArgumentWrapper> argsArray = (List<ArgumentWrapper>)args[0];
 		Session currentSession = (Session)args[1];
 		String clsn = Common.getParamString(argsArray, "clsname");
-		manageADDI.dumpJavaClass(clsn);
+		String sname = Common.getParamString(argsArray, "fieldname");
+		manageADDI.dumpJavaClass(clsn,sname);
 		currentSession.sendFullTransmission("newThreadOK", "");
 	}
 	/**
@@ -113,6 +112,7 @@ static CommandWrapper[] commandList = new CommandWrapper[]{
  static List<CommandWrapper> commandList = new ArrayList<CommandWrapper>();
 		
  static void init(){
+	 Class<?> c = Commands.class;
 	 try {
 		commandList.add(new CommandWrapper("core", "ping", c.getMethod("pong", Object[].class)));
 		commandList.add(new CommandWrapper("core", "resume", c.getMethod("resumeAll", Object[].class)));

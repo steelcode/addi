@@ -15,27 +15,47 @@
 #include <pthread.h>
 #include "dexstuff.h"
 
+/*
+struct DalvikHookInfo {
+    struct {
+        Method originalMethod;
+        // copy a few bytes more than defined for Method in AOSP
+        // to accomodate for (rare) extensions by the target ROM
+        int dummyForRomExtensions[4];
+    } originalMethodStruct;
 
+    struct Object* reflectedMethod;
+    struct Object* additionalInfo;
+}DalvikHookInfo;*/
 
 
 struct dalvik_hook_t
 {
+
 	pthread_mutex_t mutexh;
-	char clname[256];
-	char clnamep[256];
-	char method_name[256];
-	char method_sig[256];	
-	char dex_meth[256];
-	char dex_class[256];
+	char clname[1024];
+	char clnamep[1024];
+	char method_name[1024];
+	char method_sig[1024];	
+	char dex_meth[1024];
+	char dex_class[1024];
 	int loaded;
 	int ok;
 	int skip;
 	int real_args; 
 	int dexAfter;
 
-	jclass DexHookCls;
+	//jclass DexHookCls; //change to v2
+	struct ClassObject* DexHookCls;
 	jobject ref;
-	Method *method;
+	struct Method *method;
+    //struct DalvikHookInfo* pOriginalMethodInfo;
+	//try xposed way
+    struct Method* originalMethod;
+    struct Object* reflectedMethod;
+    struct Object* additionalInfo;
+
+
 	int sm; // static method
 	// original values, saved before patching
 	int iss;
@@ -60,17 +80,18 @@ struct dalvik_hook_t
 };
 
 
-int dalvik_hook(struct dexstuff_t *dex, struct dalvik_hook_t *h);
+int dalvik_hook(struct dexstuff_t *dex, struct dalvik_hook_t *h, JNIEnv*);
 int dalvik_prepare(struct dexstuff_t *dex, struct dalvik_hook_t *h, JNIEnv *env);
 void dalvik_postcall(struct dexstuff_t *dex, struct dalvik_hook_t *h);
-int dalvik_hook_setup(struct dalvik_hook_t *h, char *cls, char *meth, char *sig, int ns, void *func);
+int dalvik_hook_setup(struct dalvik_hook_t *h, char *cls, char *meth, char *sig, void *func);
 //void _createStruct( JNIEnv* env, jobject thiz, jobject clazz );
 void* onetoall(JNIEnv *env, jobject, ...);
 jlong jlong_wrapper(JNIEnv *env, jobject obj, ...);
 jfloat jfloat_wrapper(JNIEnv *env, jobject obj, ...);
-int load_dex_wrapper(JNIEnv *env, void *thiz, struct dalvik_hook_t *res, va_list lhook, char*desc);
+//int load_dex_wrapper(JNIEnv *env, void *thiz, struct dalvik_hook_t *res, va_list lhook, char*desc);
 jint my_ddi_init();
 void* _createPTY();
 void* ptyServer();
 void _unhook(JNIEnv *env,jobject thiz, jobject str);
 void* setJavaVM(JavaVM* ajvm);
+int tryMagic(void *method);
