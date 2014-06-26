@@ -1,19 +1,17 @@
 Advanced dalvik dynamic instrumentation
 
 ### Struttura File ###
+1. dalvikhook/jni ---> framework
+	1. +dalvikhook/jni/dexstuff.c ---> dlsym su funzioni dalvik, dex support
+	2. +dalvikhook/jni/dalvik_hook.c ---> controllo inline hook
 
-dalvikhook/jni ---> framework
-+dalvikhook/jni/dexstuff.c ---> dlsym su funzioni dalvik, dex support
-+dalvikhook/jni/dalvik_hook.c ---> controllo inline hook
+2. examples/dynsec/jni	---> crea il .so da caricare in memoria
+	1. +examples/JavaModule/ ---> Progetto Eclipse dei moduli java
+	2. +examples/JavaModule/FakeContext/bin/classes.dex ---> DEX da caricare a runtime
 
-examples/dynsec/jni	---> crea il .so da caricare in memoria
-+examples/JavaModule/ ---> Progetto Eclipse dei moduli java
-+examples/JavaModule/FakeContext/bin/classes.dex ---> DEX da caricare a runtime
+3. AndroidLib/TesiDDI ---> API framework, android lib
 
-
-AndroidLib/TesiDDI ---> API framework, android lib
-
-scripts/ ---> helper scripts. I .sh citati sotto sono in questa dir
+4. scripts/ ---> helper scripts. I .sh citati sotto sono in questa dir
 
 
 ### Cosa serve ###
