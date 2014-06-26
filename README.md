@@ -22,14 +22,14 @@ Advanced dalvik dynamic instrumentation
 
 ### Installazione ###
 
-1] cd scripts; ./pushfiles.sh
+1. cd scripts; ./pushfiles.sh
 
 ### Esecuzione ###
 
-2] adb shell
-3] cd /data/local/tmp;
-4] chmod 775 initenv.sh; ./initenv.sh  % solo una volta per ogni riavvio
-5] ./runhijack.sh $args  % noargs per help
+2. adb shell
+3. cd /data/local/tmp;
+4. chmod 775 initenv.sh; ./initenv.sh  % solo una volta per ogni riavvio
+5. ./runhijack.sh $args  % noargs per help
 
 ### Log ###
 
