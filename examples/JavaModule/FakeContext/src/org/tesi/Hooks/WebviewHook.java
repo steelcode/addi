@@ -29,4 +29,12 @@ public class WebviewHook extends DEXHook{
 				"added for the webview. Details: " +
 				args[0] + ", name: " + args[1], this);
 	}
+	public void myLoadUrl(Object... args){
+		String s = (String)args[0];
+		System.out.println("DENTRO MY LOADURL: con url ="+s);
+	}
+	public void myEvaluateJavascript(Object... args){
+		String s = (String)args[0];
+		System.out.println("DENTRO MY LOADURL: con script ="+s);
+	}
 }

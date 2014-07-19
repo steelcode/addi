@@ -43,7 +43,7 @@ public class NetworkHook extends DEXHook{
 	public  void getbyaddress(Object... args){
 		Log.i(_TAG, "chiamato  getbyaddress");
 	}
-	public void initInetSocketAddress(Object...args){
+	public void initInetSocketAddress(Object... args){
 		Log.i(_TAG,"---------CHIAMATO initInetSocketAddress");
 		
 	}

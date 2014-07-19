@@ -20,7 +20,6 @@ import android.net.Uri;
 import android.util.Log;
 
 
-
 //A class to wrap arguments in
 class ArgumentWrapper
 {

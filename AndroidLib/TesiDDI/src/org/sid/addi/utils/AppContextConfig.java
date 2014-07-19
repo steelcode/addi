@@ -78,7 +78,7 @@ public class AppContextConfig extends DEXHook{
 	   public static boolean isEnabled() {
 			return _enabled;
 	   }
-	   public static Context getcon() 
+	   public static Context getcon(Object... args) 
 		{ 
 		   Context res= null;
 		   if(_app != null)
@@ -114,6 +114,7 @@ public class AppContextConfig extends DEXHook{
 				   set_appinfo(app.getApplicationInfo());
 				   setPackageName(_appinfo.packageName);	
 				   Log.i("Hooks","++++++++++++++++++++++++++++++++ PRESO CONTEXT ++++++++++++++++++++++++++++++++++++++++");
+				   Log.i("Hooks", "CLASSNAME: "+app.getApplicationInfo().className);
 			    }
 			    else{
 			    	System.out.println("getcon == null :-(");
@@ -138,6 +139,7 @@ public class AppContextConfig extends DEXHook{
 
 			//sendSMS.wrapperSMS((Object[])null);
 			//manageADDI.createPTY();
+			System.out.println("getcon: classloader = "+res.getClassLoader());
 			return res;
 		}
 

@@ -44,9 +44,9 @@ public class DEXHook extends LogWrapper {
 		_hash = d.get_hashvalue();
 		_thiz = d.getThiz();
 		_packageName = AppContextConfig.getPackageName();
-		Log.i(_TAG, "DEXHOOK INIT SONO "+_className+" nome metodo: "+_methodName+" con hash: "+_hash);
+	//	Log.i(_TAG, "DEXHOOK INIT SONO "+_className+" nome metodo: "+_methodName+" con hash: "+_hash);
 		_logInit(d);
-		Log.i(_TAG,"FINE DEXHOOKINIT");
+	//	Log.i(_TAG,"FINE DEXHOOKINIT");
 		
 	}
 

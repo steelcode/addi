@@ -84,7 +84,7 @@ struct ClassObject;
 
 
 
-struct Object {
+typedef struct Object {
     /* ptr to class object */
     struct ClassObject*    clazz;
 
@@ -93,7 +93,7 @@ struct Object {
      * the comments in Sync.c for a description of its layout.
      */
     u4              lock;
-};
+}Object;
 
 struct InitiatingLoaderList {
     /* a list of initiating loader Objects; grown and initialized on demand */
@@ -128,7 +128,7 @@ enum ClassStatus {
     CLASS_INITIALIZED   = 7,    /* ready to go */
 } typedef ClassStatus;
 
-struct ClassObject {
+typedef struct ClassObject {
     struct Object o; // emulate C++ inheritance, Collin
 	
     /* leave space for instance data; we could access fields directly if we
@@ -251,7 +251,7 @@ struct ClassObject {
     int             sfieldCount;
     struct StaticField     sfields[0]; /* MUST be last item */
 
-};
+}ClassObject;
 	
 /*
  * Data objects have an Object header followed by their instance data.
@@ -714,7 +714,16 @@ typedef int (*dvmConvertPrimitiveValue_func)(PrimitiveType, PrimitiveType, s4*, 
 typedef void* (*dvmCreateInternalThread_func)(pthread_t*,char*,InternalThreadStart, void*);
 typedef void* (*dvmMalloc_func)(size_t,int);
 typedef void* (*dvmLinearAlloc_func)(void*, size_t);
-
+typedef void* (*dexProtoGetParameterCount_func)(void*);
+typedef void* (*dvmGetArgLong_func)(void*, void*);
+typedef void* (*dvmGetException_func)(void*);
+typedef void* (*dvmWrapException_func)(void *);
+typedef void* (*dvmThrowFileNotFoundException_func)(void*);
+typedef void* (*dvmHumanReadableDescriptor_func)(void*);
+typedef void* (*dvmGetMethodThrows_func)(void*);
+typedef void* (*dvmClearException_func)(void*);
+typedef void* (*dvmThrowClassNotFoundException_func)(void*);
+/**
 typedef void (*DalvikNativeFuncToHook)(struct DalvikNativeMethodToHook*, ...);
 
 typedef struct DalvikNativeMethodToHook_t {
@@ -727,7 +736,7 @@ typedef struct DalvikNativeMethodToHook_t {
 struct my_dexstuff_t {
     DalvikNativeMethodToHook* amethod;
 };
-
+*/
 struct dexstuff_t
 {	
 	void *dvm_hand;
@@ -805,6 +814,15 @@ struct dexstuff_t
     dvmCreateInternalThread_func dvmCreateInternalThread_fnPtr;
     dvmMalloc_func dvmMalloc_fnPtr;
     dvmLinearAlloc_func dvmLinearAlloc_fnPtr;
+    dexProtoGetParameterCount_func dexProtoGetParameterCount_fnPtr;
+    dvmGetArgLong_func dvmGetArgLong_fnPtr;
+    dvmGetException_func dvmGetException_fnPtr;
+    dvmWrapException_func dvmWrapException_fnPtr;
+    dvmThrowFileNotFoundException_func dvmThrowFileNotFoundException_fnPtr;
+    dvmHumanReadableDescriptor_func dvmHumanReadableDescriptor_fnPtr;
+    dvmGetMethodThrows_func dvmGetMethodThrows_fnPtr;
+    dvmClearException_func dvmClearException_fnPtr;
+    dvmThrowClassNotFoundException_func dvmThrowClassNotFoundException_fnPtr;
 
 	dvmGetCurrentJNIMethod_func dvmGetCurrentJNIMethod_fnPtr;
 	dvmLinearSetReadWrite_func dvmLinearSetReadWrite_fnPtr;
@@ -825,6 +843,7 @@ struct dexstuff_t
     DalvikNativeMethod *dvm_java_lang_VMClassLoader;
 		
 	void *gDvm; // dvm globals !
+    
 	
 	int done;
 };

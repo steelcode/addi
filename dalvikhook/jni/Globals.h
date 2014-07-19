@@ -53,7 +53,7 @@ enum JdwpStepDepth {
     SD_INTO                 = 0,    /* step into method calls */
     SD_OVER                 = 1,    /* step over method calls */
     SD_OUT                  = 2,    /* step out of current method */
-};
+}typedef JdwpStepDepth;
 const char* dvmJdwpStepDepthStr(JdwpStepDepth depth);
 
 /*
@@ -62,7 +62,7 @@ const char* dvmJdwpStepDepthStr(JdwpStepDepth depth);
 enum JdwpStepSize {
     SS_MIN                  = 0,    /* step by minimum (e.g. 1 bytecode inst) */
     SS_LINE                 = 1,    /* if possible, step to next line */
-};
+}typedef JdwpStepSize;
 
 
 typedef struct StepControl {
@@ -137,7 +137,7 @@ enum ExecutionMode {
 struct HashEntry {
     u4 hashValue;
     void* data;
-};
+}typedef HashEntry;
 typedef void (*HashFreeFunc)(void* ptr);
 #define HASH_TOMBSTONE ((void*) 0xcbcacccd)     // invalid ptr value
 
@@ -160,7 +160,7 @@ enum ClassPathEntryKind {
     kCpeJar,
     kCpeDex,
     kCpeLastEntry       /* used as sentinel at end of array */
-};
+}typedef ClassPathEntryKind;
 
 typedef struct ClassPathEntry {
     ClassPathEntryKind kind;
@@ -194,13 +194,13 @@ struct DvmGlobals {
 
     bool        jdwpAllowed;        // debugging allowed for this process?
     bool        jdwpConfigured;     // has debugging info been provided?
-    JdwpTransportType jdwpTransport;
+    //JdwpTransportType jdwpTransport;
     bool        jdwpServer;
     char*       jdwpHost;
     int         jdwpPort;
     bool        jdwpSuspend;
 
-    ProfilerClockSource profilerClockSource;
+    //ProfilerClockSource profilerClockSource;
 
     /*
      * Lock profiling threshold value in milliseconds.  Acquires that
@@ -224,11 +224,11 @@ struct DvmGlobals {
 
     bool        logStdio;
 
-    DexOptimizerMode    dexOptMode;
-    DexClassVerifyMode  classVerifyMode;
+    //DexOptimizerMode    dexOptMode;
+    //DexClassVerifyMode  classVerifyMode;
 
     bool        generateRegisterMaps;
-    RegisterMapMode     registerMapMode;
+    //RegisterMapMode     registerMapMode;
 
     bool        monitorVerification;
 
@@ -245,9 +245,9 @@ struct DvmGlobals {
     bool        disableExplicitGc;
 
     int         assertionCtrlCount;
-    AssertionControl*   assertionCtrl;
+    //AssertionControl*   assertionCtrl;
 
-    ExecutionMode   executionMode;
+    //ExecutionMode   executionMode;
 
     bool        commonInit; /* whether common stubs are generated */
     bool        constInit; /* whether global constants are initialized */
@@ -268,7 +268,7 @@ struct DvmGlobals {
     /*
      * Where the VM goes to find system classes.
      */
-    ClassPathEntry* bootClassPath;
+    struct ClassPathEntry* bootClassPath;
     /* used by the DEX optimizer to load classes from an unfinished DEX */
     void*     bootClassPathOptExtra;
     bool        optimizingBootstrapClass;
@@ -277,7 +277,7 @@ struct DvmGlobals {
      * Loaded classes, hashed by class name.  Each entry is a ClassObject*,
      * allocated in GC space.
      */
-    HashTable*  loadedClasses;
+    //HashTable*  loadedClasses;
 
     /*
      * Value for the next class serial number to be assigned.  This is
@@ -293,7 +293,7 @@ struct DvmGlobals {
      * their InitiatingLoaderList is not used, to promote sharing. The list is
      * kept here instead.
      */
-    InitiatingLoaderList* initiatingLoaderList;
+    //InitiatingLoaderList* initiatingLoaderList;
 
     /*
      * Interned strings.
@@ -303,69 +303,69 @@ struct DvmGlobals {
     pthread_mutex_t internLock;
 
     /* Hash table of strings interned by the user. */
-    HashTable*  internedStrings;
+    //HashTable*  internedStrings;
 
     /* Hash table of strings interned by the class loader. */
-    HashTable*  literalStrings;
+    //HashTable*  literalStrings;
 
     /*
      * Classes constructed directly by the vm.
      */
 
     /* the class Class */
-    ClassObject* classJavaLangClass;
+    struct ClassObject* classJavaLangClass;
 
     /* synthetic classes representing primitive types */
-    ClassObject* typeVoid;
-    ClassObject* typeBoolean;
-    ClassObject* typeByte;
-    ClassObject* typeShort;
-    ClassObject* typeChar;
-    ClassObject* typeInt;
-    ClassObject* typeLong;
-    ClassObject* typeFloat;
-    ClassObject* typeDouble;
+    struct ClassObject* typeVoid;
+    struct ClassObject* typeBoolean;
+    struct ClassObject* typeByte;
+    struct ClassObject* typeShort;
+    struct ClassObject* typeChar;
+    struct ClassObject* typeInt;
+    struct ClassObject* typeLong;
+    struct ClassObject* typeFloat;
+    struct ClassObject* typeDouble;
 
     /* synthetic classes for arrays of primitives */
-    ClassObject* classArrayBoolean;
-    ClassObject* classArrayByte;
-    ClassObject* classArrayShort;
-    ClassObject* classArrayChar;
-    ClassObject* classArrayInt;
-    ClassObject* classArrayLong;
-    ClassObject* classArrayFloat;
-    ClassObject* classArrayDouble;
+    struct ClassObject* classArrayBoolean;
+    struct ClassObject* classArrayByte;
+    struct ClassObject* classArrayShort;
+    struct ClassObject* classArrayChar;
+    struct ClassObject* classArrayInt;
+    struct ClassObject* classArrayLong;
+    struct ClassObject* classArrayFloat;
+    struct ClassObject* classArrayDouble;
 
     /*
      * Quick lookups for popular classes used internally.
      */
-    ClassObject* classJavaLangClassArray;
-    ClassObject* classJavaLangClassLoader;
-    ClassObject* classJavaLangObject;
-    ClassObject* classJavaLangObjectArray;
-    ClassObject* classJavaLangString;
-    ClassObject* classJavaLangThread;
-    ClassObject* classJavaLangVMThread;
-    ClassObject* classJavaLangThreadGroup;
-    ClassObject* classJavaLangStackTraceElement;
-    ClassObject* classJavaLangStackTraceElementArray;
-    ClassObject* classJavaLangAnnotationAnnotationArray;
-    ClassObject* classJavaLangAnnotationAnnotationArrayArray;
-    ClassObject* classJavaLangReflectAccessibleObject;
-    ClassObject* classJavaLangReflectConstructor;
-    ClassObject* classJavaLangReflectConstructorArray;
-    ClassObject* classJavaLangReflectField;
-    ClassObject* classJavaLangReflectFieldArray;
-    ClassObject* classJavaLangReflectMethod;
-    ClassObject* classJavaLangReflectMethodArray;
-    ClassObject* classJavaLangReflectProxy;
-    ClassObject* classJavaNioReadWriteDirectByteBuffer;
-    ClassObject* classOrgApacheHarmonyLangAnnotationAnnotationFactory;
-    ClassObject* classOrgApacheHarmonyLangAnnotationAnnotationMember;
-    ClassObject* classOrgApacheHarmonyLangAnnotationAnnotationMemberArray;
-    ClassObject* classOrgApacheHarmonyDalvikDdmcChunk;
-    ClassObject* classOrgApacheHarmonyDalvikDdmcDdmServer;
-    ClassObject* classJavaLangRefFinalizerReference;
+    struct ClassObject* classJavaLangClassArray;
+    struct ClassObject* classJavaLangClassLoader;
+    struct ClassObject* classJavaLangObject;
+    struct ClassObject* classJavaLangObjectArray;
+    struct ClassObject* classJavaLangString;
+    struct ClassObject* classJavaLangThread;
+    struct ClassObject* classJavaLangVMThread;
+    struct ClassObject* classJavaLangThreadGroup;
+    struct ClassObject* classJavaLangStackTraceElement;
+    struct ClassObject* classJavaLangStackTraceElementArray;
+    struct ClassObject* classJavaLangAnnotationAnnotationArray;
+    struct ClassObject* classJavaLangAnnotationAnnotationArrayArray;
+    struct ClassObject* classJavaLangReflectAccessibleObject;
+    struct ClassObject* classJavaLangReflectConstructor;
+    struct ClassObject* classJavaLangReflectConstructorArray;
+    struct ClassObject* classJavaLangReflectField;
+    struct ClassObject* classJavaLangReflectFieldArray;
+    struct ClassObject* classJavaLangReflectMethod;
+    struct ClassObject* classJavaLangReflectMethodArray;
+    struct ClassObject* classJavaLangReflectProxy;
+    struct ClassObject* classJavaNioReadWriteDirectByteBuffer;
+    struct ClassObject* classOrgApacheHarmonyLangAnnotationAnnotationFactory;
+    struct ClassObject* classOrgApacheHarmonyLangAnnotationAnnotationMember;
+    struct ClassObject* classOrgApacheHarmonyLangAnnotationAnnotationMemberArray;
+    struct ClassObject* classOrgApacheHarmonyDalvikDdmcChunk;
+    struct ClassObject* classOrgApacheHarmonyDalvikDdmcDdmServer;
+    struct ClassObject* classJavaLangRefFinalizerReference;
 
     /*
      * classes representing exception types. The names here don't include
@@ -476,7 +476,7 @@ struct DvmGlobals {
     int offJavaLangRefFinalizerReference_zombie;
 
     /* method pointers - java.lang.ref.ReferenceQueue */
-    Method* methJavaLangRefReferenceQueueAdd;
+    struct Method* methJavaLangRefReferenceQueueAdd;
 
     /* method pointers - java.lang.ref.FinalizerReference */
     Method* methJavaLangRefFinalizerReferenceAdd;
@@ -614,8 +614,8 @@ struct DvmGlobals {
      */
 	//nt a[1]; // collin
 	 
-    IndirectRefTable jniGlobalRefTable;
-    IndirectRefTable jniWeakGlobalRefTable;
+    //IndirectRefTable jniGlobalRefTable;
+    //IndirectRefTable jniWeakGlobalRefTable;
     pthread_mutex_t jniGlobalRefLock;
     pthread_mutex_t jniWeakGlobalRefLock;
     int         jniGlobalRefHiMark;
@@ -624,7 +624,7 @@ struct DvmGlobals {
     /*
      * JNI pinned object table (used for primitive arrays).
      */
-    ReferenceTable  jniPinRefTable;
+    //ReferenceTable  jniPinRefTable;
     pthread_mutex_t jniPinRefLock;
 
     /*
@@ -709,7 +709,7 @@ struct DvmGlobals {
     /*
      * Registry of objects known to the debugger.
      */
-    HashTable*  dbgRegistry;
+    //HashTable*  dbgRegistry;
 
     /*
      * Debugger breakpoint table.
@@ -721,7 +721,7 @@ struct DvmGlobals {
      * be single-stepping at a time, which is all that really makes sense,
      * but it's possible we may need to expand this to be per-thread.
      */
-    StepControl stepControl;
+    //StepControl stepControl;
 
     /*
      * DDM features embedded in the VM.

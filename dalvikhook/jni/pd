@@ -1,0 +1,136 @@
+cc1.exe: warning: C:/Users/bellone/Dropbox/MasterThesis/repos/advanceddalvikhook-framework/dalvikhook/jni/../../../adbi/instruments/base/hook.h: not a directory [enabled by default]
+In file included from C:/Users/bellone/Dropbox/MasterThesis/repos/advanceddalvikhook-framework/dalvikhook/jni/dexstuff.h:21:0,
+                 from C:/Users/bellone/Dropbox/MasterThesis/repos/advanceddalvikhook-framework/dalvikhook/jni/dalvik_hook.c:23:
+C:/Users/bellone/Dropbox/MasterThesis/repos/advanceddalvikhook-framework/dalvikhook/jni/Common.h:119:0: warning: "__BIG_ENDIAN" redefined [enabled by default]
+C:/ANDROID/android-ndk-r9d-windows-x86_64/android-ndk-r9d/platforms/android-9/arch-arm/usr/include/sys/endian.h:271:0: note: this is the location of the previous definition
+C:/Users/bellone/Dropbox/MasterThesis/repos/advanceddalvikhook-framework/dalvikhook/jni/Common.h:120:0: warning: "__LITTLE_ENDIAN" redefined [enabled by default]
+C:/ANDROID/android-ndk-r9d-windows-x86_64/android-ndk-r9d/platforms/android-9/arch-arm/usr/include/sys/endian.h:268:0: note: this is the location of the previous definition
+C:/Users/bellone/Dropbox/MasterThesis/repos/advanceddalvikhook-framework/dalvikhook/jni/Common.h:124:0: warning: "__BYTE_ORDER" redefined [enabled by default]
+C:/ANDROID/android-ndk-r9d-windows-x86_64/android-ndk-r9d/platforms/android-9/arch-arm/usr/include/sys/endian.h:266:0: note: this is the location of the previous definition
+C:/Users/bellone/Dropbox/MasterThesis/repos/advanceddalvikhook-framework/dalvikhook/jni/dalvik_hook.c:43:21: warning: initialization makes integer from pointer without a cast [enabled by default]
+C:/Users/bellone/Dropbox/MasterThesis/repos/advanceddalvikhook-framework/dalvikhook/jni/dalvik_hook.c: In function 'dalvik_hook':
+C:/Users/bellone/Dropbox/MasterThesis/repos/advanceddalvikhook-framework/dalvikhook/jni/dalvik_hook.c:110:3: warning: format '%x' expects argument of type 'unsigned int', but argument 4 has type 'struct ClassObject *' [-Wformat]
+C:/Users/bellone/Dropbox/MasterThesis/repos/advanceddalvikhook-framework/dalvikhook/jni/dalvik_hook.c:128:3: warning: format '%x' expects argument of type 'unsigned int', but argument 4 has type 'struct Method *' [-Wformat]
+C:/Users/bellone/Dropbox/MasterThesis/repos/advanceddalvikhook-framework/dalvikhook/jni/dalvik_hook.c:128:3: warning: format '%x' expects argument of type 'unsigned int', but argument 5 has type 'jmethodID' [-Wformat]
+C:/Users/bellone/Dropbox/MasterThesis/repos/advanceddalvikhook-framework/dalvikhook/jni/dalvik_hook.c:131:3: warning: format '%x' expects argument of type 'unsigned int', but argument 6 has type 'struct Method *' [-Wformat]
+C:/Users/bellone/Dropbox/MasterThesis/repos/advanceddalvikhook-framework/dalvikhook/jni/dalvik_hook.c:148:12: warning: assignment discards 'const' qualifier from pointer target type [enabled by default]
+C:/Users/bellone/Dropbox/MasterThesis/repos/advanceddalvikhook-framework/dalvikhook/jni/dalvik_hook.c:151:4: warning: format '%x' expects argument of type 'unsigned int', but argument 4 has type 'DalvikBridgeFunc' [-Wformat]
+C:/Users/bellone/Dropbox/MasterThesis/repos/advanceddalvikhook-framework/dalvikhook/jni/dalvik_hook.c:151:4: warning: format '%x' expects argument of type 'unsigned int', but argument 5 has type 'void *' [-Wformat]
+C:/Users/bellone/Dropbox/MasterThesis/repos/advanceddalvikhook-framework/dalvikhook/jni/dalvik_hook.c:160:13: warning: initialization makes integer from pointer without a cast [enabled by default]
+C:/Users/bellone/Dropbox/MasterThesis/repos/advanceddalvikhook-framework/dalvikhook/jni/dalvik_hook.c:210:4: warning: format '%x' expects argument of type 'unsigned int', but argument 5 has type 'void *' [-Wformat]
+C:/Users/bellone/Dropbox/MasterThesis/repos/advanceddalvikhook-framework/dalvikhook/jni/dalvik_hook.c:211:4: warning: format '%x' expects argument of type 'unsigned int', but argument 4 has type 'DalvikBridgeFunc' [-Wformat]
+C:/Users/bellone/Dropbox/MasterThesis/repos/advanceddalvikhook-framework/dalvikhook/jni/dalvik_hook.c:211:4: warning: format '%x' expects argument of type 'unsigned int', but argument 5 has type 'void *' [-Wformat]
+C:/Users/bellone/Dropbox/MasterThesis/repos/advanceddalvikhook-framework/dalvikhook/jni/dalvik_hook.c: In function 'boxMethodArgs':
+C:/Users/bellone/Dropbox/MasterThesis/repos/advanceddalvikhook-framework/dalvikhook/jni/dalvik_hook.c:261:23: warning: initialization makes integer from pointer without a cast [enabled by default]
+C:/Users/bellone/Dropbox/MasterThesis/repos/advanceddalvikhook-framework/dalvikhook/jni/dalvik_hook.c:290:17: warning: passing argument 1 of 'd.dvmFindPrimitiveClass_fnPtr' makes pointer from integer without a cast [enabled by default]
+C:/Users/bellone/Dropbox/MasterThesis/repos/advanceddalvikhook-framework/dalvikhook/jni/dalvik_hook.c:290:17: note: expected 'void *' but argument is of type 'char'
+C:/Users/bellone/Dropbox/MasterThesis/repos/advanceddalvikhook-framework/dalvikhook/jni/dalvik_hook.c:297:13: warning: passing argument 1 of 'd.dvmGetArgLong_fnPtr' discards 'const' qualifier from pointer target type [enabled by default]
+C:/Users/bellone/Dropbox/MasterThesis/repos/advanceddalvikhook-framework/dalvikhook/jni/dalvik_hook.c:297:13: note: expected 'void *' but argument is of type 'u4 const *'
+C:/Users/bellone/Dropbox/MasterThesis/repos/advanceddalvikhook-framework/dalvikhook/jni/dalvik_hook.c:297:13: warning: passing argument 2 of 'd.dvmGetArgLong_fnPtr' makes pointer from integer without a cast [enabled by default]
+C:/Users/bellone/Dropbox/MasterThesis/repos/advanceddalvikhook-framework/dalvikhook/jni/dalvik_hook.c:297:13: note: expected 'void *' but argument is of type 'size_t'
+C:/Users/bellone/Dropbox/MasterThesis/repos/advanceddalvikhook-framework/dalvikhook/jni/dalvik_hook.c:297:21: warning: assignment makes integer from pointer without a cast [enabled by default]
+C:/Users/bellone/Dropbox/MasterThesis/repos/advanceddalvikhook-framework/dalvikhook/jni/dalvik_hook.c:300:17: warning: passing argument 1 of 'd.dvmFindPrimitiveClass_fnPtr' makes pointer from integer without a cast [enabled by default]
+C:/Users/bellone/Dropbox/MasterThesis/repos/advanceddalvikhook-framework/dalvikhook/jni/dalvik_hook.c:300:17: note: expected 'void *' but argument is of type 'char'
+C:/Users/bellone/Dropbox/MasterThesis/repos/advanceddalvikhook-framework/dalvikhook/jni/dalvik_hook.c: In function 'jfloat_wrapper':
+C:/Users/bellone/Dropbox/MasterThesis/repos/advanceddalvikhook-framework/dalvikhook/jni/dalvik_hook.c:415:5: warning: format '%x' expects argument of type 'unsigned int', but argument 5 has type 'jmethodID' [-Wformat]
+C:/Users/bellone/Dropbox/MasterThesis/repos/advanceddalvikhook-framework/dalvikhook/jni/dalvik_hook.c: In function 'jlong_wrapper':
+C:/Users/bellone/Dropbox/MasterThesis/repos/advanceddalvikhook-framework/dalvikhook/jni/dalvik_hook.c:495:5: warning: format '%x' expects argument of type 'unsigned int', but argument 5 has type 'jmethodID' [-Wformat]
+C:/Users/bellone/Dropbox/MasterThesis/repos/advanceddalvikhook-framework/dalvikhook/jni/dalvik_hook.c: In function 'eseguiDex2':
+C:/Users/bellone/Dropbox/MasterThesis/repos/advanceddalvikhook-framework/dalvikhook/jni/dalvik_hook.c:580:2: warning: passing argument 6 of 'd.dvmCallMethodA_fnPtr' from incompatible pointer type [enabled by default]
+C:/Users/bellone/Dropbox/MasterThesis/repos/advanceddalvikhook-framework/dalvikhook/jni/dalvik_hook.c:580:2: note: expected 'union jvalue *' but argument is of type 'union JValue *'
+C:/Users/bellone/Dropbox/MasterThesis/repos/advanceddalvikhook-framework/dalvikhook/jni/dalvik_hook.c:658:13: warning: assignment from incompatible pointer type [enabled by default]
+C:/Users/bellone/Dropbox/MasterThesis/repos/advanceddalvikhook-framework/dalvikhook/jni/dalvik_hook.c:661:2: warning: passing argument 6 of 'd.dvmCallMethodA_fnPtr' from incompatible pointer type [enabled by default]
+C:/Users/bellone/Dropbox/MasterThesis/repos/advanceddalvikhook-framework/dalvikhook/jni/dalvik_hook.c:661:2: note: expected 'union jvalue *' but argument is of type 'union JValue *'
+C:/Users/bellone/Dropbox/MasterThesis/repos/advanceddalvikhook-framework/dalvikhook/jni/dalvik_hook.c:676:2: warning: passing argument 1 of 'd.dvmReleaseTrackedAlloc_fnPtr' from incompatible pointer type [enabled by default]
+C:/Users/bellone/Dropbox/MasterThesis/repos/advanceddalvikhook-framework/dalvikhook/jni/dalvik_hook.c:676:2: note: expected 'struct Object *' but argument is of type 'struct ArrayObject *'
+C:/Users/bellone/Dropbox/MasterThesis/repos/advanceddalvikhook-framework/dalvikhook/jni/dalvik_hook.c: In function 'callOriginalV2':
+C:/Users/bellone/Dropbox/MasterThesis/repos/advanceddalvikhook-framework/dalvikhook/jni/dalvik_hook.c:688:2: warning: passing argument 6 of 'd.dvmCallMethodA_fnPtr' from incompatible pointer type [enabled by default]
+C:/Users/bellone/Dropbox/MasterThesis/repos/advanceddalvikhook-framework/dalvikhook/jni/dalvik_hook.c:688:2: note: expected 'union jvalue *' but argument is of type 'union JValue *'
+C:/Users/bellone/Dropbox/MasterThesis/repos/advanceddalvikhook-framework/dalvikhook/jni/dalvik_hook.c:705:17: error: invalid type argument of '->' (have 'struct dexstuff_t')
+C:/Users/bellone/Dropbox/MasterThesis/repos/advanceddalvikhook-framework/dalvikhook/jni/dalvik_hook.c: In function 'onetoall2':
+C:/Users/bellone/Dropbox/MasterThesis/repos/advanceddalvikhook-framework/dalvikhook/jni/dalvik_hook.c:772:27: warning: initialization makes pointer from integer without a cast [enabled by default]
+C:/Users/bellone/Dropbox/MasterThesis/repos/advanceddalvikhook-framework/dalvikhook/jni/dalvik_hook.c:773:28: warning: initialization makes pointer from integer without a cast [enabled by default]
+C:/Users/bellone/Dropbox/MasterThesis/repos/advanceddalvikhook-framework/dalvikhook/jni/dalvik_hook.c:774:28: warning: initialization makes pointer from integer without a cast [enabled by default]
+C:/Users/bellone/Dropbox/MasterThesis/repos/advanceddalvikhook-framework/dalvikhook/jni/dalvik_hook.c:777:4: warning: format '%x' expects argument of type 'unsigned int', but argument 4 has type 'struct ClassObject *' [-Wformat]
+C:/Users/bellone/Dropbox/MasterThesis/repos/advanceddalvikhook-framework/dalvikhook/jni/dalvik_hook.c:779:4: warning: format '%x' expects argument of type 'unsigned int', but argument 4 has type 'struct ClassObject *' [-Wformat]
+C:/Users/bellone/Dropbox/MasterThesis/repos/advanceddalvikhook-framework/dalvikhook/jni/dalvik_hook.c:781:4: warning: format '%x' expects argument of type 'unsigned int', but argument 4 has type 'struct ClassObject *' [-Wformat]
+C:/Users/bellone/Dropbox/MasterThesis/repos/advanceddalvikhook-framework/dalvikhook/jni/dalvik_hook.c:830:4: warning: format '%p' expects argument of type 'void *', but argument 4 has type 'u4' [-Wformat]
+C:/Users/bellone/Dropbox/MasterThesis/repos/advanceddalvikhook-framework/dalvikhook/jni/dalvik_hook.c:853:6: warning: format '%p' expects argument of type 'void *', but argument 7 has type 'u4' [-Wformat]
+C:/Users/bellone/Dropbox/MasterThesis/repos/advanceddalvikhook-framework/dalvikhook/jni/dalvik_hook.c:859:6: warning: format '%p' expects argument of type 'void *', but argument 6 has type 'u4' [-Wformat]
+C:/Users/bellone/Dropbox/MasterThesis/repos/advanceddalvikhook-framework/dalvikhook/jni/dalvik_hook.c:866:6: warning: format '%p' expects argument of type 'void *', but argument 6 has type 'u4' [-Wformat]
+C:/Users/bellone/Dropbox/MasterThesis/repos/advanceddalvikhook-framework/dalvikhook/jni/dalvik_hook.c:867:16: warning: assignment makes pointer from integer without a cast [enabled by default]
+C:/Users/bellone/Dropbox/MasterThesis/repos/advanceddalvikhook-framework/dalvikhook/jni/dalvik_hook.c: In function '_createStruct':
+C:/Users/bellone/Dropbox/MasterThesis/repos/advanceddalvikhook-framework/dalvikhook/jni/dalvik_hook.c:973:3: warning: format '%x' expects argument of type 'unsigned int', but argument 4 has type 'jobject' [-Wformat]
+C:/Users/bellone/Dropbox/MasterThesis/repos/advanceddalvikhook-framework/dalvikhook/jni/dalvik_hook.c:973:3: warning: format '%x' expects argument of type 'unsigned int', but argument 5 has type 'jobject' [-Wformat]
+C:/Users/bellone/Dropbox/MasterThesis/repos/advanceddalvikhook-framework/dalvikhook/jni/dalvik_hook.c:976:3: warning: format '%x' expects argument of type 'unsigned int', but argument 4 has type 'jclass' [-Wformat]
+C:/Users/bellone/Dropbox/MasterThesis/repos/advanceddalvikhook-framework/dalvikhook/jni/dalvik_hook.c:998:12: warning: initialization discards 'const' qualifier from pointer target type [enabled by default]
+C:/Users/bellone/Dropbox/MasterThesis/repos/advanceddalvikhook-framework/dalvikhook/jni/dalvik_hook.c:999:13: warning: initialization discards 'const' qualifier from pointer target type [enabled by default]
+C:/Users/bellone/Dropbox/MasterThesis/repos/advanceddalvikhook-framework/dalvikhook/jni/dalvik_hook.c:1000:13: warning: initialization discards 'const' qualifier from pointer target type [enabled by default]
+C:/Users/bellone/Dropbox/MasterThesis/repos/advanceddalvikhook-framework/dalvikhook/jni/dalvik_hook.c:1001:13: warning: initialization discards 'const' qualifier from pointer target type [enabled by default]
+C:/Users/bellone/Dropbox/MasterThesis/repos/advanceddalvikhook-framework/dalvikhook/jni/dalvik_hook.c:1002:13: warning: initialization discards 'const' qualifier from pointer target type [enabled by default]
+C:/Users/bellone/Dropbox/MasterThesis/repos/advanceddalvikhook-framework/dalvikhook/jni/dalvik_hook.c:1003:13: warning: initialization discards 'const' qualifier from pointer target type [enabled by default]
+C:/Users/bellone/Dropbox/MasterThesis/repos/advanceddalvikhook-framework/dalvikhook/jni/dalvik_hook.c:1027:4: warning: format '%s' expects argument of type 'char *', but argument 4 has type 'void *' [-Wformat]
+C:/Users/bellone/Dropbox/MasterThesis/repos/advanceddalvikhook-framework/dalvikhook/jni/dalvik_hook.c:1027:4: warning: format '%s' expects argument of type 'char *', but argument 5 has type 'void *' [-Wformat]
+C:/Users/bellone/Dropbox/MasterThesis/repos/advanceddalvikhook-framework/dalvikhook/jni/dalvik_hook.c:1029:4: warning: format '%s' expects argument of type 'char *', but argument 4 has type 'void *' [-Wformat]
+C:/Users/bellone/Dropbox/MasterThesis/repos/advanceddalvikhook-framework/dalvikhook/jni/dalvik_hook.c:1029:4: warning: format '%s' expects argument of type 'char *', but argument 5 has type 'void *' [-Wformat]
+C:/Users/bellone/Dropbox/MasterThesis/repos/advanceddalvikhook-framework/dalvikhook/jni/dalvik_hook.c:1036:4: warning: format '%s' expects argument of type 'char *', but argument 4 has type 'void *' [-Wformat]
+C:/Users/bellone/Dropbox/MasterThesis/repos/advanceddalvikhook-framework/dalvikhook/jni/dalvik_hook.c:1036:4: warning: format '%s' expects argument of type 'char *', but argument 5 has type 'void *' [-Wformat]
+C:/Users/bellone/Dropbox/MasterThesis/repos/advanceddalvikhook-framework/dalvikhook/jni/dalvik_hook.c:1038:4: warning: format '%s' expects argument of type 'char *', but argument 4 has type 'void *' [-Wformat]
+C:/Users/bellone/Dropbox/MasterThesis/repos/advanceddalvikhook-framework/dalvikhook/jni/dalvik_hook.c:1038:4: warning: format '%s' expects argument of type 'char *', but argument 5 has type 'void *' [-Wformat]
+C:/Users/bellone/Dropbox/MasterThesis/repos/advanceddalvikhook-framework/dalvikhook/jni/dalvik_hook.c:1042:4: warning: format '%s' expects argument of type 'char *', but argument 4 has type 'void *' [-Wformat]
+C:/Users/bellone/Dropbox/MasterThesis/repos/advanceddalvikhook-framework/dalvikhook/jni/dalvik_hook.c:1042:4: warning: format '%s' expects argument of type 'char *', but argument 5 has type 'void *' [-Wformat]
+C:/Users/bellone/Dropbox/MasterThesis/repos/advanceddalvikhook-framework/dalvikhook/jni/dalvik_hook.c:1056:4: warning: format '%s' expects argument of type 'char *', but argument 4 has type 'void *' [-Wformat]
+C:/Users/bellone/Dropbox/MasterThesis/repos/advanceddalvikhook-framework/dalvikhook/jni/dalvik_hook.c:1056:4: warning: format '%s' expects argument of type 'char *', but argument 5 has type 'void *' [-Wformat]
+C:/Users/bellone/Dropbox/MasterThesis/repos/advanceddalvikhook-framework/dalvikhook/jni/dalvik_hook.c:1070:3: warning: format '%x' expects argument of type 'unsigned int', but argument 4 has type 'struct dalvik_hook_t **' [-Wformat]
+C:/Users/bellone/Dropbox/MasterThesis/repos/advanceddalvikhook-framework/dalvikhook/jni/dalvik_hook.c:1070:3: warning: format '%x' expects argument of type 'unsigned int', but argument 5 has type 'struct dalvik_hook_t *' [-Wformat]
+C:/Users/bellone/Dropbox/MasterThesis/repos/advanceddalvikhook-framework/dalvikhook/jni/dalvik_hook.c: In function 'ptyServer':
+C:/Users/bellone/Dropbox/MasterThesis/repos/advanceddalvikhook-framework/dalvikhook/jni/dalvik_hook.c:1084:2: warning: format '%d' expects argument of type 'int', but argument 4 has type 'pthread_t' [-Wformat]
+C:/Users/bellone/Dropbox/MasterThesis/repos/advanceddalvikhook-framework/dalvikhook/jni/dalvik_hook.c:1096:2: warning: format '%x' expects argument of type 'unsigned int', but argument 4 has type 'struct JNINativeInterface const **' [-Wformat]
+C:/Users/bellone/Dropbox/MasterThesis/repos/advanceddalvikhook-framework/dalvikhook/jni/dalvik_hook.c:1096:2: warning: format '%x' expects argument of type 'unsigned int', but argument 5 has type 'struct JNINativeInterface const **' [-Wformat]
+C:/Users/bellone/Dropbox/MasterThesis/repos/advanceddalvikhook-framework/dalvikhook/jni/dalvik_hook.c:1096:2: warning: format '%x' expects argument of type 'unsigned int', but argument 6 has type 'struct JNIInvokeInterface const **' [-Wformat]
+C:/Users/bellone/Dropbox/MasterThesis/repos/advanceddalvikhook-framework/dalvikhook/jni/dalvik_hook.c:1100:2: warning: format '%x' expects argument of type 'unsigned int', but argument 4 has type 'jclass' [-Wformat]
+C:/Users/bellone/Dropbox/MasterThesis/repos/advanceddalvikhook-framework/dalvikhook/jni/dalvik_hook.c:1132:2: warning: format '%x' expects argument of type 'unsigned int', but argument 4 has type 'jobject' [-Wformat]
+C:/Users/bellone/Dropbox/MasterThesis/repos/advanceddalvikhook-framework/dalvikhook/jni/dalvik_hook.c:1132:2: warning: format '%x' expects argument of type 'unsigned int', but argument 5 has type 'jmethodID' [-Wformat]
+C:/Users/bellone/Dropbox/MasterThesis/repos/advanceddalvikhook-framework/dalvikhook/jni/dalvik_hook.c:1139:2: warning: passing argument 1 of 'pthread_exit' makes pointer from integer without a cast [enabled by default]
+C:/ANDROID/android-ndk-r9d-windows-x86_64/android-ndk-r9d/platforms/android-9/arch-arm/usr/include/pthread.h:146:17: note: expected 'void *' but argument is of type 'int'
+C:/Users/bellone/Dropbox/MasterThesis/repos/advanceddalvikhook-framework/dalvikhook/jni/dalvik_hook.c: In function '_wrapper_dexstuff_loaddex':
+C:/Users/bellone/Dropbox/MasterThesis/repos/advanceddalvikhook-framework/dalvikhook/jni/dalvik_hook.c:1157:18: warning: initialization makes integer from pointer without a cast [enabled by default]
+C:/Users/bellone/Dropbox/MasterThesis/repos/advanceddalvikhook-framework/dalvikhook/jni/dalvik_hook.c:1159:11: warning: assignment makes integer from pointer without a cast [enabled by default]
+C:/Users/bellone/Dropbox/MasterThesis/repos/advanceddalvikhook-framework/dalvikhook/jni/dalvik_hook.c: In function '_th_wrapper':
+C:/Users/bellone/Dropbox/MasterThesis/repos/advanceddalvikhook-framework/dalvikhook/jni/dalvik_hook.c:1209:2: warning: format '%x' expects argument of type 'unsigned int', but argument 4 has type 'struct JNINativeInterface const **' [-Wformat]
+C:/Users/bellone/Dropbox/MasterThesis/repos/advanceddalvikhook-framework/dalvikhook/jni/dalvik_hook.c:1209:2: warning: format '%x' expects argument of type 'unsigned int', but argument 5 has type 'struct JNIInvokeInterface const **' [-Wformat]
+C:/Users/bellone/Dropbox/MasterThesis/repos/advanceddalvikhook-framework/dalvikhook/jni/dalvik_hook.c:1222:2: warning: passing argument 1 of 'pthread_exit' makes pointer from integer without a cast [enabled by default]
+C:/ANDROID/android-ndk-r9d-windows-x86_64/android-ndk-r9d/platforms/android-9/arch-arm/usr/include/pthread.h:146:17: note: expected 'void *' but argument is of type 'int'
+C:/Users/bellone/Dropbox/MasterThesis/repos/advanceddalvikhook-framework/dalvikhook/jni/dalvik_hook.c: In function '_newThread':
+C:/Users/bellone/Dropbox/MasterThesis/repos/advanceddalvikhook-framework/dalvikhook/jni/dalvik_hook.c:1227:24: warning: initialization makes integer from pointer without a cast [enabled by default]
+C:/Users/bellone/Dropbox/MasterThesis/repos/advanceddalvikhook-framework/dalvikhook/jni/dalvik_hook.c:1230:16: warning: initialization discards 'const' qualifier from pointer target type [enabled by default]
+C:/Users/bellone/Dropbox/MasterThesis/repos/advanceddalvikhook-framework/dalvikhook/jni/dalvik_hook.c:1231:15: warning: initialization discards 'const' qualifier from pointer target type [enabled by default]
+C:/Users/bellone/Dropbox/MasterThesis/repos/advanceddalvikhook-framework/dalvikhook/jni/dalvik_hook.c:1239:2: warning: passing argument 3 of 'pthread_create' from incompatible pointer type [enabled by default]
+C:/ANDROID/android-ndk-r9d-windows-x86_64/android-ndk-r9d/platforms/android-9/arch-arm/usr/include/pthread.h:143:5: note: expected 'void * (*)(void *)' but argument is of type 'void * (*)(struct thargs *)'
+C:/Users/bellone/Dropbox/MasterThesis/repos/advanceddalvikhook-framework/dalvikhook/jni/dalvik_hook.c: In function '_loadSystemClass':
+C:/Users/bellone/Dropbox/MasterThesis/repos/advanceddalvikhook-framework/dalvikhook/jni/dalvik_hook.c:1244:18: warning: initialization discards 'const' qualifier from pointer target type [enabled by default]
+C:/Users/bellone/Dropbox/MasterThesis/repos/advanceddalvikhook-framework/dalvikhook/jni/dalvik_hook.c: In function 'startMagic':
+C:/Users/bellone/Dropbox/MasterThesis/repos/advanceddalvikhook-framework/dalvikhook/jni/dalvik_hook.c:1269:3: warning: format '%x' expects argument of type 'unsigned int', but argument 4 has type 'u1 *' [-Wformat]
+C:/Users/bellone/Dropbox/MasterThesis/repos/advanceddalvikhook-framework/dalvikhook/jni/dalvik_hook.c:1269:3: warning: format '%x' expects argument of type 'unsigned int', but argument 6 has type 'struct RawDexFile *' [-Wformat]
+C:/Users/bellone/Dropbox/MasterThesis/repos/advanceddalvikhook-framework/dalvikhook/jni/dalvik_hook.c:1280:6: warning: format '%x' expects argument of type 'unsigned int', but argument 6 has type 'struct MemMapping' [-Wformat]
+C:/Users/bellone/Dropbox/MasterThesis/repos/advanceddalvikhook-framework/dalvikhook/jni/dalvik_hook.c:1280:6: warning: format '%x' expects argument of type 'unsigned int', but argument 7 has type 'struct DexFile *' [-Wformat]
+C:/Users/bellone/Dropbox/MasterThesis/repos/advanceddalvikhook-framework/dalvikhook/jni/dalvik_hook.c:1283:6: warning: format '%p' expects argument of type 'void *', but argument 5 has type 'struct MemMapping' [-Wformat]
+C:/Users/bellone/Dropbox/MasterThesis/repos/advanceddalvikhook-framework/dalvikhook/jni/dalvik_hook.c:1294:6: warning: passing argument 2 of 'mprotect' makes integer from pointer without a cast [enabled by default]
+C:/ANDROID/android-ndk-r9d-windows-x86_64/android-ndk-r9d/platforms/android-9/arch-arm/usr/include/sys/mman.h:50:15: note: expected 'size_t' but argument is of type 'void *'
+C:/Users/bellone/Dropbox/MasterThesis/repos/advanceddalvikhook-framework/dalvikhook/jni/dalvik_hook.c:1296:31: warning: initialization discards 'const' qualifier from pointer target type [enabled by default]
+C:/Users/bellone/Dropbox/MasterThesis/repos/advanceddalvikhook-framework/dalvikhook/jni/dalvik_hook.c: In function '_dumpJavaClass':
+C:/Users/bellone/Dropbox/MasterThesis/repos/advanceddalvikhook-framework/dalvikhook/jni/dalvik_hook.c:1406:18: warning: initialization discards 'const' qualifier from pointer target type [enabled by default]
+C:/Users/bellone/Dropbox/MasterThesis/repos/advanceddalvikhook-framework/dalvikhook/jni/dalvik_hook.c:1407:10: warning: assignment makes pointer from integer without a cast [enabled by default]
+C:/Users/bellone/Dropbox/MasterThesis/repos/advanceddalvikhook-framework/dalvikhook/jni/dalvik_hook.c:1425:3: warning: format '%x' expects argument of type 'unsigned int', but argument 4 has type 'struct ClassObject *' [-Wformat]
+C:/Users/bellone/Dropbox/MasterThesis/repos/advanceddalvikhook-framework/dalvikhook/jni/dalvik_hook.c:1425:3: warning: format '%x' expects argument of type 'unsigned int', but argument 5 has type 'struct Object *' [-Wformat]
+C:/Users/bellone/Dropbox/MasterThesis/repos/advanceddalvikhook-framework/dalvikhook/jni/dalvik_hook.c:1426:3: warning: format '%x' expects argument of type 'unsigned int', but argument 4 has type 'struct DvmDex *' [-Wformat]
+C:/Users/bellone/Dropbox/MasterThesis/repos/advanceddalvikhook-framework/dalvikhook/jni/dalvik_hook.c: In function 'my_ddi_init':
+C:/Users/bellone/Dropbox/MasterThesis/repos/advanceddalvikhook-framework/dalvikhook/jni/dalvik_hook.c:1487:9: warning: assignment makes integer from pointer without a cast [enabled by default]
+C:/Users/bellone/Dropbox/MasterThesis/repos/advanceddalvikhook-framework/dalvikhook/jni/dalvik_hook.c:1538:3: warning: format '%x' expects argument of type 'unsigned int', but argument 4 has type 'struct JNINativeInterface const **' [-Wformat]
+C:/Users/bellone/Dropbox/MasterThesis/repos/advanceddalvikhook-framework/dalvikhook/jni/dalvik_hook.c:1551:4: warning: format '%x' expects argument of type 'unsigned int', but argument 4 has type 'jclass' [-Wformat]
+C:/Users/bellone/Dropbox/MasterThesis/repos/advanceddalvikhook-framework/dalvikhook/jni/dalvik_hook.c:1556:4: warning: format '%x' expects argument of type 'unsigned int', but argument 4 has type 'jobject' [-Wformat]
+C:/Users/bellone/Dropbox/MasterThesis/repos/advanceddalvikhook-framework/dalvikhook/jni/dalvik_hook.c:1556:4: warning: format '%x' expects argument of type 'unsigned int', but argument 5 has type 'jmethodID' [-Wformat]
+C:/Users/bellone/Dropbox/MasterThesis/repos/advanceddalvikhook-framework/dalvikhook/jni/dalvik_hook.c: In function '_unhook':
+C:/Users/bellone/Dropbox/MasterThesis/repos/advanceddalvikhook-framework/dalvikhook/jni/dalvik_hook.c:1568:12: warning: initialization discards 'const' qualifier from pointer target type [enabled by default]
+C:/Users/bellone/Dropbox/MasterThesis/repos/advanceddalvikhook-framework/dalvikhook/jni/dalvik_hook.c:1578:2: warning: format '%x' expects argument of type 'unsigned int', but argument 5 has type 'struct dalvik_hook_t *' [-Wformat]
+make: *** [/cygdrive/c/Users/bellone/Dropbox/MasterThesis/repos/advanceddalvikhook-framework/dalvikhook/obj/local/armeabi/objs/dalvikhook/dalvik_hook.o] Error 1

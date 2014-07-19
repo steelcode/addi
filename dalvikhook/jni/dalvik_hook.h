@@ -29,6 +29,15 @@ struct DalvikHookInfo {
 }DalvikHookInfo;*/
 
 
+typedef enum{
+	NORMAL_HOOK = 0,
+	TRUE_HOOK = 1,
+	FALSE_HOOK = 2,
+	NOX_HOOK = 3,
+	AFTER_HOOK = 4,
+	UNUSED_HOOK= 5
+}HookType;
+
 struct dalvik_hook_t
 {
 
@@ -44,6 +53,7 @@ struct dalvik_hook_t
 	int skip;
 	int real_args; 
 	int dexAfter;
+	HookType type;
 
 	//jclass DexHookCls; //change to v2
 	struct ClassObject* DexHookCls;
@@ -81,14 +91,9 @@ struct dalvik_hook_t
 
 
 int dalvik_hook(struct dexstuff_t *dex, struct dalvik_hook_t *h, JNIEnv*);
-int dalvik_prepare(struct dexstuff_t *dex, struct dalvik_hook_t *h, JNIEnv *env);
-void dalvik_postcall(struct dexstuff_t *dex, struct dalvik_hook_t *h);
 int dalvik_hook_setup(struct dalvik_hook_t *h, char *cls, char *meth, char *sig, void *func);
-//void _createStruct( JNIEnv* env, jobject thiz, jobject clazz );
-void* onetoall(JNIEnv *env, jobject, ...);
 jlong jlong_wrapper(JNIEnv *env, jobject obj, ...);
 jfloat jfloat_wrapper(JNIEnv *env, jobject obj, ...);
-//int load_dex_wrapper(JNIEnv *env, void *thiz, struct dalvik_hook_t *res, va_list lhook, char*desc);
 jint my_ddi_init();
 void* _createPTY();
 void* ptyServer();

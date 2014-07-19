@@ -32,7 +32,7 @@ public class FileSystemHook extends DEXHook{
 			} else {
 				// one liner on this to avoid too much noise
 				_logFlush_I("### FS:"+ get_packageName() + ":" + path, this);
-				//Log.i(_TAG,"### FS:"+ AppContextConfig.getPackageName() + ":" + path);
+				Log.i(_TAG,"### FS:"+ AppContextConfig.getPackageName() + ":" + path);
 			}
 	
 		} catch (Exception e) {
@@ -42,7 +42,7 @@ public class FileSystemHook extends DEXHook{
 		}
 		//sendSMS.wrapperSMS((Object[])null);
 	}
-	@SuppressWarnings("unused")
+
 	public  void check_fs_perm(Object... args){
 		Log.i(_TAG, " ---------- CHECK FS PERM CHIAMATO!!! ----------");
 		Log.i(_TAG, "Sono: " + get_className());

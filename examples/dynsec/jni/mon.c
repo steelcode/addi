@@ -189,7 +189,7 @@ static int my_epoll_wait(int epfd, struct epoll_event *events, int maxevents, in
 	hook_precall(&eph);
 	log("XXX5 MYPID %d\n", getpid())
 	my_ddi_init();
-	_createPTY();
+	//_createPTY();
 
 	// call original function
 	int res = orig_epoll_wait(epfd, events, maxevents, timeout);    

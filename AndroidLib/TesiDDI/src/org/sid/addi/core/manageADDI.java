@@ -66,6 +66,7 @@ public abstract class manageADDI {
 	
 	//public static native int hookMethodNative(Member method, Class<?> declaringClass, int slot, Class<?>[] parameterTypes, Class<?> returnType);
 	
+	public static native void diosoloW();
 	
 	
 	

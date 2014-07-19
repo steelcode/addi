@@ -1,0 +1,37 @@
+## Funzionamento del Framework ##
+
+Il framework ADDI è composto da due 'side', uno nativo e uno Java. 
+La parte nativa si occupa di gestire e impostare dinamicamente i Dalvik-hook a run-time, gestire l'interfaccia dei comandi, caricare a run-time i file DEX, etc...
+La parte Java contiene la definizione degli hook, il codice da eseguire quando scatta un hook e le classi che permettono la creazione dei log e dei report di esecuzione, inoltre sono offerte delle API per comunicare con la parte nativa.
+
+
+### Breve Descrizione ###
+
+ADDI permette di instrumentare dinamicamente Dalvik, l'ambiente di runtime di Android. L'instrumentazione a runtime viene ottenuta utilizzando le funzioni esposte dalla libreria libdvm.so. L'idea di base, proposta da C. Mulliner e ripresa in modo radicalmente differente in questo progetto, è quella di utilizzare gli hook a runtime per modificare l'esecuzione e inserire codice da eseguire all'attivazione degli hook stessi. Gli hook possono essere piazzati sia sui metodi offerti dal SDK di Android, sia su quelli presenti all'interno dell'applicazione target. Ad ogni hook può essere associato del codice Java da eseguire (contenuto in un DEX caricato a run-time).
+Quando si parla di Dalvik-hook (D-hook) si intendono gli hook che utilizzando le funzioni Dalvik permettono di piazzare un hook sui metodi Java, mentre quando si parla di native-hook ci si riferisce ad hook che hanno come target funzioni native.
+I D-hook, definiti nel mondo Java, sono di 4 tipi:
+1. Pre-Hook: il codice Java, se presente, viene eseguito prima della chiamata originale
+2. After-Hook: il codice Java, se presente, viene eseguito dopo la chiamata originale
+3. NO-EX: il codice Java, se presente, viene eseguito al posto della chiamata originale e il valore di ritorno, se presente, viene restituito al chiamante
+4. True-Hook: il codice Java, se prensente, ritorna sempre true
+5. False-Hook: il codice Java, se prensente, ritorna sempre false
+
+### Internals ###
+
+La libreria dinamica che definisce le funzioni offerte da ADDI viene caricata all'interno del processo target e quindi viene eseguita la funzione definita come entry-point la quale si occupa di inizializzare il framework. La fase di init consiste nell'impostare un hook nativo sulla funzione 'epool_wait()' di libc.so (tale funzione viene richiama molto spesso dal framework di Android), quando tale hook scatta vengono impostati i dalvik-hook e inizializzato l'ambiente del framework.
+I dalvik-hook, come detto prima, sono definiti lato Java e piazzati dal lato nativo. Perchè ciò sia possibile occorre caricare le classi necessarie dal DEX e richiamare i relativi costruttori. Dopo di che vengono piazzati gli hook su Dalvik nel seguente modo:
+
+1. La funzione dalvik_setup(struct dalvik_hook_t *h, char *cls, char *meth, char *sig,  void *func) si occupa di impostare le variabili che definiscono un Dalvik-hook. Ogni D-hook viene identificato da un valore hash composto da:
+(nome_package).(nome_classe).(nome_metodo).(signature_metodo) [dove . è l'operatore di concatenazione] 
+
+2. la funzione dalvik_hook(struct dexstuff_t *dex, struct dalvik_hook_t *h) si occupa di impostare l'hook vero e proprio, le operazioni sono le seguenti:
+	2.1 Viene ricercata in memoria la classe target (specificando il nome in formato Dalvik)
+	2.2 Viene ricercato il metodo all'interno della classe trovata al punto 2.1
+	2.3 il metodo trovato al punto precedente viene copiato (memcpy) all'interno della struttura dinamica che contiene gli hook.
+	2.4 Il metodo del punto 2.2 viene impostato come 'NATIVO', viene cambiato il numero degli argomenti, la grandezza dei registri e altri valori e infine viene impostato il puntatore 'nativeFunc', contenuto all'interno della struttura che rapprensenta i Java Method, facendolo puntare alla funzione 'entry-point' definita nel framework (onetoall2 dentro dalvik_hook.c)
+
+In questo modo ogni volta che viene richiamato un metodo hookato il flusso di esecuzione viene rediretto alla funzione nativa 'onetoall2', tale funzione analizza lo stack e si occupa di capire quale hook è stato richiamato, calcola l'hash di tale hook e lo ricerca all'interno della struttura dinamica. Il D-hook viene recuperato dalla struttura dinamica e nel caso vi sia del codice Java associato viene eseguito, rispettando l'ordine imposto dal tipo di D-hook (Pre/After/NO-EX/etc...).
+La comunicazione con il mondo esterno avviene utilizzando le PIPE create al momento dell'inizializzazione, i comandi accettati dal framework permettono una gestione dinamica delle operazioni di analisi, per esempio: aggiunta/modifica/rimozione di un hook, avvio del profiler, suspend di tutti i thread tranne quello di gestione, etc...
+
+
+### Sviluppatori ###

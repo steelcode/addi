@@ -17,7 +17,7 @@
 #include <stdarg.h>
 
 #include "dexstuff.h"
-
+#include "Globals.h"
 #include "log.h"
 
 
@@ -31,6 +31,9 @@ static void* mydlsym(void *hand, const char *name)
 	return ret;
 }
 
+/**
+	Salvik nella struttura dexstuff_t i riferimenti ai metodi della libdvm.so
+*/
 void dexstuff_resolv_dvm(struct dexstuff_t *d)
 {
 	d->dvm_hand = dlopen("libdvm.so", RTLD_NOW);
@@ -117,7 +120,19 @@ void dexstuff_resolv_dvm(struct dexstuff_t *d)
 		d->dvmCreateInternalThread_fnPtr = mydlsym(d->dvm_hand, "_Z23dvmCreateInternalThreadPlPKcPFPvS2_ES2_");
 		d->dvmMalloc_fnPtr = mydlsym(d->dvm_hand,"_Z9dvmMallocji");
 		d->dvmLinearAlloc_fnPtr = mydlsym(d->dvm_hand, "_Z14dvmLinearAllocP6Objectj");
-				
+		d->dexProtoGetParameterCount_fnPtr = mydlsym(d->dvm_hand, "_Z25dexProtoGetParameterCountPK8DexProto");
+		d->dvmGetArgLong_fnPtr = mydlsym(d->dvm_hand,"_Z13dvmGetArgLongPKji");
+		d->dvmGetException_fnPtr = mydlsym(d->dvm_hand, "_Z15dvmGetExceptionP6Thread");
+		d->dvmWrapException_fnPtr = mydlsym(d->dvm_hand, "_Z16dvmWrapExceptionPKc");
+		d->dvmThrowFileNotFoundException_fnPtr = mydlsym(d->dvm_hand, "_Z29dvmThrowFileNotFoundExceptionPKc");
+		d->dvmHumanReadableDescriptor_fnPtr = mydlsym(d->dvm_hand,"_Z26dvmHumanReadableDescriptorPKc"); //not usable
+		d->dvmGetMethodThrows_fnPtr = mydlsym(d->dvm_hand, "_Z18dvmGetMethodThrowsPK6Method");
+		d->dvmClearException_fnPtr = mydlsym(d->dvm_hand, "_Z17dvmClearExceptionP6Thread");
+		d->dvmThrowClassNotFoundException_fnPtr = mydlsym(d->dvm_hand, "_Z30dvmThrowClassNotFoundExceptionPKc");
+
+
+		
+
 		if (!d->dvmUseJNIBridge_fnPtr)
 			d->dvmUseJNIBridge_fnPtr = mydlsym(d->dvm_hand, "dvmUseJNIBridge");
 		d->dvmDecodeIndirectRef_fnPtr =  mydlsym(d->dvm_hand, "_Z20dvmDecodeIndirectRefP6ThreadP8_jobject");
@@ -139,63 +154,8 @@ void dexstuff_resolv_dvm(struct dexstuff_t *d)
 	}
 }
 
-/*
- * Given a boxed primitive type, such as java/lang/Integer, return the
- * primitive type index.
- *
- * Returns PRIM_NOT for void, since we never "box" that.
- */
-PrimitiveType _getBoxedType(struct DataObject* arg)
-{
-    const int kJavaLangLen = 11;     // strlen("Ljava/lang/")
-    log("dentro GETBOXEDTYPE arg = %p \n", arg)
-    if (arg == NULL)
-        return PRIM_NOT;
 
-    const char* name = arg->o.clazz->descriptor;
 
-    if (strncmp(name, "Ljava/lang/", kJavaLangLen) != 0)
-        return PRIM_NOT;
-
-    if (strcmp(name + kJavaLangLen, "Boolean;") == 0)
-        return PRIM_BOOLEAN;
-    if (strcmp(name + kJavaLangLen, "Character;") == 0)
-        return PRIM_CHAR;
-    if (strcmp(name + kJavaLangLen, "Float;") == 0)
-        return PRIM_FLOAT;
-    if (strcmp(name + kJavaLangLen, "Double;") == 0)
-        return PRIM_DOUBLE;
-    if (strcmp(name + kJavaLangLen, "Byte;") == 0)
-        return PRIM_BYTE;
-    if (strcmp(name + kJavaLangLen, "Short;") == 0)
-        return PRIM_SHORT;
-    if (strcmp(name + kJavaLangLen, "Integer;") == 0)
-        return PRIM_INT;
-    if (strcmp(name + kJavaLangLen, "Long;") == 0)
-        return PRIM_LONG;
-    return PRIM_NOT;
-}
-
-int calculateArgsSize(char* pShorty){
-	int count = 0;
-    for (;;) {
-	    switch (*(pShorty++)) {
-	        case '\0': {
-	            return count;
-	        }
-	        case 'D':
-	        case 'J': {
-	            count ++;
-	            break;
-	        }
-	        default: {
-	            count++;
-	            break;
-	        }
-	    }
-	}
-	return count;
-}
 
 
 void* _dvmGetBoxedTypeDescriptor(struct dexstuff_t* d, PrimitiveType p){
@@ -210,63 +170,12 @@ void* _dvmDecodeIndirectRef(struct dexstuff_t* d, Thread* self, jobject ref){
 	return d->dvmDecodeIndirectRef_fnPtr(self, ref);
 }
 
-int _initMemberOffset(JNIEnv *env, struct dexstuff_t* d, struct Thread* self){
-	log("dentro iniziMemberOffset \n")
-	jintArray dummyArray = (*env)->NewIntArray(env,1);
-	if (dummyArray == NULL) {
-        log("Could allocate int array for testing\n");
-        d->dvmLogExceptionStackTrace_fnPtr();
-        (*env)->ExceptionClear(env);
-        return 0;
-    }
-    jint* dummyArrayElements = (*env)->GetIntArrayElements(env,dummyArray, NULL);
-    arrayContentsOffset = (size_t)dummyArrayElements - (size_t)d->dvmDecodeIndirectRef_fnPtr(self, dummyArray);
-    (*env)->ReleaseIntArrayElements(env,dummyArray,dummyArrayElements, 0);
-    (*env)->DeleteLocalRef(env,dummyArray);
-    if (arrayContentsOffset < 12 || arrayContentsOffset > 128) {
-        log("Detected strange offset %d of ArrayObject->contents  \n", arrayContentsOffset);
-        return 0;
-    }
-
-    return 1;
-}
-
-void _dvmWriteBarrierArray(struct dexstuff_t* d, const struct ArrayObject* obj, size_t start, size_t end){
-	log("dentro writebarriearrray \n")
-	d->dvmWriteBarrierArray_fnPtr(obj, start, end);
-}
-
-void _dvmSetObjectArrayElement(struct dexstuff_t* d, struct ArrayObject* obj, int index,
-                                     struct Object* val) {
-    ((struct Object **)(void *)(obj)->contents)[index] = val;
-    if (val != NULL) {
-        _dvmWriteBarrierArray(d,obj, index, index + 1);
-    }
-}
-
-
-s8 _dvmGetArgLong(const u4* args, int elem){
-	s8 val;
-	memcpy(&val, &args[elem],sizeof(val));
-	return val;
-
-}
-
-void _dvmReleaseTrackedAlloc(struct dexstuff_t*d, struct Object* obj, struct Thread* self){
-	d->dvmReleaseTrackedAlloc_fnPtr(obj, self);
-}
-
-struct DataObject* _dvmBoxPrimitive(struct dexstuff_t* d, JValue value, struct ClassObject* primClass){
-	return d->dvmBoxPrimitive_fnPtr(value, primClass);
-}
 
 void*  _dvmFindPrimitiveClass(struct dexstuff_t*  d, char *c){
 	return d->dvmFindPrimitiveClass_fnPtr(c);
 }
 
-void* _dvmCallMethod(struct dexstuff_t* d, struct Thread* self, const struct Method* method, struct Object* obj, bool fromJni, JValue* pResult){
-	;//return d->dvmCallMethod_fnPtr(self, method, obj, presult);
-}
+
 
 void* _dvmFindArrayClass(struct dexstuff_t* d, char* desc, void* loader){
 	return  d->dvmFindArrayClass_fnPtr(desc,loader);
@@ -276,13 +185,6 @@ void* _dvmAllocArrayByClass(struct dexstuff_t* d, struct ClassObject*  arrayClas
 	return d->dvmAllocArrayByClass_fnPtr(arrayClass, length, allocFlags);
 }
 
-void* _dvmInvokeMethod(struct dexstuff_t* d, struct Object* obj, const struct Method* method,
-    struct ArrayObject* argList, struct ArrayObject* params, struct ClassObject* returnType,
-    bool noAccessCheck){
-
-	return d->dvmInvokeMethod_fnPtr(obj, method, argList, params, returnType, noAccessCheck);
-
-}
 
 void* _dvmComputeMethodArgsSize(struct dexstuff_t* d, struct Method* m){
 	return d->dvmComputeMethodArgsSize_fnPtr(m);
@@ -330,25 +232,23 @@ void*  _loadClass(struct dexstuff_t *d, jobject clsname){
 }
 struct ClassObject* _getCallerClass(struct dexstuff_t* dex){
 	Thread* t = getSelf(dex);
-	log("XXX5 THREAD = 0x%x, field = 0x%x\n", t, t->interpSave.curFrame);
+	//log("XXX5 THREAD = 0x%x, field = 0x%x\n", t, t->interpSave.curFrame);
 	struct ClassObject* co = dex->dvmGetCallerClass_fnPtr(t->interpSave.curFrame);
 	return co;
 }
 struct ClassObject* _getCaller2Class(struct dexstuff_t* dex){
 	Thread* t = getSelf(dex);
-	log("XXX5 THREAD = 0x%x, field = 0x%x\n", t, t->interpSave.curFrame);
+	//log("XXX5 THREAD = 0x%x, field = 0x%x\n", t, t->interpSave.curFrame);
 	struct ClassObject* co = dex->dvmGetCaller2Class_fnPtr(t->interpSave.curFrame);
 	return co;
 }
 struct ClassObject* _getCaller3Class(struct dexstuff_t* dex){
 	Thread* t = getSelf(dex);
-	log("XXX5 THREAD = 0x%x, field = 0x%x\n", t, t->interpSave.curFrame);
+	//log("XXX5 THREAD = 0x%x, field = 0x%x\n", t, t->interpSave.curFrame);
 	struct ClassObject* co = dex->dvmGetCaller3Class_fnPtr(t->interpSave.curFrame);
 	return co;
 }
-void _dvmCallMethodV(struct dexstuff_t* dex, void* th, struct Method* m, struct Object *thiz, JValue result, va_list l){
-	dex->dvmCallMethodV_fnPtr(th, m, thiz, 0, &result, l);
-}
+
 void* _mterprintmethod(struct dexstuff_t *dex){
 	struct Method* m = dex->dvmGetCurrentJNIMethod_fnPtr();
 	dex->dvmMterpPrintMethod_fnPtr(m);
@@ -439,7 +339,8 @@ void _dumpMethod(struct dexstuff_t* d,struct DexFile* pDexFile, const struct Dex
     backDescriptor = _dexStringByTypeIdx(pDexFile, pMethodId->classIdx);
 
     log("DUMP METHOD, name = %s, type = %s \n", name, typeDescriptor)
-    createAndInsertDhook(env, classDescriptor, name, typeDescriptor);
+    if(!strstr(name,"run"))
+    	createAndInsertDhook(env, classDescriptor, name, typeDescriptor);
     
 }
 
@@ -470,14 +371,16 @@ void _dumpClass(struct dexstuff_t* d, struct DexFile* pDexFile, int idx, JNIEnv*
     		return;
     	}
     	else{
-    		log("DUMPCLASS HO TROVATO CLASSE: %s\n", classDescriptor)
     		if(!strstr(classDescriptor, targetCls))
     			return;
+    		log("DUMPCLASS HO TROVATO CLASSE: %s\n", classDescriptor)
     	}
     }
+    /**
     for (i = 0; i < (int) pClassData->header.directMethodsSize; i++) {
-        //_dumpMethod(d,pDexFile, &pClassData->directMethods[i], i,classDescriptor, env);
+       //_dumpMethod(d,pDexFile, &pClassData->directMethods[i], i,classDescriptor, env);
     }
+    */
 
     for (i = 0; i < (int) pClassData->header.virtualMethodsSize; i++) {
         _dumpMethod(d,pDexFile, &pClassData->virtualMethods[i], i,classDescriptor,env);
@@ -496,7 +399,7 @@ void handleAllMethodClass(struct dexstuff_t* d, JNIEnv* env){
 	log("DENTRO HANDLEALLMETHODCLASS\n")
 	jthrowable exc;
 	//struct ClassObject* pp = d->dvmFindLoadedClass_fnPtr("Lcourse/labs/activitylab/ActivityOne;");
-	struct ClassObject* pp = d->dvmFindLoadedClass_fnPtr("Lcom/whatsapp/App;");
+	struct ClassObject* pp = d->dvmFindLoadedClass_fnPtr("Lappinventor/ai_garikoitzmartinez/crackme01/Screen1;"); //prendo il classloader
 	//countMethods(pp);
 
 	if(!pp){
@@ -505,9 +408,10 @@ void handleAllMethodClass(struct dexstuff_t* d, JNIEnv* env){
 	}
 	size_t i,k;
 	struct DexClassDef* pCd  = NULL;
-	char* targetCls = "Lcom/whatsapp/App";
+	char* targetCls = "Lappinventor/";
+	dalvik_dump_class(d, "Lappinventor/ai_garikoitzmartinez/crackme01/Screen1;");
 	//devo fare un  for per ogni metodo in ogni classe
-	struct Method** ppM =  pp->pDvmDex->pResMethods;
+	//struct Method** ppM =  pp->pDvmDex->pResMethods;
 	for (i = 0; i < (int) pp->pDvmDex->pDexFile->pHeader->classDefsSize; i++) {
         _dumpClass(d,pp->pDvmDex->pDexFile, i, env, targetCls);
     }
@@ -537,10 +441,10 @@ void diosolo(struct dexstuff_t* d, JNIEnv *env){
 	//handleAllMethodClass(d,env);
 	char* commName = "Lcourse/labs";
 	//struct ClassObject* pp = d->dvmFindLoadedClass_fnPtr("Lcom/whatsapp/Main;");
-	struct ClassObject* pp = d->dvmFindLoadedClass_fnPtr("Lcourse/labs/activitylab/ActivityOne;");
+	struct ClassObject* pp = d->dvmFindLoadedClass_fnPtr("Lcom/tinder/managers/ManagerApplication;");
 	if(!pp){
 		log("diosolo  NON HO TROVATO MAIN CLASS\n")
-		dalvik_dump_class(d, "");
+		//dalvik_dump_class(d, "");
 		return;
 	}
 	size_t k = 0;
@@ -714,6 +618,7 @@ void* dexstuff_loaddex(struct dexstuff_t *d, char *path)
 	struct DexOrJar* result;
 	log("dexstuff_loaddex, path = 0x%x, %s\n", path, path)
 	void *jpath = d->dvmStringFromCStr_fnPtr(path, strlen(path), ALLOC_DEFAULT);
+	log("dexstuff_loaddex, path = 0x%x, %s\n", jpath, jpath)
 	u4 args[2] = { (u4)jpath, (u4)NULL };
 	//log("XXX5 NOME0 = %s\n", d->dvm_dalvik_system_DexFile[0].name)
 	d->dvm_dalvik_system_DexFile[0].fnPtr(args, &pResult);

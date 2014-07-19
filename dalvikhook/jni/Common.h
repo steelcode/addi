@@ -26,6 +26,17 @@
 #include <stdio.h>
 #include <assert.h>
 
+/*
+ * Some systems might have this in <stdbool.h>.
+ */
+#ifndef __CPP__
+#ifndef __bool_true_false_are_defined
+typedef enum { false=0, true=!false } bool;
+#define __bool_true_false_are_defined 1
+#endif
+#endif
+
+
 
 #if !defined(NDEBUG) && defined(WITH_DALVIK_ASSERT)
 # undef assert
@@ -97,15 +108,7 @@ typedef union JValue {
     //void* l;
 } JValue;
 
-/*
- * Some systems might have this in <stdbool.h>.
- */
-#ifndef __CPP__
-#ifndef __bool_true_false_are_defined
-typedef enum { false=0, true=!false } bool;
-#define __bool_true_false_are_defined 1
-#endif
-#endif
+
 
 #define NELEM(x) ((int) (sizeof(x) / sizeof((x)[0])))
 
