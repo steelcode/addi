@@ -8,6 +8,7 @@ import java.lang.reflect.InvocationTargetException;
 
 import org.sid.addi.core.DEXHook;
 import org.sid.addi.core.manageADDI;
+import org.tesi.core.MyInit;
 
 import dalvik.system.PathClassLoader;
 
@@ -64,7 +65,15 @@ public class OnlyLogHook extends DEXHook {
 				System.out.println("-----STRING MYLOADCLASS ARGS["+i+"]:  "+(String)args[i]);
 			else
 				System.out.println("----- DUMP MYLOADCLASS ARGS["+i+"]:  "+args[i].toString());
-		}		
+		}	
+		String c = (String) args[0];
+
+		//System.out.println("MYLOADCLASSS CERCO CLASSE: "+c);
+		//manageADDI.dumpJavaClass(c,"");
+		String c1 = c.replace(".", "/");
+		c1 = "L" + c1 + ";";		
+		System.out.println("CHIAMO SEARCH FAILED CON: "+c1);
+		MyInit.searchFailedHookWithClsName(c1);
 	}
 	public void dumpArgs(Object...args){
 		Object thiz = null;

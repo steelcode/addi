@@ -32,34 +32,32 @@ public abstract class DalvikHook extends StringHelper{
 	protected String _dex_method = null;
 	protected String _dex_class = null;
 	protected HookType type;
+	protected int ns; //args+ ?static
+	protected int _myargs;
+	protected int dump;
+	protected int debugme;
+	protected int _error;
+	protected int _loaded;
+	protected int _skip; 
+	protected Object thiz = null;
+	protected DEXHook _dexhook;
+	protected DalvikHook _mythiz = null;
 	
 	public int getType(){
 		return this.type.getValue();
 	}
-	
 	public int getNs() {
 		return ns;
 	}
-	public void setNs(int ns) {
-		this.ns = ns;
+	public void setError(int value) {
+		this._error = value;
 	}
 	public int get_myargs() {
 		return _myargs;
 	}
 	public void set_myargs(int _myargs) {
 		this._myargs = _myargs;
-	}
-	protected int ns; //args+ ?static
-	protected int _myargs;
-	protected int dump;
-	protected int debugme;
-	protected int _loaded;
-	protected int _skip; 
-	protected int dexAfter;
-	protected Object thiz = null;
-	protected DEXHook _dexhook;
-	protected DalvikHook _mythiz = null;
-	
+	}	
 	public void setThiz(Object t){
 		this.thiz = t;
 	}
@@ -68,38 +66,28 @@ public abstract class DalvikHook extends StringHelper{
 	}
 	public DEXHook getDexFunc(){
 		return _dexhook;
-	}
-	
+	}	
 	public String get_dex_class() {
 		return _dex_class;
 	}
-
 	public void set_dex_class(String _dex_class) {
 		this._dex_class = _dex_class;
 	}
-
 	public int isSkip() {
 		return _skip;
 	}
-
 	public void setSkip(int skip) {
 		this._skip = skip;
 	}	
-	
-
 	public String get_hashvalue() {
 		return _hashvalue;
 	}
-
 	public void set_hashvalue(String _hashvalue) {
 		this._hashvalue = _hashvalue;
 	}
-
-
 	public String get_dexpath() {
 		return _dexpath;
 	}
-
 	public void set_dexpath(String _dexpath) {
 		this._dexpath = _dexpath;
 	}
@@ -115,22 +103,14 @@ public abstract class DalvikHook extends StringHelper{
 		this._method_sig = method_sig;
 		this._dex_method = dex_method;
 		this._dex_class = dex_class;
-		//this.ns = num_args;
 		this._dexhook = ih;
-		//the hash value is: clname+method_name+method_descriptor clname is without L e ;
-		//this._hashvalue = removeFirstChar(clname.replace(";", ""))+method_name+method_sig;
 		this._hashvalue = clname+method_name+method_sig;
 		this._loaded = 0;
-		//this._myargs = mya;
-		//this._skip = skip;
 		this.type = t;
-		this._mythiz = this;
-		
-		
+		this._mythiz = this;		
 	}
 	public void initFunc(){
-		_dexhook.init(this);
-		
+		_dexhook.init(this);		
 	}
 	private void printArrayObj(Object[] o){
 		for(Object obj : o){

@@ -1,4 +1,10 @@
-Advanced dalvik dynamic instrumentation
+### Advanced dalvik dynamic instrumentation ###
+
+
+Il framework ADDI è composto da due 'side', uno nativo e uno Java. 
+La parte nativa si occupa di gestire e impostare dinamicamente i Dalvik-hook a run-time, gestire l'interfaccia dei comandi, caricare a run-time i file DEX, etc...
+La parte Java contiene la definizione degli hook, il codice da eseguire quando scatta un hook e le classi che permettono la creazione dei log e dei report di esecuzione, inoltre sono offerte delle API (come AndroidLib) per comunicare con la parte nativa.
+
 
 ### Struttura File ###
 

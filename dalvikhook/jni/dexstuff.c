@@ -129,9 +129,8 @@ void dexstuff_resolv_dvm(struct dexstuff_t *d)
 		d->dvmGetMethodThrows_fnPtr = mydlsym(d->dvm_hand, "_Z18dvmGetMethodThrowsPK6Method");
 		d->dvmClearException_fnPtr = mydlsym(d->dvm_hand, "_Z17dvmClearExceptionP6Thread");
 		d->dvmThrowClassNotFoundException_fnPtr = mydlsym(d->dvm_hand, "_Z30dvmThrowClassNotFoundExceptionPKc");
+		d->dvmGetRawDexFileDex_fnPtr = mydlsym(d->dvm_hand, "_Z19dvmGetRawDexFileDexP10RawDexFile");
 
-
-		
 
 		if (!d->dvmUseJNIBridge_fnPtr)
 			d->dvmUseJNIBridge_fnPtr = mydlsym(d->dvm_hand, "dvmUseJNIBridge");
@@ -395,6 +394,73 @@ void countMethods(struct ClassObject* pp){
 	}
 }
 
+void prova(struct dexstuff_t* d, void* cookie){
+	log("DENTRO PROVA, cookie = %x\n", cookie)
+	struct DexOrJar* pDexOrJar = (struct DexOrJar*)cookie;
+	log("cookie = 0x%x, pdexmem = 0x%x, %s\n", cookie, pDexOrJar->pDexMemory, pDexOrJar->fileName)
+	log("rawdexfile %x \n", pDexOrJar->pRawDexFile)
+	int i = 0;
+	struct DexClassDef* pClassDef;
+	struct DexClassData* pClassData = NULL;
+	const u1* pEncodedData;
+	const char* classDescriptor;
+	struct DvmDex* apDvmDex;
+	struct DexFile* pDexFile;
+	log("provo a chiamare dvmgetrawdexfile\n")
+	//pDvmDex = d->dvmGetRawDexFileDex_fnPtr(pDexOrJar->pRawDexFile);
+	apDvmDex = pDexOrJar->pRawDexFile->pDvmDex;
+    if(apDvmDex == NULL){
+    	return;
+    }
+    log("PRESO pDVMDEX %x\n", apDvmDex)
+    log("mappedreadonly %x, header %x \n", apDvmDex->isMappedReadOnly, apDvmDex->pHeader)
+    log("dexFile %x\n", apDvmDex->pDexFile)
+    pDexFile = apDvmDex->pDexFile;
+    struct DexClassLookup* pLookup = pDexFile->pClassLookup;
+    log("CLASSLOOKUP num: %d\n", pLookup->numEntries)
+
+
+    return;
+}
+void _dumpClass2(struct dexstuff_t* d, struct DexFile* pDexFile, int idx, void* cookie){
+	struct DexClassDef* pClassDef;
+	struct DexClassData* pClassData = NULL;
+	const u1* pEncodedData;
+	const char* classDescriptor;
+	
+	int i;
+	pClassDef = &pDexFile->pClassDefs[idx];
+	if (pClassDef->classDataOff == 0)
+        pEncodedData = NULL;
+    else
+    	pEncodedData = (const u1*) (pDexFile->baseAddr + pClassDef->classDataOff);
+	pClassData = d->dexReadAndVerifyClassData_fnPtr(&pEncodedData, NULL);
+	classDescriptor = _dexStringByTypeIdx(pDexFile, pClassDef->classIdx);
+	char * pointer = malloc((sizeof(char) * strlen(classDescriptor)) + 1);
+    if (!(classDescriptor[0] == 'L' &&
+          classDescriptor[strlen(classDescriptor)-1] == ';')){
+    	log("DUMPCLASS ERRORE FORMATO CLASSE \n")
+    	return;
+    }
+    else{
+    	log("DUMPCLASS HO TROVATO CLASSE: %s\n", classDescriptor)
+    	if(strstr(classDescriptor, "Lorg/tesi/") || strstr(classDescriptor, "Lorg/sid/")){
+			memcpy(pointer, classDescriptor, sizeof(char)*strlen(classDescriptor));
+			pointer[strlen(pointer)-1] = '\0';
+			pointer = pointer++;
+			log("chiamo con: %s\n", pointer)
+    		dexstuff_defineclass(d, pointer, cookie);
+    	}
+    }
+}
+void prova2(struct dexstuff_t* d, struct ClassObject* pCo, void* cookie){
+	int i = (int) pCo->pDvmDex->pDexFile->pHeader->classDefsSize;
+	log("prova2, dex contiene %d classi \n", i)
+	for (i = 0; i < (int) pCo->pDvmDex->pDexFile->pHeader->classDefsSize; i++) {
+        _dumpClass2(d,pCo->pDvmDex->pDexFile, i, cookie);
+    }
+}
+
 void handleAllMethodClass(struct dexstuff_t* d, JNIEnv* env){
 	log("DENTRO HANDLEALLMETHODCLASS\n")
 	jthrowable exc;
@@ -618,37 +684,13 @@ void* dexstuff_loaddex(struct dexstuff_t *d, char *path)
 	struct DexOrJar* result;
 	log("dexstuff_loaddex, path = 0x%x, %s\n", path, path)
 	void *jpath = d->dvmStringFromCStr_fnPtr(path, strlen(path), ALLOC_DEFAULT);
-	log("dexstuff_loaddex, path = 0x%x, %s\n", jpath, jpath)
+	
 	u4 args[2] = { (u4)jpath, (u4)NULL };
 	//log("XXX5 NOME0 = %s\n", d->dvm_dalvik_system_DexFile[0].name)
 	d->dvm_dalvik_system_DexFile[0].fnPtr(args, &pResult);
 	//result = (jint) pResult.l;
 	result = (struct DexOrJar*) pResult.l;
-	/**
-	if(result->pRawDexFile){
-		log("cookie = 0x%x, pdexmem = 0x%x, %s\n", pResult.l, result->pDexMemory, result->fileName)
-		//log("porcodio magic: 0x%x \n", result->pRawDexFile->pDvmDex->pDexFile->pOptHeader->dexLength)
-		if(result->pRawDexFile){
-			log("cisono\n")
-			log("prendo rawdexfile  = 0x%x\n",  result->pRawDexFile)
-			struct RawDexFile* rdex = result->pRawDexFile;
-			log("preso rawdexfile = 0x%x\n", rdex)
-			if(rdex != NULL){
-				log("cisono1\n")
-				//log("cachefilename = 0x%x\n",rdex->cacheFileName)
-				if(rdex->pDvmDex){
-					log("cisono2\n")
-					//log("prendo DvmDex = 0x%x\n", rdex->pDvmDex)
-					struct DvmDex* pdex = rdex->pDvmDex;
-					struct DexFile* pfd = pdex->pDexFile;
-					log("base addr = 0x%x\n", pfd->baseAddr)
-				}
-				else
-					log("p dvmdex NULL \n")
-			}
-		}
-	}	
-	*/
+
 
 	return result;
 }

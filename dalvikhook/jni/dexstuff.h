@@ -723,6 +723,7 @@ typedef void* (*dvmHumanReadableDescriptor_func)(void*);
 typedef void* (*dvmGetMethodThrows_func)(void*);
 typedef void* (*dvmClearException_func)(void*);
 typedef void* (*dvmThrowClassNotFoundException_func)(void*);
+typedef void* (*dvmGetRawDexFileDex_func)(struct RawDexFile*);
 /**
 typedef void (*DalvikNativeFuncToHook)(struct DalvikNativeMethodToHook*, ...);
 
@@ -823,6 +824,7 @@ struct dexstuff_t
     dvmGetMethodThrows_func dvmGetMethodThrows_fnPtr;
     dvmClearException_func dvmClearException_fnPtr;
     dvmThrowClassNotFoundException_func dvmThrowClassNotFoundException_fnPtr;
+    dvmGetRawDexFileDex_func dvmGetRawDexFileDex_fnPtr;
 
 	dvmGetCurrentJNIMethod_func dvmGetCurrentJNIMethod_fnPtr;
 	dvmLinearSetReadWrite_func dvmLinearSetReadWrite_fnPtr;

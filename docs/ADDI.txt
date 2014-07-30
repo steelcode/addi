@@ -1,10 +1,3 @@
-## Funzionamento del Framework ##
-
-Il framework ADDI è composto da due 'side', uno nativo e uno Java. 
-La parte nativa si occupa di gestire e impostare dinamicamente i Dalvik-hook a run-time, gestire l'interfaccia dei comandi, caricare a run-time i file DEX, etc...
-La parte Java contiene la definizione degli hook, il codice da eseguire quando scatta un hook e le classi che permettono la creazione dei log e dei report di esecuzione, inoltre sono offerte delle API per comunicare con la parte nativa.
-
-
 ### Breve Descrizione ###
 
 ADDI permette di instrumentare dinamicamente Dalvik, l'ambiente di runtime di Android. L'instrumentazione a runtime viene ottenuta utilizzando le funzioni esposte dalla libreria libdvm.so. L'idea di base, proposta da C. Mulliner e ripresa in modo radicalmente differente in questo progetto, è quella di utilizzare gli hook a runtime per modificare l'esecuzione e inserire codice da eseguire all'attivazione degli hook stessi. Gli hook possono essere piazzati sia sui metodi offerti dal SDK di Android, sia su quelli presenti all'interno dell'applicazione target. Ad ogni hook può essere associato del codice Java da eseguire (contenuto in un DEX caricato a run-time).

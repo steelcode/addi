@@ -43,7 +43,7 @@ public abstract class manageADDI {
 	 */
 	
 	/* Inserisce nella lista un DalvikHook*/
-	public static native void createStruct(DalvikHook d);
+	public static native int createStruct(DalvikHook d);
 	//public static native void createPTY();
 	/* sospende tutti i thread tranne il chiamante*/
 	public static native void suspendALL();
@@ -146,10 +146,9 @@ public abstract class manageADDI {
 		
 	}
 	
-	public static void _init(DalvikHook d){
-		
-		//try xposed way
-		createStruct(d);
+	public static int _init(DalvikHook d){
+		int i = createStruct(d); //1 is error, 0 ok
+		return i; 
 	}
 	
 }
