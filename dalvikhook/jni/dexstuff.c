@@ -130,6 +130,7 @@ void dexstuff_resolv_dvm(struct dexstuff_t *d)
 		d->dvmClearException_fnPtr = mydlsym(d->dvm_hand, "_Z17dvmClearExceptionP6Thread");
 		d->dvmThrowClassNotFoundException_fnPtr = mydlsym(d->dvm_hand, "_Z30dvmThrowClassNotFoundExceptionPKc");
 		d->dvmGetRawDexFileDex_fnPtr = mydlsym(d->dvm_hand, "_Z19dvmGetRawDexFileDexP10RawDexFile");
+		//d->dvmCreateStringFromCstr_fnPtr = mydlsym(d->dvm_hand, "_Z23dvmCreateStringFromCstrPKc");
 
 
 		if (!d->dvmUseJNIBridge_fnPtr)
@@ -189,20 +190,20 @@ void* _dvmComputeMethodArgsSize(struct dexstuff_t* d, struct Method* m){
 	return d->dvmComputeMethodArgsSize_fnPtr(m);
 }
 void*  _dvmInitClass(struct dexstuff_t* d, void* cls){\
-	log("dvminitclass\n")
+	//log("dvminitclass\n")
 	void *res = d->dvmInitClass_fnPtr(cls);
-	log("chiamato dvminitclass = %p \n", res)
+	//log("chiamato dvminitclass = %p \n", res)
 }
 
 void*  _dvmFindStaticField(struct dexstuff_t* d, struct ClassObject*  cls, char* fname, char* fsig){
 	void* res = d->dvmFindStaticField_fnPtr(cls,fname,fsig);
-	log("cisono\n")
-	log("XXX7 staticfield = 0x%x\n", res)
+	//log("cisono\n")
+	//log("XXX7 staticfield = 0x%x\n", res)
 }
 
 int _dvmDexChangeDex1(struct dexstuff_t *d, struct DvmDex* pdvmD, u1* addr, u1 newVal){
 	void* res = d->dvmDexChangeDex1_fnPtr(pdvmD,addr,newVal);
-	log("dvmDexChangeDex1 = %p\n", res)
+	//log("dvmDexChangeDex1 = %p\n", res)
 
 }
 
@@ -212,21 +213,21 @@ int _sysChangeMapAccess(struct dexstuff_t *d, void* addr, size_t length, int wan
 
 void* _dvmDexFileOpenFromFd(struct dexstuff_t *d, int cookie, struct DvmDex* pdex){
 	int res = d->dvmDexFileOpenFromFd_fnPtr(cookie, &pdex);
-	log("XXX7 openfromfd res = 0x%x\n", res)
+	//log("XXX7 openfromfd res = 0x%x\n", res)
 	return res;
 }
 
 //problemi con il passaggio del parametro objName di tipo StringObject*
 void*  _loadClass(struct dexstuff_t *d, jobject clsname){
-	log("XXX7 sono dentro LOADCLASS = 0x%x\n", &clsname)
-	log("DEBUG VMCLASSLOADER = %s\n", d->dvm_java_lang_VMClassLoader[6].name)
+	//log("XXX7 sono dentro LOADCLASS = 0x%x\n", &clsname)
+	//log("DEBUG VMCLASSLOADER = %s\n", d->dvm_java_lang_VMClassLoader[6].name)
 	u4 args[2] = { (struct StringObject*) &clsname, (u4)0x0};
 	JValue pResult;
 	void* res = NULL;
 	d->dvm_java_lang_VMClassLoader[6].fnPtr( args , &pResult );
 	res = (void*) pResult.l;
 	if(res){
-		log("XXX7 TROVATA CLS = 0x%x\n", res)
+		//log("XXX7 TROVATA CLS = 0x%x\n", res)
 	}
 }
 struct ClassObject* _getCallerClass(struct dexstuff_t* dex){
@@ -274,7 +275,7 @@ void _unlockThreadList(struct dexstuff_t *dex){
 void _callSuspendThread(struct dexstuff_t *dex){
 	tself = getSelf(dex);
 	//dex->dvmDumpAllThreadsb_fnPtr();
-	log("XXX5 sto sospendendo @0x%x\n", tself)
+	//log("XXX5 sto sospendendo @0x%x\n", tself)
 	dex->dvmSuspendThread_fnPtr(tself);
 	//dex->dvmDumpAllThreadsb_fnPtr();
 }
@@ -324,7 +325,7 @@ char* _dexCopyDescriptorFromMethodId(struct dexstuff_t* d, const struct DexFile*
 }
 
 void _dumpMethod(struct dexstuff_t* d,struct DexFile* pDexFile, const struct DexMethod* pDexMethod, int i , char* classDescriptor, JNIEnv* env){
-	log("DUMP METHOD CHIAMATO \n")
+	//log("DUMP METHOD CHIAMATO \n")
     const struct DexMethodId* pMethodId;
     const char* backDescriptor;
     const char* name;
@@ -337,7 +338,7 @@ void _dumpMethod(struct dexstuff_t* d,struct DexFile* pDexFile, const struct Dex
 
     backDescriptor = _dexStringByTypeIdx(pDexFile, pMethodId->classIdx);
 
-    log("DUMP METHOD, name = %s, type = %s \n", name, typeDescriptor)
+    //log("DUMP METHOD, name = %s, type = %s \n", name, typeDescriptor)
     if(!strstr(name,"run"))
     	createAndInsertDhook(env, classDescriptor, name, typeDescriptor);
     
@@ -359,7 +360,7 @@ void _dumpClass(struct dexstuff_t* d, struct DexFile* pDexFile, int idx, JNIEnv*
 
     if (!(classDescriptor[0] == 'L' &&
           classDescriptor[strlen(classDescriptor)-1] == ';')){
-    	log("DUMPCLASS ERRORE FORMATO CLASSE \n")
+    	//log("DUMPCLASS ERRORE FORMATO CLASSE \n")
     	return;
     }
     else{
@@ -372,7 +373,7 @@ void _dumpClass(struct dexstuff_t* d, struct DexFile* pDexFile, int idx, JNIEnv*
     	else{
     		if(!strstr(classDescriptor, targetCls))
     			return;
-    		log("DUMPCLASS HO TROVATO CLASSE: %s\n", classDescriptor)
+    		//log("DUMPCLASS HO TROVATO CLASSE: %s\n", classDescriptor)
     	}
     }
     /**
@@ -624,11 +625,11 @@ void diosolo(struct dexstuff_t* d, JNIEnv *env){
 	handleAllMethodClass(d,env);
 }
 void* _dvmFindLoadedClass(struct dexstuff_t *dex, char *clsname){
-	log("XXX7 chiamato dvmFindLoadedClass con %s\n", clsname);
+	//log("XXX7 chiamato dvmFindLoadedClass con %s\n", clsname);
 	struct ClassObject* co = dex->dvmFindLoadedClass_fnPtr(clsname);
-	log("findloadedclass ci sono = %p\n", co)
+	//log("findloadedclass ci sono = %p\n", co)
 	if(co)
-		log("XXX7 ritorno cls = 0x%x, clazzloader = 0x%x\n", co, co->classLoader)
+		//log("XXX7 ritorno cls = 0x%x, clazzloader = 0x%x\n", co, co->classLoader)
 	return (void*)co;
 }
 
@@ -671,7 +672,7 @@ void * get_method(struct dexstuff_t *dex, char* name, char * desc){
 	strcat(name,h->name);
 	char *str = dex->dexProtoCopyMethodDescriptor_fnPtr(&h->prototype);
 	log("XXX get_method NAME = %s, DESCRIPTOR = %s\n", h->name, str)
-	log("XXX4 prova = %s\n", h->clazz->descriptor)
+	//log("XXX4 prova = %s\n", h->clazz->descriptor)
 	strcpy(desc,str);
 }
 int is_static(struct dexstuff_t *dex, struct Method *m){
@@ -684,7 +685,7 @@ void* dexstuff_loaddex(struct dexstuff_t *d, char *path)
 	struct DexOrJar* result;
 	log("dexstuff_loaddex, path = 0x%x, %s\n", path, path)
 	void *jpath = d->dvmStringFromCStr_fnPtr(path, strlen(path), ALLOC_DEFAULT);
-	
+	d->dvmReleaseTrackedAlloc_fnPtr(jpath,getSelf(d));
 	u4 args[2] = { (u4)jpath, (u4)NULL };
 	//log("XXX5 NOME0 = %s\n", d->dvm_dalvik_system_DexFile[0].name)
 	d->dvm_dalvik_system_DexFile[0].fnPtr(args, &pResult);
@@ -697,7 +698,7 @@ void* dexstuff_loaddex(struct dexstuff_t *d, char *path)
 
 void* dexstuff_getStackClass2(struct dexstuff_t *d){
 	jvalue pResult;
-	u4 args[0] = {};	
+	u4 args[2] = {};	
 	d->dvm_dalvik_system_VMStack[1].fnPtr(args, &pResult);
 	jobject* ret = pResult.l;
 	return ret;
@@ -707,23 +708,23 @@ void* dexstuff_defineclass(struct dexstuff_t *d, char *name, int cookie)
 	u4 *nameObj = (u4*) name;
 	jvalue pResult;
 	
-	log("dexstuff_defineclass: %s using %x\n", name, cookie)
+	//log("dexstuff_defineclass: %s using %x\n", name, cookie)
 	
 	void* cl = d->dvmGetSystemClassLoader_fnPtr();
 	struct Method *m = d->dvmGetCurrentJNIMethod_fnPtr();
-	log("sys classloader = 0x%x\n", cl)
-	log("cur m classloader = 0x%x\n", m->clazz->classLoader)
+	//log("sys classloader = 0x%x\n", cl)
+	//log("cur m classloader = 0x%x\n", m->clazz->classLoader)
 	
 	void *jname = d->dvmStringFromCStr_fnPtr(name, strlen(name), ALLOC_DEFAULT);
 	//log("called string...\n")
 
 	u4 args[3] = { (u4)jname, (u4) m->clazz->classLoader, (u4) cookie };
 	d->dvm_dalvik_system_DexFile[3].fnPtr( args , &pResult );
-	log("cur m classloader = 0x%x\n", m->clazz->classLoader)
+	//log("cur m classloader = 0x%x\n", m->clazz->classLoader)
 
 	jobject *ret = pResult.l;
 	
-	log("class = 0x%x\n", ret)
+	//log("class = 0x%x\n", ret)
 	
 	return ret;
 }
@@ -735,7 +736,7 @@ void* _setSelf(struct dexstuff_t*dex){
 Thread* getSelf(struct dexstuff_t *d)
 {
 	Thread* self  = d->dvmThreadSelf_fnPtr();
-	log("GETSELF = %p \n", self)
+	//log("GETSELF = %p \n", self)
 	return self;
 }
 

@@ -51,41 +51,30 @@
  
 #undef log
 
-#define log(...) \
-        {FILE *fp = fopen("/data/local/tmp/strmon.log", "a+");\
+#define log2(...) \
+        {FILE *fp = fopen(logname, "a+");\
         fprintf(fp, __VA_ARGS__);\
         fclose(fp);}
 
-static struct hook_t eph;
-static struct hook_t eph2;
-static struct hook_t addTraceh;
-
-static struct dalvik_hook_t sb1;
-static int debug = 0;
-
+struct hook_t eph;
+struct hook_t eph2;
+struct hook_t addTraceh;
+struct dalvik_hook_t sb1;
+int debug = 0;
+char logname[] = "/data/local/tmp/dynsec/nhook.log";
 static const JNIEnv *env = NULL;
 static JavaVM* g_JavaVM = NULL;
 
 pthread_mutex_t hookm;
 
-/**
-char *ptsn;
-int coms;
-lista L;
-pthread_mutex_t mutex; //list mutex
-static struct dexstuff_t d;
-static int debug = 1;
-int cookie;
-pthread_t pty_t;
-*/
 static void my_log(char *msg)
 {
-	log("%s",msg)
+	log2("%s",msg)
 }
 static void my_log2(char *msg)
 {
 	if (debug)
-		log("%s",msg)
+		log2("%s",msg)
 }
 // helper function
 void printString(JNIEnv *env, jobject str, char *l)
@@ -93,43 +82,11 @@ void printString(JNIEnv *env, jobject str, char *l)
 	char *s = (*env)->GetStringUTFChars(env, str, 0);
 
 	if (s) {
-		log("%s%s\n", l, s)
+		log2("%s%s\n", l, s)
 		(*env)->ReleaseStringUTFChars(env, str, s); 
 	}
 }
 
-/**
-static int aflag = 0;
-static void* hookp(JNIEnv* env,jobject thiz, jobject a1, jobject a2){
-	log("XX4 dentro hookp \n")
-	jvalue args[2];
-	args[0].l = a1;
-	args[1].l = a2;
-	dalvik_prepare(&d,&sb1, env);
-	void * res = (*env)->CallObjectMethodA(env, thiz, sb1.mid, args);
-	dalvik_postcall(&d,&sb1);
-	if(aflag == 10){
-		int ret = _tryLockThreadList(&d);
-		log("XXX4 PRIMA DI SUSPEND THREAD ritornato + %d\n", ret)
-		void * niente = getSelf(&d);
-		niente = getSelf(&d);
-		niente = getSelf(&d);
-		callSuspendThread(&d);
-		//_suspendSelf(&d); <---- sospende native
-		_unlockThreadList(&d);
-		log("XXX4 DOPO SUSPEND THREAD!!!\n")
-		_createPTY(env);
-	}
-	aflag++;
-	return res;
-}
-static void unaprova(){
-
-	dalvik_hook_setup(&sb1, "Landroid/app/SharedPreferencesImpl;",  "getString",  "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;", 3, hookp);
-	dalvik_hook(&d, &sb1);
-
-}
-*/
 
 
 // JNI OnLoad
@@ -137,17 +94,17 @@ JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM* vm, void* reserved)
 {
     g_JavaVM = vm;
     setJavaVM(g_JavaVM);
-    log("XXX5 Java CHIAMATO ONLOAD, jvm = 0x%x\n", g_JavaVM)
+    log2("XXX5 Java CHIAMATO ONLOAD, jvm = 0x%x\n", g_JavaVM)
     return JNI_VERSION_1_6;
 }
 
 static void my_connect(int socket, struct sockaddr *address, socklen_t length){
-	log("chiamato connect!!!\n")
+	log2("chiamato connect!!!\n")
 	int (*orig_connect)(int socket, struct sockaddr *address, socklen_t length);
 	orig_connect = (void*)eph2.orig;
 	if(address->sa_family == AF_INET){
 		struct sockaddr_in *address_in = address;
-		log("sinport = 0x%x\n", address_in->sin_port)
+		log2("sinport = 0x%x\n", address_in->sin_port)
 	}
 	orig_connect(socket, address,  length);
 
@@ -157,9 +114,9 @@ static void my_add_trace(void* self, void* method, int action){
 	pthread_mutex_lock(&hookm);
 	void (*origin_add_trace)(void* self, void* method, int action);
 	origin_add_trace = (void*) addTraceh.orig;	
-	log("XXX7 chiamato add trace\n")
-			hook_precall(&addTraceh);
-		origin_add_trace(self,method,action);
+	log2("XXX7 chiamato add trace\n")
+	hook_precall(&addTraceh);
+	origin_add_trace(self,method,action);
 	/**
 	if(tryMagic(method)){
 		hook_precall(&addTraceh);
@@ -167,64 +124,52 @@ static void my_add_trace(void* self, void* method, int action){
 		hook_postcall(&addTraceh);	
 	}
 	*/
-	log("XXX7 fine add trace\n")
+	log2("XXX7 fine add trace\n")
 	pthread_mutex_unlock(&hookm);
 	return;
 }
 static bool my_dvmInitClass(jclass* clazz){
-	log("XXX7 dentro hook dvminitclass = %p\n", clazz)
+	log2("XXX7 dentro hook dvminitclass = %p\n", clazz)
 	bool (*origin_dvmInitClass)(jclass*);
 	origin_dvmInitClass = (void*)eph2.orig;
 	hook_precall(&eph2);
 	bool res = origin_dvmInitClass(clazz);
 	hook_postcall(&eph2);
-	log("XXX7 esco da hook dvminitclass %p, %x\n",res,res)
+	log2("XXX7 esco da hook dvminitclass %p, %x\n",res,res)
 	return res;
 }
 static int my_epoll_wait(int epfd, struct epoll_event *events, int maxevents, int timeout)
 {
+	log2("dentro my_epool_wait, log vale = %s\n", logname)
 	int (*orig_epoll_wait)(int epfd, struct epoll_event *events, int maxevents, int timeout);
 	orig_epoll_wait = (void*)eph.orig;
 	// remove hook for epoll_wait
 	hook_precall(&eph);
-	log("XXX5 MYPID %d\n", getpid())
+	log2("sticazzi\n")
 	my_ddi_init();
-	//_createPTY();
+	_createPTY();
 
 	// call original function
 	int res = orig_epoll_wait(epfd, events, maxevents, timeout);    
 	return res;
 }
 
+
 // set my_init as the entry point
 void __attribute__ ((constructor)) my_init(void);
 
 void my_init(void)
 {
-	log("DDI: started\n");
 	pthread_mutex_init(&hookm, NULL);
-/**
-	coms=1;
-	ptsn = (char*) malloc(sizeof(char*));
-	if(!start_coms(&coms, ptsn))
-		log("XXX error start coms\n")
-  	if(debug)
-  		log("XXX ptsname: %s - %d\n", ptsn, coms)
-*/
+	
  	// set to 1 to turn on, this will be noisy
 	debug = 0;
 
  	// set log function for  libbase (very important!)
 	set_logfunction(my_log);
 	// set log function for libdalvikhook (very important!)
-	dalvikhook_set_logfunction(my_log);
-	/**
-	char* oldClassPath = getenv("CLASSPATH");
-	log("XXX5 classpath = %s\n", oldClassPath)
-	if(oldClassPath == NULL){
-		setenv("CLASSPATH", "/data/local/tmp/tesiddi.jar" ,1);
-	}
-	*/
+	dalvikhook_set_logfunction(logmsgtofile);
+	log2("DDI: started, pid: %d logname: %s\n", getpid(),logname);
 	//hook(&addTraceh, getpid(), "libdvm.", "_Z17dvmMethodTraceAddP6ThreadPK6Methodi", my_add_trace, my_add_trace);
     hook(&eph, getpid(), "libc.", "epoll_wait", my_epoll_wait, 0);
    // hook(&eph2, getpid(), "libdvm.", "dvmInitClass", 0, my_dvmInitClass);

@@ -138,10 +138,33 @@ public abstract class DalvikHook extends StringHelper{
 	}
 	public void myexecute(Object[] args){
 		try {
-			//System.out.println("CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC");
+			//System.out.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
 			//System.out.println("DUMP: dex_method = "+get_dex_method()+" DEXCLASS = " + get_dex_class()+" CLSNAME = "+get_clname());
+			Class ob = Object[].class;
 			//System.out.println("DEBUG DEXHOOK,  "+_dexhook._methodName);
-			Method m = _dexhook.getClass().getDeclaredMethod(get_dex_method(), Object[].class);
+			ClassLoader cl = DalvikHook.class.getClassLoader();
+			//System.out.println("MIO CLASSLOADER: "+cl);
+			Class d = _dexhook.getClass();
+			//System.out.println("TROVATA DEXHOOK CLASS: "+d);
+			ClassLoader cl2 = d.getClassLoader();
+			//System.out.println("DEXHOOK CLASSLOADER: "+cl2);
+			Method m = null;
+			Method[] mm = d.getMethods();
+			//System.out.println("PRESO ARRAY METODI: "+ mm);
+			for (Method x : mm){
+				//System.out.print("Nome metodo: "+x.getName()+" ");
+				if(x.getName().equalsIgnoreCase(get_dex_method())){
+					m = x;
+				}
+			}
+			//Method m = d.getDeclaredMethod(get_dex_method(), ob);
+			if(m==null){
+				System.out.println("IL METODO E NULLO PORCODIO!!!");
+				return ;
+			}
+			
+			//Method m = _dexhook.getClass().getDeclaredMethod(get_dex_method(), ob);
+			
 			//System.out.println("RICEVUTO NUM ARGS = "+args.length + args.toString());
 			//printArrayObj(args);
 			//System.out.println("CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC" + _clname + " paranoica " + m.getName());
@@ -158,6 +181,7 @@ public abstract class DalvikHook extends StringHelper{
 			//System.out.println("vediamo un po class: "+myargs.getClass().toString()+" myargs: "+myargs.length + myargs.toString());
 			//System.out.println("INVOKO IL METODO SENZA VALORE DI RITORNO!!!");
 			m.invoke(_dexhook, myargs);
+			System.out.println("INVOKATO IL METODO SENZA VALORE DI RITORNO!!!");
 		} catch (IllegalAccessException e) {
 			System.out.println("PUTTANA CENERENTOLA");
 			printArrayObj(args);
@@ -190,10 +214,11 @@ public abstract class DalvikHook extends StringHelper{
 		} catch (InvocationTargetException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		} catch (NoSuchMethodException e) {
+		} 
+		/*catch (NoSuchMethodException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		}
+		}*/
 		
 	}
 	public void myexecute(){

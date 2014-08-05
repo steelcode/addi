@@ -37,6 +37,7 @@ public class Session {
 	
 	
 	public Session(String request, String response){
+		System.out.println("PORCODIOPORCODIO DENTRO COSTRUTTORE SESSION");
 		Log.i(_TAG,  "------------ DENTRO SESSION con req = " +request+" e res = "+response);
 		
 			//req = new File(request);
@@ -81,11 +82,13 @@ public class Session {
 		return data.toString();
 	}
 	public void start(){
+		System.out.println("DIOPORCODIOPORCODIOPORCO "+Class.class.getClassLoader());
 		Log.i(_TAG, "------------DENTRO START");
 		//manageADDI.suspendALL();
 		String line = null;
 		for(;;){
 			try {
+				Log.i(_TAG, "------------DENTRO FOR START");
 				//input = new BufferedReader(new InputStreamReader(new FileInputStream(req)));
 				//output = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(res)));
 				input = new BufferedReader(new FileReader(new File(req)));
@@ -107,10 +110,12 @@ public class Session {
 				System.out.println("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA");
 				// TODO Auto-generated catch block
 				e.printStackTrace();
+				break;
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 				System.out.println("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA");
+				break;
 			}
 		}
 	}

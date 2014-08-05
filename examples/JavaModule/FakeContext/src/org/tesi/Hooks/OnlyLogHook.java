@@ -48,10 +48,11 @@ public class OnlyLogHook extends DEXHook {
 		if(_thiz != null){
 			thiz = _thiz;
 			if(thiz instanceof String)
-				System.out.println("----- DUMP MYLOADCLASS, THIZ:  "+(String)thiz);
+				System.out.println("----- DUMP STRING MYLOADCLASS, THIZ:  "+(String)thiz);
 			else{
 				System.out.println("----- DUMP MYLOADCLASS, THIZ:  "+thiz.toString());
-				System.out.println("----- DUMP MYLOADCLASS, THIZ PARENT:  "+((PathClassLoader)_thiz).getParent().toString());
+				//da qui si entra nel sifone
+				//System.out.println("----- DUMP MYLOADCLASS, THIZ PARENT:  "+((PathClassLoader)_thiz).getParent().toString());
 			}
 		}
 		else{
@@ -66,6 +67,7 @@ public class OnlyLogHook extends DEXHook {
 			else
 				System.out.println("----- DUMP MYLOADCLASS ARGS["+i+"]:  "+args[i].toString());
 		}	
+		System.out.println("DOPO FOR");
 		String c = (String) args[0];
 
 		//System.out.println("MYLOADCLASSS CERCO CLASSE: "+c);

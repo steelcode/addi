@@ -37,14 +37,17 @@
 #define LOADER"/data/local/tmp/loader.dex"
 #define DEXFILE "/data/local/tmp/classes.dex"
 
+
 struct dexstuff_t d;
 lista L; //dalvikhook list
 pthread_mutex_t mutex; //list mutex
-int debug = 1;
-static int cookie = NULL;
+static int debug = 0;
+static int cookie = NULL; 
 pthread_t pty_t;
+char working_dir[256] = {0};
 static JavaVM* g_JavaVM = NULL;
-
+static int cookie2 = NULL;
+struct ClassObject* dalvikHookCls=NULL;
 
 
 /**
@@ -315,13 +318,18 @@ static struct ArrayObject* boxMethodArgs(struct Method* method, const u4* args)
 
 //static void __attribute__ ((constructor)) dalvikhook_my_init(void);
 
-static char logfile[] = "/data/local/tmp/log";
+static char logfile[256] = "/data/local/tmp/dynsec";
 
-static void logmsgtofile(char *msg)
+void logmsgtofile(char *msg)
 {
+	/*
     int fp = open(logfile, O_WRONLY|O_APPEND);
     write(fp, msg, strlen(msg));
     close(fp);
+    */
+    FILE* fp = fopen(logfile, "a+");
+    fprintf(fp,"%s",msg);
+    fclose(fp);
 }
 
 static void logmsgtostdout(char *msg)
@@ -523,7 +531,13 @@ typedef struct dexth_args{
 	JValue* _margs;
 }dexth_args;
 
-
+/*
+void* callLoadClass(char* c){
+	jclass mycls = (*env)->FindClass(env, "org/tesi/bootloader/BootLoader"); 
+	jmethodID entrypoint = (*env)->GetStaticMethodID(env, mycls, "_loadClass", "(Ljava/lang/String;)V");
+	(*env)->CallStaticVoidMethod(env,mycls,entrypoint,c);
+}
+*/
 /**
 	Funzione che carica ed esegue il metodo java contenuto nel file DEX associato all'hook
 */
@@ -546,11 +560,13 @@ struct Object* eseguiDex2(JNIEnv*env,struct Method* original, struct Object* thi
 		log("ESEGUIDEX2 decodificata ref = %p, risultato = %p \n", dh->ref, oo)
 		log("ESEGUIDEX2 ho un dex method da chiamare = %s!!!\n", dh->dex_meth)
 	}
-		
+	/*
 	if(!dh->loaded){
 		if(debug)
 			log("ESEGUIDEX2 DEVO CARICARE LA CLASSE DAL DEX %s\n", dh->dex_class)
+		//XXX
 		//clazz = (jclass *)dexstuff_defineclass(&d, dh->dex_class, cookie);
+		//load della classe...
 		pCo = (struct ClassObject*) _dvmFindLoadedClass(&d,DALVIKHOOKCLS_2);// _dvmFindSystemClass(&d, DALVIKHOOKCLS_2);
 		if(debug)
 			log("ESEGUIDEX2 trovata dalvikhookcls = %p \n", pCo)
@@ -565,6 +581,7 @@ struct Object* eseguiDex2(JNIEnv*env,struct Method* original, struct Object* thi
 		if(debug)
 			log("ESEGUIDEX2 DEX CLASS CACHED!!!\n")
 	}
+	*/
 	if(thiz != NULL){
 		log("ESEGUIDEX2 DENTRO SET THIZ, cerco in classe = %p \n",dh->DexHookCls)
 		struct Method* set_thiz = d.dvmFindVirtualMethodHierByDescriptor_fnPtr(dh->DexHookCls, "setThiz" , "(Ljava/lang/Object;)V");
@@ -585,74 +602,7 @@ struct Object* eseguiDex2(JNIEnv*env,struct Method* original, struct Object* thi
 	//struct Method* dex_meth = d.dvmFindVirtualMethodHierByDescriptor_fnPtr(dh->DexHookCls, "myexecute" , "()V");
 	if(debug)
 		log("ESEGUIDEX2 trovato myexecute %p \n", dex_meth)
-	/** Provo la nuova strada del boxargs
-	char* pshorty = &original->shorty[1];
-	//cerco le classi che mi servono per costruire l'array degli argomenti
-	struct ClassObject* pDio = _dvmFindSystemClass(&d, "Ljava/lang/reflect/Array;");
-	struct ClassObject* pDioObj = _dvmFindSystemClass(&d, "Ljava/lang/Object;");
-	struct ClassObject* pDioInteger = _dvmFindSystemClass(&d, "Ljava/lang/Integer;");
-	if(debug)
-		log("trovata array class = %p e obj class = %p \n", pDio, pDioObj)
-	//metodi della classe Array reflect
-	struct Method* pDioM = d.dvmFindDirectMethodHierByDescriptor_fnPtr(pDio, "newInstance" , "(Ljava/lang/Class;I)Ljava/lang/Object;");
-	struct Method* pDioM2 = d.dvmFindDirectMethodHierByDescriptor_fnPtr(pDio, "set" , "(Ljava/lang/Object;ILjava/lang/Object;)V");
-	struct Method* pDioMint = d.dvmFindDirectMethodHierByDescriptor_fnPtr(pDio, "setInt" , "(Ljava/lang/Object;II)V");
-	struct Method* pDioMValueOf = d.dvmFindDirectMethodHierByDescriptor_fnPtr(pDioInteger, "valueOf" , "(I)Ljava/lang/Integer;");
-	if(debug)
-		log("TROVATO METODO newInstance = %p, set = %p,  \n", pDioM, pDioM2)
-	jvalue args2[2];
-	args2[0].l = pDioObj;
-	args2[1].i = real_args;
-	//creo una nuova istanza della classe Object[]
-	d.dvmCallMethodA_fnPtr(self, pDioM, NULL,false, &result, args2 );
-	struct Object* mioArray;
-	//alloco lo spazio per l'oggetto array
-	mioArray = d.dvmLinearAlloc_fnPtr(oo->clazz->classLoader, sizeof(struct Object) ); //calloc(1,sizeof(struct Object));
-	mioArray = result.l;
-	if(debug)
-		log("chiamato metodo, ottenuto %p \n", mioArray)
-	JValue args3[3];
-	int i = 0;
-	for(i=0;i<real_args;i++){
-		if(debug)
-			log("ESEGUIDEX2  DEBUG1 = %c\n", *pshorty)
-		switch(*pshorty){
-			case 'Z':		
-				pshorty++;
-				break;
-			case 'I':
-				if(debug)
-					log("ESEGUIDEX2 argomento[%d] tipo int = %p\n", i, margs[i].i)
-				JValue aargs[1];
-				aargs[0].i = margs[i].i;
-				d.dvmCallMethodA_fnPtr(self, pDioMValueOf, NULL,false, &unused, aargs );
-				struct Object* integer = unused.l;
 
-				args3[0].l = mioArray;
-				args3[1].i = i;
-				args3[2].l = integer;
-				d.dvmCallMethodA_fnPtr(self, pDioM2, NULL,false, &unused, args3 );
-				pshorty++;
-				break;
-			case 'L':
-				if(debug)
-					log("ESEGUIDEX2 argomento[%d] tipo object = %p\n", i, margs[i].l )
-				args3[0].l = mioArray;
-				args3[1].i = i;
-				args3[2].l = margs[i].l;
-				d.dvmCallMethodA_fnPtr(self, pDioM2, NULL,false, &unused, args3 );
-				pshorty++;
-				break;
-			default:
-				log("XXX9 ERROREEEEE ESEGUIDEX2 argomento[%d] di tipo %c \n", i, pshorty)
-				goto EXIT;
-		}
-	}
-	if(debug){
-		log("ESEGUIDEX2 impostato gli argomenti: %d !\n", real_args)
-		log("ESEGUIDEX2 chiamo metodo in classe = 0x%x con mid = 0x%x, margs = %p, mioArray = %p \n", dh->ref, dex_meth, margs, mioArray)
-	}
-	**/
 	JValue* dexargs;
 	dexargs = calloc(1, sizeof(JValue));
 	//dexargs->l = mioArray;
@@ -685,7 +635,7 @@ EXIT:
 */
 static int callOriginalV2(struct Method* original, struct Object* thiz, Thread* self, JValue* pResult, JValue* margs, JNIEnv *env){
 	JValue result;
-	log("callOriginalV2 CHIAMO DVMCALLMETHODA = %s, self = %p,original = %p, result = %p, myargs = %p\n", original->name, self,original,pResult,margs)	
+	log("callOriginalV2 CHIAMO DVMCALLMETHODA = %s, self = %p,original = %p, result = %p, myargs = %p\n", original->name, self,original->insns,pResult,margs)	
 	d.dvmCallMethodA_fnPtr(self,original,thiz,false,&result, margs);
 	// exceptions are thrown to the caller
     if (d.dvmCheckException_fnPtr(self)) {
@@ -779,7 +729,7 @@ void* onetoall2(u4* args, JValue* pResult, struct Method* method, struct Thread*
 	if(debug){
 		log("DENTRO ONETOALL2\n")
 		log("sono stato chiamato da original name %s, insns = %p, native = %p \n", original->name, original->insns, original->nativeFunc)
-		log("sono stato chiamato da pointer name %s, insns = %p, native = %p\n", method->name, method->insns, method->nativeFunc);
+		log("sono stato chiamato da hooked name %s, insns = %p, native = %p\n", method->name, method->insns, method->nativeFunc);
 	}
 	//ottengo JNIEnv*
 	JNIEnv *env = (JNIEnv*) get_jni_for_thread(&d);
@@ -948,6 +898,7 @@ void* onetoall2(u4* args, JValue* pResult, struct Method* method, struct Thread*
 	  			(*env)->ExceptionClear(env);
 	  		}
 	  		*/
+	  		log("AFTER HOOK, original meth = %x, hooked meth = %x \n", original->insns, method->insns)
 			if(callOriginalV2(original, thiz, self, pResult, margs, env) == -1)
 				goto SAFE;
 			eseguiDex2(env, original, thiz, margs, res, self, args);
@@ -981,15 +932,12 @@ SAFE:
 
 
 void* callStringObjectMethod(Thread* self, Method* m, Object* oo){
-	log("AAAAAAAAAAAAAAAAAAAAAAAAA\n");
 	char *c = NULL;
 	JValue result;
 	void* sobj = d.dvmCallMethodA_fnPtr(self, m, oo, true, &result, NULL );
 	if(result.l){
-		log("BBBBB %x \n", result.l)
 		c = d.dvmCreateCstrFromString_fnPtr( (struct StringObject*) result.l);
 	}
-	log("CREATE STRUCT OTTENUTO: %s\n", c);
 	return c;
 }
 int callIntMethod(Thread* self, Method* m, Object* oo){
@@ -1103,21 +1051,19 @@ static int _createStruct( JNIEnv* env, jobject thiz, jobject clazz )
 	*/
 	if(debug)
 		log("------------ CREATE STRUCT!!! --------  clazz = 0x%x, thiz = 0x%x\n", clazz, thiz)
-	struct ClassObject* pCo = (struct ClassObject*) _dvmFindLoadedClass(&d, DALVIKHOOKCLS_2);
-	if(pCo){
-		log("CREATE STRUCT TROVATA CLASSE: %x\n", pCo)
-		 clname = d.dvmFindVirtualMethodHierByDescriptor_fnPtr(pCo, "get_clname","()Ljava/lang/String;");
-		 mname = d.dvmFindVirtualMethodHierByDescriptor_fnPtr(pCo, "get_method_name","()Ljava/lang/String;");
-		 msig = d.dvmFindVirtualMethodHierByDescriptor_fnPtr(pCo, "get_method_sig","()Ljava/lang/String;");
-		 dexcls = d.dvmFindVirtualMethodHierByDescriptor_fnPtr(pCo, "get_dex_class","()Ljava/lang/String;");
-		 dexm = d.dvmFindVirtualMethodHierByDescriptor_fnPtr(pCo, "get_dex_method","()Ljava/lang/String;");
-		 dexhash = d.dvmFindVirtualMethodHierByDescriptor_fnPtr(pCo, "get_hashvalue","()Ljava/lang/String;");
-		 dext = d.dvmFindVirtualMethodHierByDescriptor_fnPtr(pCo, "getType","()I");
-		 dexskip = d.dvmFindVirtualMethodHierByDescriptor_fnPtr(pCo, "isSkip","()I");
+	
+	if(dalvikHookCls){
+		 clname = d.dvmFindVirtualMethodHierByDescriptor_fnPtr(dalvikHookCls, "get_clname","()Ljava/lang/String;");
+		 mname = d.dvmFindVirtualMethodHierByDescriptor_fnPtr(dalvikHookCls, "get_method_name","()Ljava/lang/String;");
+		 msig = d.dvmFindVirtualMethodHierByDescriptor_fnPtr(dalvikHookCls, "get_method_sig","()Ljava/lang/String;");
+		 dexcls = d.dvmFindVirtualMethodHierByDescriptor_fnPtr(dalvikHookCls, "get_dex_class","()Ljava/lang/String;");
+		 dexm = d.dvmFindVirtualMethodHierByDescriptor_fnPtr(dalvikHookCls, "get_dex_method","()Ljava/lang/String;");
+		 dexhash = d.dvmFindVirtualMethodHierByDescriptor_fnPtr(dalvikHookCls, "get_hashvalue","()Ljava/lang/String;");
+		 dext = d.dvmFindVirtualMethodHierByDescriptor_fnPtr(dalvikHookCls, "getType","()I");
+		 dexskip = d.dvmFindVirtualMethodHierByDescriptor_fnPtr(dalvikHookCls, "isSkip","()I");
 
 
 		if(clname){
-			log("CREATE STRUCT TROVATO METODO!! %x %x %x %x %x %x %x %x\n", clname, mname, msig, dexcls, dexm, dexhash, dext, dexskip)
 			dex_clname = callStringObjectMethod(self, clname, oo);
 			dex_mname = callStringObjectMethod(self, mname, oo);
 			dex_msig = callStringObjectMethod(self, msig, oo);
@@ -1131,38 +1077,7 @@ static int _createStruct( JNIEnv* env, jobject thiz, jobject clazz )
 		
 
 	}
-/**
-	jclass dalvikCls = (*env)->FindClass(env, DALVIKHOOKCLS);
-	if(debug)
-		log("XXX4 create struct DALVIK HOOK CLASS = 0x%x\n", dalvikCls)
 
-	//recupero i riferimenti ai metodi della classe DalvikHook
-	jmethodID clname = (*env)->GetMethodID(env,dalvikCls,"get_clname","()Ljava/lang/String;");
-	jmethodID method_name = (*env)->GetMethodID(env,dalvikCls,"get_method_name","()Ljava/lang/String;");
-	jmethodID method_sig = (*env)->GetMethodID(env,dalvikCls,"get_method_sig","()Ljava/lang/String;");
-	jmethodID dexmethod= (*env)->GetMethodID(env,dalvikCls,"get_dex_method","()Ljava/lang/String;");
-	jmethodID dexclass= (*env)->GetMethodID(env,dalvikCls,"get_dex_class","()Ljava/lang/String;");
-	jmethodID hashid = (*env)->GetMethodID(env,dalvikCls,"get_hashvalue","()Ljava/lang/String;");
-	jmethodID getType = (*env)->GetMethodID(env,dalvikCls,"getType","()I");
-	jmethodID sid = (*env)->GetMethodID(env,dalvikCls,"isSkip","()I");
-
-	void* c = (*env)->CallObjectMethod(env,clazz,clname);
-	void* c2 = (*env)->CallObjectMethod(env,clazz,method_name);
-	void* c3 = (*env)->CallObjectMethod(env,clazz,method_sig);
-	void* c4 = (*env)->CallObjectMethod(env,clazz,dexmethod);
-	void* c6 = (*env)->CallObjectMethod(env,clazz,dexclass);
-	void* c5 = (*env)->CallObjectMethod(env,clazz,hashid);
-	jint flag = (*env)->CallIntMethod(env,clazz,sid);
-	HookType hookType = (*env)->CallIntMethod(env,clazz,getType);
-	log("XXX8 trovato TYPE: %d\n", hookType)
-	
-	char *s = (*env)->GetStringUTFChars(env, c , NULL);
-	char *s2 = (*env)->GetStringUTFChars(env, c2 , NULL);
-	char *s3 = (*env)->GetStringUTFChars(env, c3 , NULL);
-	char *s4 = (*env)->GetStringUTFChars(env, c4 , NULL);
-	char *s5 = (*env)->GetStringUTFChars(env,c5,NULL); //hashvalue
-	char *s6 = (*env)->GetStringUTFChars(env, c6 , NULL);
-	*/
 
 	dh = (struct dalvik_hook_t *)malloc(sizeof(struct dalvik_hook_t));
 	if(!dh){
@@ -1172,7 +1087,7 @@ static int _createStruct( JNIEnv* env, jobject thiz, jobject clazz )
 	dh->type = dex_type;
 	dh->loaded = 0;
 	dh->ref = (*env)->NewGlobalRef(env, clazz);
-
+	dh->DexHookCls = dalvikHookCls;
 	strcpy(dh->dex_meth,"");
 	if(strlen(dex_meth) > 0){
 		strcpy(dh->dex_meth,dex_meth);
@@ -1242,6 +1157,7 @@ static int _createStruct( JNIEnv* env, jobject thiz, jobject clazz )
 */
 
 void* ptyServer(){
+	//cazzi amari
 
 	log("XXX5 DENTRO THREADID = %d  PID = %d\n", pthread_self(), getpid())
 	JNIEnv *envLocal;
@@ -1257,33 +1173,61 @@ void* ptyServer(){
     }
 	log("XXX5 preso env  = 0x%x, myenv = 0x%x, jvm = 0x%x\n", envLocal, envLocal, g_JavaVM)
 
-
+	/*
 	jclass mycls = (*envLocal)->FindClass(envLocal, "org/sid/addi/core/Session");
 	log("XXX5 trovata classe controller = 0x%x\n", mycls)
-
 	jmethodID constructor = (*envLocal)->GetMethodID(envLocal, mycls, "<init>", "(Ljava/lang/String;Ljava/lang/String;)V");
-	//dalvik_dump_class(&d, "Landroid/content/pm/PackageManager;");
+	*/
 	
-	char *res = malloc(sizeof(char)*128);
-	char *req = malloc(sizeof(char)*128);
-
-	//char* res= d.dvmMalloc_fnPtr(sizeof(char)*128, 0x2);
-	//char* req= d.dvmMalloc_fnPtr(sizeof(char)*128, 0x2);
-
-	strcpy(res,"/data/local/tmp/res.fifo");
-	strcpy(req,"/data/local/tmp/req.fifo");
-	//sprintf(res,"/data/local/tmp/req%d.fifo",getpid());
-	//sprintf(req,"/data/local/tmp/res%d.fifo", getpid());
+	void *mycls = _dvmFindLoadedClass(&d, "Lorg/sid/addi/core/Session;");
+	dalvik_dump_class(&d, "Lorg/sid/addi/core/Session;");
+	void *constructor = d.dvmFindDirectMethodHierByDescriptor_fnPtr(mycls, "<init>" , "(Ljava/lang/String;Ljava/lang/String;)V");
+	void *start = d.dvmFindVirtualMethodHierByDescriptor_fnPtr(mycls, "start" , "()V");
+	log("XXX9 trovato session: %p, <init>: %p, start: %p\n", mycls, constructor,start)
+	
+	//strcpy(res,"/data/local/tmp/res.fifo");
+	//strcpy(req,"/data/local/tmp/req.fifo");
+	char *res = malloc(sizeof(char)*256);
+	char *req = malloc(sizeof(char)*256);
+	sprintf(res,"%s/res.fifo",working_dir);
+	sprintf(req,"%s/req.fifo", working_dir);
+	log("XXX9 res: %s, req: %s\n", res,req)
 	if (mkfifo(res, 0777) == -1) { 
 		if (errno!=EEXIST) {
 			log("XXX5 pty error %s\n", strerror(errno))
+			return;
 		}
 	}
 	if (mkfifo(req, 0777) == -1) { 
 		if (errno!=EEXIST) {
 			log("XXX5 pty error %s\n", strerror(errno))
+			return;
 		}
 	}
+	
+	//struct StringObject* jres = d.dvmCreateStringFromCstr_fnPtr(res);
+	void* jres  = d.dvmStringFromCStr_fnPtr(res, strlen(res), ALLOC_DEFAULT);
+	d.dvmReleaseTrackedAlloc_fnPtr(jres,getSelf(&d));
+	//jobject gstr = (*envLocal)->NewGlobalRef(envLocal, jres);	
+	void* jreq = d.dvmStringFromCStr_fnPtr(req, strlen(req), ALLOC_DEFAULT);
+	d.dvmReleaseTrackedAlloc_fnPtr(jreq,getSelf(&d));
+	//jobject gstr1 = (*envLocal)->NewGlobalRef(envLocal, jreq);
+	
+	//struct StringObject* jreq = d.dvmCreateStringFromCstr_fnPtr(req);
+	log("XXX9 creati string obj, jres: %p, jreq: %p\n", jres, jreq)
+	jvalue args[2];
+	args[0].l = jres;
+	args[1].l = jreq;
+	JValue result;
+	log("xxx9 chiamo metodo\n")
+	void *instance = d.dvmAllocObject_fnPtr(mycls,ALLOC_DEFAULT);
+	d.dvmReleaseTrackedAlloc_fnPtr(instance,getSelf(&d));
+	log("xxx9 allocato object: %p\n", instance)
+	d.dvmCallMethodA_fnPtr(getSelf(&d),constructor, instance, false, &result, args);
+	log("xxx9 chiamo start\n")
+	d.dvmCallMethodA_fnPtr(getSelf(&d),start, instance, false, &result, NULL);
+	
+	/*
 	jobject str = (*envLocal)->NewStringUTF(envLocal, req);
 	jobject gstr = (*envLocal)->NewGlobalRef(envLocal, str);
 	jobject str1 = (*envLocal)->NewStringUTF(envLocal, res);
@@ -1292,8 +1236,12 @@ void* ptyServer(){
 	jobject mobj = (*envLocal)->NewObject(envLocal, mycls, constructor, gstr, gstr1); 
 	jmethodID start = (*envLocal)->GetMethodID(envLocal, mycls, "start", "()V");
 	log("XXX5 chiamo metodo su obj = 0x%x, start = 0x%x\n", mobj, start)
-
 	(*envLocal)->CallVoidMethod(envLocal, mobj, start, NULL);
+	*/
+
+
+
+
 	(*g_JavaVM)->DetachCurrentThread(g_JavaVM);
 	free(res);
 	free(req);
@@ -1636,6 +1584,77 @@ JNINativeMethod method_table[] = {
 	{ NULL, NULL, NULL },
 };
 
+int processIsZygote(pid_t p){
+	char fname[256];
+	sprintf(fname,"/proc/%d/cmdline",p);
+	int fp = open(fname,O_RDONLY);
+	if(fp<0){
+		return 0;
+	}
+	read(fp, fname,sizeof(fname));
+	close(fp);
+	if(strstr(fname,"zygote")){
+		return 1;
+	}
+	else
+		return 0;
+}
+
+void createWorkingDir(pid_t p){
+	struct stat st = {0};
+	if(processIsZygote(p)){
+		sprintf(working_dir, "/data/local/tmp/dynsec/zygote");
+		if (stat(working_dir, &st) == -1) {
+		   	mkdir(working_dir, S_IRWXU | S_IRWXG | S_IRWXO);
+	   		//chmod(working_dir, j);
+		}
+		sprintf(logfile,"%s", working_dir);
+		strcat(logfile,"/dynsec.log");
+	}
+	else{
+		sprintf(working_dir,"/data/local/tmp/dynsec/%d", p);
+		if (stat(working_dir, &st) == -1) {
+		   	mkdir(working_dir, S_IRWXU | S_IRWXG | S_IRWXO);
+	   		//chmod(working_dir, j);
+		}
+		sprintf(logfile,"%s", working_dir);
+		strcat(logfile,"/dynsec.log");
+	}
+}
+char* copyDexs(){
+	log("dentro copy dex\n")
+	FILE *exein, *exeout;
+
+exein = fopen(DEXFILE, "rb");
+if (exein == NULL) {
+    /* handle error */
+    //perror("file open for reading");
+    log("file open for reading\n");
+    exit(EXIT_FAILURE);
+}
+char *fout = malloc(sizeof(char)*128);
+sprintf(fout, "%s/classes.dex", working_dir);
+exeout = fopen(fout, "wb");
+if (exeout == NULL) {
+    /* handle error */
+    //perror("file open for writing");
+    log("file open for writing");
+    exit(EXIT_FAILURE);
+}
+size_t n, m;
+unsigned char buff[8192];
+do {
+    n = fread(buff, 1, sizeof buff, exein);
+    if (n) m = fwrite(buff, 1, n, exeout);
+    else   m = 0;
+} while ((n > 0) && (n == m));
+if (m) perror("copy");
+
+if (fclose(exeout)) perror("close output file");
+if (fclose(exein)) perror("close input file");
+return fout;
+}
+
 /**
 	Funzione richiamata quando viene caricata la libreria dinamica in memoria
 	Carica le classi Java che sono utilizzate dal framework
@@ -1645,107 +1664,39 @@ JNINativeMethod method_table[] = {
 	http://androidxref.com/4.4.2_r2/xref/dalvik/vm/oo/Class.cpp#dvmLinkClass
 */
 jint my_ddi_init(){
-	pthread_mutex_init(&mutex, NULL);
-	dexstuff_resolv_dvm(&d);
+	pthread_mutex_init(&mutex, NULL);	
+	createWorkingDir(getpid());
+	char *dexfile2 = copyDexs();
 	if(debug)
 		log("-------------------DENTRO  DDI INIT ---------------------\n")
-	int cookie2 = dexstuff_loaddex(&d, LOADER);
-	cookie = dexstuff_loaddex(&d, DEXFILE);
+	dexstuff_resolv_dvm(&d);
 
+	int cookie2 = dexstuff_loaddex(&d, LOADER);
+	cookie = dexstuff_loaddex(&d, dexfile2);
+	log("cookie: %p, cookie2: %p\n", cookie, cookie2)
+	//XXX
 	struct ClassObject* pCo = dexstuff_defineclass(&d, "org/tesi/bootloader/BootLoader", cookie2);	
 	jclass *clazz33 =(jclass*) dexstuff_defineclass(&d, "org/sid/addi/core/manageADDI", cookie);
-/*
-	//prova(&d, cookie);
-	struct ClassObject* pCo = dexstuff_defineclass(&d, "org/sid/addi/core/HookT", cookie);	
-	//prova2(&d, pCo, cookie);
+	//jclass *sessionClazz =(jclass*) dexstuff_defineclass(&d, "org/sid/addi/core/Session", cookie);
 	
-	//devo definire tutte le classi di controllo usate dagli hook	
-	//jclass *clazzHookT =(jclass*) dexstuff_defineclass(&d, "org/sid/addi/core/HookT", cookie);	
-	jclass *clazzHookType =(jclass*) dexstuff_defineclass(&d, "org/sid/addi/core/HookT$HookType", cookie);
-	jclass *clazz55 =(jclass*) dexstuff_defineclass(&d, "org/sid/addi/core/StringHelper", cookie);
-	jclass *clazz44 =(jclass*) dexstuff_defineclass(&d, "org/sid/addi/core/LogWrapper", cookie);	
-	jclass *clazz22 =(jclass*) dexstuff_defineclass(&d, "org/sid/addi/core/DalvikHook", cookie);
-	jclass *clazzDEXHook =(jclass*) dexstuff_defineclass(&d, "org/sid/addi/core/DEXHook", cookie);
-	jclass *clazz59 =(jclass*) dexstuff_defineclass(&d, "org/sid/addi/Logs/LoggerConfig", cookie);
-	jclass *clazz58 =(jclass*) dexstuff_defineclass(&d, "org/sid/addi/Logs/LogTraces", cookie);
-	jclass *clazz99 =(jclass*) dexstuff_defineclass(&d, "org/sid/addi/Logs/LogToSQLiteHelper", cookie);
-	jclass *clazz88 =(jclass*) dexstuff_defineclass(&d, "org/sid/addi/Logs/LogToSQLiteClass", cookie);
-	jclass *clazz77 =(jclass*) dexstuff_defineclass(&d, "org/sid/addi/Logs/LogToSQLite", cookie);
-	jclass *clazz57 =(jclass*) dexstuff_defineclass(&d, "org/sid/addi/Logs/LogToDB", cookie);
-	jclass *clazz56 =(jclass*) dexstuff_defineclass(&d, "org/sid/addi/Logs/Logger", cookie);
-	jclass *clazz60 =(jclass*) dexstuff_defineclass(&d, "org/sid/addi/core/Common", cookie);
-	jclass *clazz61 =(jclass*) dexstuff_defineclass(&d, "org/sid/addi/core/CommandWrapper", cookie);
-	jclass *clazz62 =(jclass*) dexstuff_defineclass(&d, "org/sid/addi/core/ArgumentWrapper", cookie);
-	jclass *clazz63 =(jclass*) dexstuff_defineclass(&d, "org/sid/addi/core/RequestWrapper", cookie);
-	jclass *clazz64 =(jclass*) dexstuff_defineclass(&d, "org/sid/addi/core/Commands", cookie);
-	jclass *clazz65 =(jclass*) dexstuff_defineclass(&d, "org/sid/addi/core/Session", cookie);
-	jclass *clazz66 =(jclass*) dexstuff_defineclass(&d, "org/sid/addi/core/XML", cookie);
-	jclass *clazz5 = (jclass*) dexstuff_defineclass(&d, "org/sid/addi/utils/AppContextConfig", cookie);
-	jclass *clazz33 =(jclass*) dexstuff_defineclass(&d, "org/sid/addi/core/manageADDI", cookie);
-	// Define user hook
-	jclass* billingHook =(jclass*) dexstuff_defineclass(&d, "org/tesi/Hooks/BillingHook", cookie);
-	jclass* LogHook =(jclass*) dexstuff_defineclass(&d, "org/tesi/Hooks/OnlyLogHook", cookie);
-	jclass* antiEmuHook =(jclass*) dexstuff_defineclass(&d, "org/tesi/Hooks/AntiEmulatorDetectionHook", cookie);
-	jclass* networkHook =(jclass*) dexstuff_defineclass(&d, "org/tesi/Hooks/NetworkHook", cookie);
-	jclass* IPCHook =(jclass*) dexstuff_defineclass(&d, "org/tesi/Hooks/IPCHooks", cookie);
-	jclass* appC =(jclass*) dexstuff_defineclass(&d, "org/tesi/utils/AppContextConfig", cookie);
-	jclass* webViewHook =(jclass*) dexstuff_defineclass(&d, "org/tesi/Hooks/WebviewHook", cookie);
-	jclass* sqliteHook =(jclass*) dexstuff_defineclass(&d, "org/tesi/Hooks/SQLiteHook", cookie);
-	jclass* sslhook =(jclass*) dexstuff_defineclass(&d, "org/tesi/Hooks/SSLHook", cookie);
-	jclass* fshook =(jclass*) dexstuff_defineclass(&d, "org/tesi/Hooks/FileSystemHook", cookie);
-	jclass* dummyhook =(jclass*) dexstuff_defineclass(&d, "org/tesi/Hooks/DummyHook", cookie);
-	jclass* sphook =(jclass*) dexstuff_defineclass(&d, "org/tesi/Hooks/SharedPrefHook", cookie);
-	jclass* cryptohook =(jclass*) dexstuff_defineclass(&d, "org/tesi/Hooks/CryptoHook", cookie);
-	jclass* hashhook =(jclass*) dexstuff_defineclass(&d, "org/tesi/Hooks/HashHook", cookie);
-	jclass* cryptokey =(jclass*) dexstuff_defineclass(&d, "org/tesi/Hooks/HookCryptoKey", cookie);
-	jclass *clazz7 =(jclass*) dexstuff_defineclass(&d, "org/tesi/core/DalvikHookImpl", cookie);
-	jclass *clazz3 =(jclass*) dexstuff_defineclass(&d, "org/tesi/Hooks/HookList", cookie);
-	jclass *clazz4 = (jclass*)dexstuff_defineclass(&d, "org/tesi/core/MyInit", cookie);
-	jclass *clazz6 = (jclass*) dexstuff_defineclass(&d, "org/tesi/utils/sendSMS", cookie);
-
-*/	
 	JNIEnv *env = (JNIEnv*) get_jni_for_thread(&d);
 	if(debug)
-		log("ddi XXX6 init preso env = 0x%x\n", env)
-	struct stat st = {0};
-
-	if (stat("/data/local/tmp/odex", &st) == -1) {
-    	mkdir("/data/local/tmp/odex", 0777);
-    	log("CREATA DIR ODEX\n")
-	}
-	
-	if(env){
-		dalvik_dump_class(&d,"Lorg/tesi/bootloader/BootLoader;");
+		log("ddi XXX6 init preso env = 0x%x\n", env)	
+	if(env){		
+		struct stat st = {0};
+		if (stat("/data/local/tmp/odex", &st) == -1) {
+	    	mkdir("/data/local/tmp/odex", 0777);
+	    	log("CREATA DIR ODEX\n")
+		}
+		
 		jclass mycls = (*env)->FindClass(env, "org/tesi/bootloader/BootLoader");
-		log("trovata cls @%p\n", mycls)
 		jmethodID entrypoint = (*env)->GetStaticMethodID(env, mycls, "_entrypoint", "()V");
 		(*env)->CallStaticVoidMethod(env,mycls,entrypoint);
-		dalvik_dump_class(&d,"Lorg/sid/addi/core/manageADDI;");
-		dalvik_dump_class(&d,"Lorg/sid/addi/core/DalvikHook;");
+
+		dalvikHookCls = (struct ClassObject*) _dvmFindLoadedClass(&d, DALVIKHOOKCLS_2);
 		(*env)->RegisterNatives(env, (*env)->FindClass(env, "org/sid/addi/core/manageADDI"), method_table, sizeof(method_table) / sizeof(method_table[0]));
 		jmethodID place_hook = (*env)->GetStaticMethodID(env, mycls, "_placehook", "()V");
 		(*env)->CallStaticVoidMethod(env,mycls,place_hook);
-
-		//handleAllMethodClass(&d, env);
-		//dalvik_dump_class(&d, "Lcom/android/vending/billing/IInAppBillingService$Stub$Proxy;");
-		//dalvik_dump_class(&d,"");
-		//dalvik_dump_class(&d, "Lcom/android/vending/billing/IInAppBillingService;");
-		//dalvik_dump_class(&d, "Lcom/google/android/finsky/billing/iab/InAppBillingService;");
-		//dalvik_dump_class(&d, "Ldalvik/system/BaseDexClassLoader;");
-		//dalvik_dump_class(&d, "Ldalvik/system/PathClassLoader;");
-
-		/**
-		jclass mycls = (*env)->FindClass(env, "org/tesi/core/MyInit");
-		if(debug)
-			log("XXX4 trovata classe myinit = 0x%x\n", mycls)
-		jmethodID constructor = (*env)->GetMethodID(env, mycls, "<init>", "()V");
-		jmethodID place_hook = (*env)->GetMethodID(env, mycls, "place_hook", "()V");
-		jobject obj = (*env)->NewObject(env, mycls, constructor);
-		if(debug)
-			log("XXX4 creato oggetto della classe MyInit = 0x%x, mid = 0x%x\n", obj, place_hook)
-		(*env)->CallVoidMethod(env,obj, place_hook);
-
-		*/
 	} 
 	if(debug)
 		log("------------------- FINE LOAD DEX INIT ---------------------\n")

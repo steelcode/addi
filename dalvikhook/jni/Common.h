@@ -25,6 +25,7 @@
 
 #include <stdio.h>
 #include <assert.h>
+#include "Misc.h"
 
 /*
  * Some systems might have this in <stdbool.h>.
