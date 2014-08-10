@@ -38,6 +38,18 @@ typedef enum{
 	UNUSED_HOOK= 5
 }HookType;
 
+/**
+	Struttura per wrappare gli argomenti dei thread
+*/
+typedef struct dexth_args{
+	JNIEnv* _env;
+	struct Method* _original;
+	struct Object* _thiz;
+	struct dalvik_hook_t*  _res;
+	struct Thread* _self;
+	JValue* _margs;
+}dexth_args;
+
 struct dalvik_hook_t
 {
 
@@ -72,7 +84,7 @@ struct dalvik_hook_t
 	int rss;
 	int oss;	
 	int access_flags;
-	void *insns; // dalvik code
+	u2 *insns; // dalvik code
 	// native values
 	int n_iss; // == n_rss
 	int n_rss; // num argument (+ 1, if non-static method) 
@@ -90,10 +102,8 @@ struct dalvik_hook_t
 };
 
 
-int dalvik_hook(struct dexstuff_t *dex, struct dalvik_hook_t *h, JNIEnv*);
+int dalvik_hook(struct dexstuff_t *dex, struct dalvik_hook_t *h);
 int dalvik_hook_setup(struct dalvik_hook_t *h, char *cls, char *meth, char *sig, void *func);
-jlong jlong_wrapper(JNIEnv *env, jobject obj, ...);
-jfloat jfloat_wrapper(JNIEnv *env, jobject obj, ...);
 int processIsZygote(pid_t p);
 jint my_ddi_init();
 void* _createPTY();

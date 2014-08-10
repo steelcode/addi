@@ -1,8 +1,48 @@
+//http://androidxref.com/4.4.2_r2/xref/dalvik/vm/Thread.h
+
+/*
+ * VM thread support.
+ */
 #ifndef DALVIK_THREAD_H_
 #define DALVIK_THREAD_H_
 
-#include "InterpState.h"
 #include <pthread.h>
+
+typedef struct InterpSaveState {
+    const u2*       pc;         // Dalvik PC
+    u4*             curFrame;   // Dalvik frame pointer
+    const struct Method    *method;    // Method being executed
+    //DvmDex*         methodClassDex;
+    void*         methodClassDex;
+    JValue          retval;
+    void*           bailPtr;
+#if defined(WITH_TRACKREF_CHECKS)
+    int             debugTrackedRefStart;
+#else
+    int             unused;        // Keep struct size constant
+#endif
+    struct InterpSaveState* prev;  // To follow nested activations
+}InterpSaveState;
+
+
+
+/*
+ * Interpreter control struction.  Packed into a long long to enable
+ * atomic updates.
+ */
+union InterpBreak {
+    volatile int64_t   all;
+    struct {
+        uint16_t   subMode;
+        uint8_t    breakFlags;
+        int8_t     unused;   /* for future expansion */
+#ifndef DVM_NO_ASM_INTERP
+        void* curHandlerTable;
+#else
+        int32_t    unused1;
+#endif
+    } ctl;
+}typedef InterpBreak;
 
 
 /*
@@ -27,51 +67,10 @@ enum ThreadStatus {
     THREAD_NATIVE       = 7,        /* off in a JNI native method */
     THREAD_VMWAIT       = 8,        /* waiting on a VM resource */
     THREAD_SUSPENDED    = 9,        /* suspended, usually by GC or debugger */
-};
+}typedef ThreadStatus;
 
-#define kJniLocalRefMin         64
-#define kJniLocalRefMax         512     /* arbitrary; should be plenty */
-#define kInternalRefDefault     32      /* equally arbitrary */
-#define kInternalRefMax         4096    /* mainly a sanity check */
-
-#define kMinStackSize       (512 + STACK_OVERFLOW_RESERVE)
-#define kDefaultStackSize   (16*1024)   /* four 4K pages */
-#define kMaxStackSize       (256*1024 + STACK_OVERFLOW_RESERVE)
-
-/*
- * Interpreter control struction.  Packed into a long long to enable
- * atomic updates.
- */
-union InterpBreak {
-    volatile int64_t   all;
-    struct {
-        uint16_t   subMode;
-        uint8_t    breakFlags;
-        int8_t     unused;   /* for future expansion */
-#ifndef DVM_NO_ASM_INTERP
-        void* curHandlerTable;
-#else
-        int32_t    unused1;
-#endif
-    } ctl;
-};
-
-struct InterpSaveState {
-    const u2*       pc;         // Dalvik PC
-    u4*             curFrame;   // Dalvik frame pointer
-    const Method    *method;    // Method being executed
-    //DvmDex*         methodClassDex;
-    void*         methodClassDex;
-    JValue          retval;
-    void*           bailPtr;
-#if defined(WITH_TRACKREF_CHECKS)
-    int             debugTrackedRefStart;
-#else
-    int             unused;        // Keep struct size constant
-#endif
-    struct InterpSaveState* prev;  // To follow nested activations
-} __attribute__ ((__packed__));
-
+/* start point for an internal thread; mimics pthread args */
+typedef void* (*InternalThreadStart)(void* arg);
 /* args for internal thread creation */
 struct InternalStartArgs {
     /* inputs */
@@ -81,16 +80,17 @@ struct InternalStartArgs {
     struct Object*     group;
     bool        isDaemon;
     /* result */
-    volatile Thread** pThread;
+    volatile struct Thread** pThread;
     volatile int*     pCreateStatus;
 };
+
 
 /*
  * Our per-thread data.
  *
  * These are allocated on the system heap.
  */
-struct Thread {
+typedef struct Thread {
     /*
      * Interpreter state which must be preserved across nested
      * interpreter invocations (via JNI callbacks).  Must be the first
@@ -138,7 +138,7 @@ struct Thread {
     /* FP of bottom-most (currently executing) stack frame on interp stack */
     void*       XcurFrame;
     /* current exception, or NULL if nothing pending */
-    Object*     exception;
+    struct Object*     exception;
 
     bool        debugIsMethodEntry;
     /* interpreter stack size; our stacks are fixed-length */
@@ -185,7 +185,7 @@ struct Thread {
     u1*         interpStackStart;
 
     /* the java/lang/Thread that we are associated with */
-    Object*     threadObj;
+    struct Object*     threadObj;
 
     /* the JNIEnv pointer associated with this thread */
     JNIEnv*     jniEnv;
@@ -198,7 +198,7 @@ struct Thread {
    // ReferenceTable  jniMonitorRefTable;
 
     /* hack to make JNI_OnLoad work right */
-    Object*     classLoaderOverride;
+    struct Object*     classLoaderOverride;
 
     /* mutex to guard the interrupted and the waitMonitor members */
     pthread_mutex_t    waitMutex;
@@ -239,7 +239,7 @@ struct Thread {
     u8          cpuClockBase;
 
     /* previous stack trace sample and length (used by sampling profiler) */
-    const Method** stackTraceSample;
+    const struct Method** stackTraceSample;
     size_t stackTraceSampleLength;
 
     /* memory allocation profiling state */
@@ -262,19 +262,24 @@ struct Thread {
 #if defined(ARCH_IA32) && defined(WITH_JIT)
     u4 spillRegion[MAX_SPILL_JIT_IA];
 #endif
-};
+}Thread;
 
-struct JitToInterpEntries {
-    void (*dvmJitToInterpNormal)(void);
-    void (*dvmJitToInterpNoChain)(void);
-    void (*dvmJitToInterpPunt)(void);
-    void (*dvmJitToInterpSingleStep)(void);
-    void (*dvmJitToInterpTraceSelect)(void);
-#if defined(WITH_SELF_VERIFICATION)
-    void (*dvmJitToInterpBackwardBranch)(void);
-#else
-    void (*unused)(void);  // Keep structure size constant
+enum SuspendCause {
+    SUSPEND_NOT = 0,
+    SUSPEND_FOR_GC,
+    SUSPEND_FOR_DEBUG,
+    SUSPEND_FOR_DEBUG_EVENT,
+    SUSPEND_FOR_STACK_DUMP,
+    SUSPEND_FOR_DEX_OPT,
+    SUSPEND_FOR_VERIFY,
+    SUSPEND_FOR_HPROF,
+    SUSPEND_FOR_SAMPLING,
+#if defined(WITH_JIT)
+    SUSPEND_FOR_TBL_RESIZE,  // jit-table resize
+    SUSPEND_FOR_IC_PATCH,    // polymorphic callsite inline-cache patch
+    SUSPEND_FOR_CC_RESET,    // code-cache reset
+    SUSPEND_FOR_REFRESH,     // Reload data cached in interpState
 #endif
 };
 
-#endif 
+#endif  // DALVIK_THREAD_H_

@@ -27,10 +27,12 @@ import org.w3c.dom.Element;
 *
 */
 public abstract class manageADDI {	
+	/*
 	static {
 		System.load("/data/local/tmp/libdynsec.so");
 		System.load("/data/local/tmp/libmstring.so");	
-	}	
+	}
+	*/	
 	public static List<DalvikHook> _myhooks = null;
 	
 	public static void setmyHooks(List<DalvikHook> d){
@@ -63,6 +65,7 @@ public abstract class manageADDI {
 	public static native int loadDex(String d);
 	
 	public static native void dumpJavaClass(String cls,String sname);
+	
 	
 	//public static native int hookMethodNative(Member method, Class<?> declaringClass, int slot, Class<?>[] parameterTypes, Class<?> returnType);
 	

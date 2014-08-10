@@ -16,6 +16,7 @@ public class HookList {
 			//
 			
 			//new DalvikHookImpl("Lcourse/labs/activitylab/ActivityOne;", "testJD", "(JD)V", "","", null, HookType.NORMAL_HOOK),
+			new DalvikHookImpl("Lcourse/labs/activitylab/ActivityOne;", "hookMe", "()V", "cippalippa","org/tesi/Hooks/OnlyLogHook", new OnlyLogHook(), HookType.NORMAL_HOOK),
 			//new DalvikHookImpl("Lcourse/labs/activitylab/ActivityOne;", "testAll", "(ZBCSIJFDLjava/lang/String;)D", "","", null, HookType.NORMAL_HOOK),
 			//new DalvikHookImpl("Lcourse/labs/activitylab/ActivityOne;", "trovami6", "(ILjava/lang/String;)V", "entrypoint","org/tesi/Hooks/DummyHook", new DummyHook(), HookType.NORMAL_HOOK),	
 			new DalvikHookImpl("Lcom/example/hellojni/HelloJni;", "testStatic", "()V", "","", null, HookType.NORMAL_HOOK),
@@ -56,7 +57,7 @@ public class HookList {
 			
 			//new DalvikHookImpl("Ldalvik/system/PathClassLoader;", "<init>", "(Ljava/lang/String;Ljava/lang/ClassLoader;)V", "dumpArgs","org/tesi/Hooks/OnlyLogHook", new OnlyLogHook(), HookType.NORMAL_HOOK),
 			//new DalvikHookImpl("Ldalvik/system/PathClassLoader;", "<init>", "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/ClassLoader;)V", "dumpArgs","org/tesi/Hooks/OnlyLogHook", new OnlyLogHook(), HookType.NORMAL_HOOK),
-			new DalvikHookImpl("Ldalvik/system/BaseDexClassLoader;", "<init>", "(Ljava/lang/String;Ljava/io/File;Ljava/lang/String;Ljava/lang/ClassLoader;)V", "dumpArgs","org/tesi/Hooks/OnlyLogHook", new OnlyLogHook(), HookType.AFTER_HOOK),
+			//new DalvikHookImpl("Ldalvik/system/BaseDexClassLoader;", "<init>", "(Ljava/lang/String;Ljava/io/File;Ljava/lang/String;Ljava/lang/ClassLoader;)V", "dumpArgs","org/tesi/Hooks/OnlyLogHook", new OnlyLogHook(), HookType.AFTER_HOOK),
 			new DalvikHookImpl("Ljava/lang/ClassLoader;", "loadClass", "(Ljava/lang/String;Z)Ljava/lang/Class;", "myLoadClass","org/tesi/Hooks/OnlyLogHook", new OnlyLogHook(), HookType.AFTER_HOOK),
 			/** FILE SYSTEM HOOK */		
 			//new DalvikHookImpl("Ljava/io/File;", "<init>", "(Ljava/lang/String;)V", "","", null,2, 1,HookType.NORMAL_HOOK),
@@ -117,7 +118,7 @@ public class HookList {
 			*/
 			/** SHARED PREFERENCES */
 			//new DalvikHookImpl("Landroid/content/ContextWrapper;", "getSharedPreferences", "(Ljava/lang/String;I)Landroid/content/SharedPreferences;", "", 3,2,HookType.NORMAL_HOOK),
-			new DalvikHookImpl("Landroid/app/SharedPreferencesImpl;", "getString", "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;", "getSharedPref", "org/tesi/Hooks/SharedPrefHook", new SharedPrefHook(),HookType.NORMAL_HOOK),
+			new DalvikHookImpl("Landroid/app/SharedPreferencesImpl;", "getString", "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;", "getSharedPref", "org/tesi/Hooks/SharedPrefHook", new SharedPrefHook(),HookType.AFTER_HOOK),
 			new DalvikHookImpl("Landroid/app/SharedPreferencesImpl;", "getStringSet", "(Ljava/lang/String;Ljava/util/Set;)Ljava/util/Set;", "getSharedPref","org/tesi/Hooks/SharedPrefHook", new SharedPrefHook(),HookType.NORMAL_HOOK),
 			new DalvikHookImpl("Landroid/app/SharedPreferencesImpl;", "getAll", "()Ljava/util/Map;", "","", null,HookType.NORMAL_HOOK),
 			new DalvikHookImpl("Landroid/app/SharedPreferencesImpl;", "getBoolean", "(Ljava/lang/String;Z)Z", "", "",null,HookType.NORMAL_HOOK),

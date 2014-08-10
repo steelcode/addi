@@ -42,12 +42,12 @@ public class MyInit {
 	//cambiato messo statico
 	public static void place_hook(){
 		_MyInit();
-		System.out.println("CHIAMATO PLACE HOOK1");
+		//System.out.println("CHIAMATO PLACE HOOK1");
 		manageADDI.setmyHooks(_myhooks);
-		System.out.println("CHIAMATO PLACE HOOK2");
+		//System.out.println("CHIAMATO PLACE HOOK2");
 		//manageADDI.writeXMLHooks("");
 		for (final DalvikHook elem : _myhooks) {
-			System.out.println("CHIAMATO PLACE HOOK3");
+			//System.out.println("CHIAMATO PLACE HOOK3");
 			//createStruct(elem);
 			int error = manageADDI._init(elem);
 			if(error == 1){

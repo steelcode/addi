@@ -4,22 +4,15 @@
  */
 package org.tesi.Hooks;
 
-import java.lang.reflect.InvocationTargetException;
-
 import org.sid.addi.core.DEXHook;
-import org.sid.addi.core.manageADDI;
-import org.tesi.core.MyInit;
 
-import dalvik.system.PathClassLoader;
 
 /**
  * @author Valerio Costamagna
  *
  */
 public class OnlyLogHook extends DEXHook {
-	public void save_log(Object... args){
-		
-	}
+
 	public void myCompare(Object... args){
 		if(_thiz == null){
 			System.out.println("MYCOMPARE THIZ NULLO!!!!!");
@@ -43,20 +36,39 @@ public class OnlyLogHook extends DEXHook {
 		}
 		
 	}
+	public String getFullTraces() {
+		StackTraceElement[] ste = Thread.currentThread().getStackTrace();
+	    if (ste == null)
+	        return "";
+	    StringBuilder stringBuilder = new StringBuilder();
+	    for (StackTraceElement element : ste)
+	        stringBuilder.append(element.toString()).append("\n");
+	    return stringBuilder.toString();
+	}
+	public void cippalippa(Object...args){
+		System.out.println("CIPPALIPPA JAVA");
+		
+	}
 	public void myLoadClass(Object...args){
+		System.out.println("+-+-+-+-+-+-+-+--+-+-+-+-+-aaaa-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-++-");
+		/*
+		//String s = getFullTraces();
+		//System.out.println(s);
 		Object thiz = null;
 		if(_thiz != null){
 			thiz = _thiz;
 			if(thiz instanceof String)
+				
 				System.out.println("----- DUMP STRING MYLOADCLASS, THIZ:  "+(String)thiz);
-			else{
+			else{	
 				System.out.println("----- DUMP MYLOADCLASS, THIZ:  "+thiz.toString());
 				//da qui si entra nel sifone
 				//System.out.println("----- DUMP MYLOADCLASS, THIZ PARENT:  "+((PathClassLoader)_thiz).getParent().toString());
 			}
 		}
 		else{
-			System.out.println("----- DUMP MYLOADCLASS, THIZ NULL!!!!");
+			;
+			//System.out.println("----- DUMP MYLOADCLASS, THIZ NULL!!!!");
 		}
 		int i;
 		for(i=0;i<args.length;i++){
@@ -67,44 +79,50 @@ public class OnlyLogHook extends DEXHook {
 			else
 				System.out.println("----- DUMP MYLOADCLASS ARGS["+i+"]:  "+args[i].toString());
 		}	
-		System.out.println("DOPO FOR");
-		String c = (String) args[0];
-
+		//String c = (String) args[0];
 		//System.out.println("MYLOADCLASSS CERCO CLASSE: "+c);
 		//manageADDI.dumpJavaClass(c,"");
-		String c1 = c.replace(".", "/");
-		c1 = "L" + c1 + ";";		
-		System.out.println("CHIAMO SEARCH FAILED CON: "+c1);
-		MyInit.searchFailedHookWithClsName(c1);
+		//String c1 = c.replace(".", "/");
+		//c1 = "L" + c1 + ";";		
+		//System.out.println("CHIAMO SEARCH FAILED CON: "+c1);
+		//MyInit.searchFailedHookWithClsName(c1);
+		
+		*/
+		 
 	}
 	public void dumpArgs(Object...args){
 		Object thiz = null;
 		if(_thiz != null){
 			thiz = _thiz;
 			if(thiz instanceof String)
-				System.out.println("----- DUMP ARGS, THIZ:  "+(String)thiz);
+				;
+				//System.out.println("----- DUMP ARGS, THIZ:  "+(String)thiz);
 			else{
-				System.out.println("----- DUMP ARGS, THIZ:  "+thiz.toString());
-				System.out.println("----- DUMP ARGS, THIZ PARENT:  "+((PathClassLoader)_thiz).getParent().toString());
+				;
+				//System.out.println("----- DUMP ARGS, THIZ:  "+thiz.toString());
+				//System.out.println("----- DUMP ARGS, THIZ PARENT:  "+((PathClassLoader)_thiz).getParent().toString());
 			}
 		}
 		else{
-			System.out.println("----- DUMP ARGS, THIZ NULL!!!!");
+			;
+			//System.out.println("----- DUMP ARGS, THIZ NULL!!!!");
 		}
 		int i;
 		for(i=0;i<args.length;i++){
 			if(args[i] == null)
 				continue;
 			if(args[i] instanceof String)
-				System.out.println("-----STRING DUMP ARGS["+i+"]:  "+(String)args[i]);
+				;
+				//System.out.println("-----STRING DUMP ARGS["+i+"]:  "+(String)args[i]);
 			else
-				System.out.println("----- DUMP ARGS["+i+"]:  "+args[i].toString());
+				;
+				//System.out.println("----- DUMP ARGS["+i+"]:  "+args[i].toString());
 		}
-		PathClassLoader pcl = (PathClassLoader)_thiz;
-		System.out.println("----- FINE CLASSLOADER1: "+pcl.getClass());
-		System.out.println("----- FINE CLASSLOADER2: "+pcl.getClass().getClassLoader());
-		System.out.println("----- FINE SYSTEM CLASSLOADER: "+PathClassLoader.getSystemClassLoader().toString());
-		manageADDI.diosoloW();
+		//PathClassLoader pcl = (PathClassLoader)_thiz;
+		//System.out.println("----- FINE CLASSLOADER1: "+pcl.getClass());
+		//System.out.println("----- FINE CLASSLOADER2: "+pcl.getClass().getClassLoader());
+		//System.out.println("----- FINE SYSTEM CLASSLOADER: "+PathClassLoader.getSystemClassLoader().toString());
+		//manageADDI.diosoloW();
 		/**
 		try {
 			ClassLoader mcl = pcl.getClass().getClassLoader();

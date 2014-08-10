@@ -131,6 +131,8 @@ void dexstuff_resolv_dvm(struct dexstuff_t *d)
 		d->dvmThrowClassNotFoundException_fnPtr = mydlsym(d->dvm_hand, "_Z30dvmThrowClassNotFoundExceptionPKc");
 		d->dvmGetRawDexFileDex_fnPtr = mydlsym(d->dvm_hand, "_Z19dvmGetRawDexFileDexP10RawDexFile");
 		//d->dvmCreateStringFromCstr_fnPtr = mydlsym(d->dvm_hand, "_Z23dvmCreateStringFromCstrPKc");
+		d->dvmChangeStatus_fnPtr = mydlsym(d->dvm_hand, "_Z15dvmChangeStatusP6Thread12ThreadStatus");
+
 
 
 		if (!d->dvmUseJNIBridge_fnPtr)
@@ -151,11 +153,18 @@ void dexstuff_resolv_dvm(struct dexstuff_t *d)
 		d->dvmHashForeach_fnPtr = mydlsym(d->dvm_hand, "_Z14dvmHashForeachP9HashTablePFiPvS1_ES1_");
 		d->dvmInstanceof_fnPtr = mydlsym(d->dvm_hand, "_Z13dvmInstanceofPK11ClassObjectS1_");
 		d->gDvm = mydlsym(d->dvm_hand, "gDvm");
+		d->gDvmJni = mydlsym(d->dvm_hand, "gDvmJni");
 	}
 }
 
 
-
+void modify(struct dexstuff_t* d){
+	struct DvmJniGlobals* a = (struct DvmJniGlobals*) d->gDvmJni;
+	log("gdvmjni: %p\n", a)
+	log("valore: %p %d\n", a->workAroundAppJniBugs, a->workAroundAppJniBugs);
+	a->workAroundAppJniBugs = true;
+	log("valore: %p %d\n", a->workAroundAppJniBugs, a->workAroundAppJniBugs);
+}
 
 
 void* _dvmGetBoxedTypeDescriptor(struct dexstuff_t* d, PrimitiveType p){
@@ -695,6 +704,20 @@ void* dexstuff_loaddex(struct dexstuff_t *d, char *path)
 
 	return result;
 }
+void* dexstuff_getStackTrace(struct dexstuff_t *d){
+	log("dentro stack trace\n")
+	_dumpAllT(d);
+	jvalue pResult;
+	struct Thread* th = getSelf(d);
+	log("self vale: %p, tid: %d, thObj: %x, status: %u\n", th, th->threadId, th->threadObj, th->status)
+	u4 args[1];
+	args[0] =  th;
+	d->dvm_dalvik_system_VMStack[3].fnPtr(args, &pResult);
+	void* ret = pResult.l;
+	log("ritornato: %p\n", ret)
+	return ret;
+
+}
 
 void* dexstuff_getStackClass2(struct dexstuff_t *d){
 	jvalue pResult;
@@ -712,8 +735,8 @@ void* dexstuff_defineclass(struct dexstuff_t *d, char *name, int cookie)
 	
 	void* cl = d->dvmGetSystemClassLoader_fnPtr();
 	struct Method *m = d->dvmGetCurrentJNIMethod_fnPtr();
-	//log("sys classloader = 0x%x\n", cl)
-	//log("cur m classloader = 0x%x\n", m->clazz->classLoader)
+	log("sys classloader = 0x%x\n", cl)
+	log("cur m classloader = 0x%x\n", m->clazz->classLoader)
 	
 	void *jname = d->dvmStringFromCStr_fnPtr(name, strlen(name), ALLOC_DEFAULT);
 	//log("called string...\n")

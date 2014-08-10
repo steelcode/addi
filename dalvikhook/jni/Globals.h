@@ -1102,6 +1102,6 @@ struct DvmJniGlobals {
     JavaVM*     jniVm;
 };
 
-extern struct DvmJniGlobals gDvmJni;
+//extern struct DvmJniGlobals gDvmJni;
 
 #endif  // DALVIK_GLOBALS_H_

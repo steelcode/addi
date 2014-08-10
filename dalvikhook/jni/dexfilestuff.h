@@ -1,6 +1,9 @@
 #ifndef __dexfilestuff_h__
 #define __dexfilestuff_h__
 
+
+#include <pthread.h>
+
 //take from dalvik/libdex/DexFile.h
 /* DEX file magic number */
 #define DEX_MAGIC       "dex\n"
