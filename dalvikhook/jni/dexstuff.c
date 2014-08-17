@@ -132,6 +132,9 @@ void dexstuff_resolv_dvm(struct dexstuff_t *d)
 		d->dvmGetRawDexFileDex_fnPtr = mydlsym(d->dvm_hand, "_Z19dvmGetRawDexFileDexP10RawDexFile");
 		//d->dvmCreateStringFromCstr_fnPtr = mydlsym(d->dvm_hand, "_Z23dvmCreateStringFromCstrPKc");
 		d->dvmChangeStatus_fnPtr = mydlsym(d->dvm_hand, "_Z15dvmChangeStatusP6Thread12ThreadStatus");
+		d->JNI_GetCreatedJavaVMs_fnPtr = mydlsym(d->dvm_hand, "JNI_CreateJavaVM");
+		d->dvmFillStackTraceArray_fnPtr = mydlsym(d->dvm_hand, "_Z22dvmFillStackTraceArrayPKvPPK6Methodj");
+		d->dvmComputeExactFrameDepth_fnPtr = mydlsym(d->dvm_hand, "_Z25dvmComputeExactFrameDepthPKv");
 
 
 
@@ -239,6 +242,17 @@ void*  _loadClass(struct dexstuff_t *d, jobject clsname){
 		//log("XXX7 TROVATA CLS = 0x%x\n", res)
 	}
 }
+
+int _computeStackFrameDepth(struct dexstuff_t* dex){
+	Thread* t = getSelf(dex);
+	int i = dex->dvmComputeExactFrameDepth_fnPtr(t->interpSave.curFrame);
+	return i;
+
+}
+void _fillStrackTraceArray(struct dexstuff_t* dex, struct Method** pA, size_t len){
+	Thread *t = getSelf(dex);
+	dex->dvmFillStackTraceArray_fnPtr(t->interpSave.curFrame,pA, len);
+}
 struct ClassObject* _getCallerClass(struct dexstuff_t* dex){
 	Thread* t = getSelf(dex);
 	//log("XXX5 THREAD = 0x%x, field = 0x%x\n", t, t->interpSave.curFrame);
@@ -267,6 +281,7 @@ void* _attachCurrentT(struct dexstuff_t  *dex){
 }
 void _suspendAllT(struct dexstuff_t *dex){
 	dex->dvmSuspendAllThreads_fnPtr(SUSPEND_FOR_DEBUG);
+	_dumpAllT(dex);
 }
 void _dumpAllT(struct dexstuff_t *dex){
 	dex->dvmDumpAllThreadsb_fnPtr();
@@ -347,9 +362,10 @@ void _dumpMethod(struct dexstuff_t* d,struct DexFile* pDexFile, const struct Dex
 
     backDescriptor = _dexStringByTypeIdx(pDexFile, pMethodId->classIdx);
 
-    //log("DUMP METHOD, name = %s, type = %s \n", name, typeDescriptor)
+    log("DUMP METHOD, name = %s, type = %s \n", name, typeDescriptor)
     if(!strstr(name,"run"))
     	createAndInsertDhook(env, classDescriptor, name, typeDescriptor);
+
     
 }
 
@@ -382,16 +398,17 @@ void _dumpClass(struct dexstuff_t* d, struct DexFile* pDexFile, int idx, JNIEnv*
     	else{
     		if(!strstr(classDescriptor, targetCls))
     			return;
-    		//log("DUMPCLASS HO TROVATO CLASSE: %s\n", classDescriptor)
+    		log("DUMPCLASS HO TROVATO CLASSE: %s\n", classDescriptor)
     	}
     }
-    /**
+    log("MARIA, num met vrt: %d\n", (int)pClassData->header.directMethodsSize)
+    log("MARIA num met dir: %d\n", (int)pClassData->header.virtualMethodsSize)
     for (i = 0; i < (int) pClassData->header.directMethodsSize; i++) {
-       //_dumpMethod(d,pDexFile, &pClassData->directMethods[i], i,classDescriptor, env);
+       _dumpMethod(d,pDexFile, &pClassData->directMethods[i], i,classDescriptor, env);
     }
-    */
+    
 
-    for (i = 0; i < (int) pClassData->header.virtualMethodsSize; i++) {
+    for (i = 0; i < (int) pClassData->header.virtualMethodsSize; i++) { //
         _dumpMethod(d,pDexFile, &pClassData->virtualMethods[i], i,classDescriptor,env);
     }
 }
@@ -475,7 +492,7 @@ void handleAllMethodClass(struct dexstuff_t* d, JNIEnv* env){
 	log("DENTRO HANDLEALLMETHODCLASS\n")
 	jthrowable exc;
 	//struct ClassObject* pp = d->dvmFindLoadedClass_fnPtr("Lcourse/labs/activitylab/ActivityOne;");
-	struct ClassObject* pp = d->dvmFindLoadedClass_fnPtr("Lappinventor/ai_garikoitzmartinez/crackme01/Screen1;"); //prendo il classloader
+	struct ClassObject* pp = d->dvmFindLoadedClass_fnPtr("Lcom/instagram/android/activity/MainTabActivity;"); //prendo il classloader
 	//countMethods(pp);
 
 	if(!pp){
@@ -484,11 +501,11 @@ void handleAllMethodClass(struct dexstuff_t* d, JNIEnv* env){
 	}
 	size_t i,k;
 	struct DexClassDef* pCd  = NULL;
-	char* targetCls = "Lappinventor/";
-	dalvik_dump_class(d, "Lappinventor/ai_garikoitzmartinez/crackme01/Screen1;");
+	char* targetCls = "Lcom/instagram";
+
 	//devo fare un  for per ogni metodo in ogni classe
 	//struct Method** ppM =  pp->pDvmDex->pResMethods;
-	for (i = 0; i < (int) pp->pDvmDex->pDexFile->pHeader->classDefsSize; i++) {
+	for (i = 0; i <  (int)pp->pDvmDex->pDexFile->pHeader->classDefsSize; i++) { //(int)pp->pDvmDex->pDexFile->pHeader->classDefsSize
         _dumpClass(d,pp->pDvmDex->pDexFile, i, env, targetCls);
     }
     return;
@@ -747,7 +764,7 @@ void* dexstuff_defineclass(struct dexstuff_t *d, char *name, int cookie)
 
 	jobject *ret = pResult.l;
 	
-	//log("class = 0x%x\n", ret)
+	log("class = 0x%x\n", ret)
 	
 	return ret;
 }

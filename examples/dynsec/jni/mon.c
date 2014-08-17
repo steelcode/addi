@@ -148,10 +148,12 @@ static int my_epoll_wait(int epfd, struct epoll_event *events, int maxevents, in
 	orig_epoll_wait = (void*)eph.orig;
 	// remove hook for epoll_wait
 	hook_precall(&eph);
-	
+	lancia_consumer_producer();
 	my_ddi_init();
-	log("sticazziaaa\n")
-	//_createPTY();
+	
+	_createPTY();
+	//_newThread();
+	
 
 	// call original function
 	int res = orig_epoll_wait(epfd, events, maxevents, timeout);    

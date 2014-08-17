@@ -151,6 +151,9 @@ typedef void* (*dvmGetMethodThrows_func)(void*);
 typedef void* (*dvmClearException_func)(void*);
 typedef void* (*dvmThrowClassNotFoundException_func)(void*);
 typedef void* (*dvmGetRawDexFileDex_func)(struct RawDexFile*);
+typedef void* (*JNI_GetCreatedJavaVMs_func)(void**, void*, void*);
+typedef void* (*dvmFillStackTraceArray_func)(void*,void*,void*);
+typedef void* (*dvmComputeExactFrameDepth_func)(void*);
 
 typedef void* (*dvmChangeStatus_func)(void*,void*);
 
@@ -258,6 +261,9 @@ struct dexstuff_t
     dvmGetRawDexFileDex_func dvmGetRawDexFileDex_fnPtr;
     //dvmCreateStringFromCstr_func dvmCreateStringFromCstr_fnPtr;
     dvmChangeStatus_func dvmChangeStatus_fnPtr;
+    JNI_GetCreatedJavaVMs_func JNI_GetCreatedJavaVMs_fnPtr;
+    dvmFillStackTraceArray_func dvmFillStackTraceArray_fnPtr;
+    dvmComputeExactFrameDepth_func dvmComputeExactFrameDepth_fnPtr;
 
 	dvmGetCurrentJNIMethod_func dvmGetCurrentJNIMethod_fnPtr;
 	dvmLinearSetReadWrite_func dvmLinearSetReadWrite_fnPtr;

@@ -74,8 +74,8 @@ struct dalvik_hook_t
     //struct DalvikHookInfo* pOriginalMethodInfo;
 	//try xposed way
     struct Method* originalMethod;
-    struct Object* reflectedMethod;
-    struct Object* additionalInfo;
+    //struct Object* reflectedMethod;
+    //struct Object* additionalInfo;
 
 
 	int sm; // static method

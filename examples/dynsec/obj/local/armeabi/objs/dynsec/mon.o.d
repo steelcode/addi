@@ -93,8 +93,10 @@
  ../../../../adbi/instruments/base/hook.h \
  ../../../dalvikhook/jni/dexstuff.h ../../../dalvikhook/jni/Common.h \
  /opt/ANDROIDE/android-ndk-r10/platforms/android-9/arch-arm/usr/include/assert.h \
- ../../../dalvikhook/jni/Misc.h ../../../dalvikhook/jni/dexfilestuff.h \
- ../../../dalvikhook/jni/dalvik_hook.h ../../../dalvikhook/jni/dexstuff.h \
+ ../../../dalvikhook/jni/Misc.h ../../../dalvikhook/jni/Object.h \
+ ../../../dalvikhook/jni/dexfilestuff.h ../../../dalvikhook/jni/Stack.h \
+ ../../../dalvikhook/jni/Thread.h ../../../dalvikhook/jni/dalvik_hook.h \
+ ../../../dalvikhook/jni/dexstuff.h \
  ../../../../adbi/instruments/base/base.h ../../../dalvikhook/jni/lista.h \
  ../../../dalvikhook/jni/Misc.h ../../../dalvikhook/jni/coffeecatch.h \
  /opt/ANDROIDE/android-ndk-r10/platforms/android-9/arch-arm/usr/include/setjmp.h \
@@ -290,7 +292,13 @@
 
 ../../../dalvikhook/jni/Misc.h:
 
+../../../dalvikhook/jni/Object.h:
+
 ../../../dalvikhook/jni/dexfilestuff.h:
+
+../../../dalvikhook/jni/Stack.h:
+
+../../../dalvikhook/jni/Thread.h:
 
 ../../../dalvikhook/jni/dalvik_hook.h:
 
