@@ -112,3 +112,4 @@ void _unhook(JNIEnv *env,jobject thiz, jobject str);
 void* setJavaVM(JavaVM* ajvm);
 int tryMagic(void *method);
 void logmsgtofile(char *msg);
+void logstacktofile(char *msg);

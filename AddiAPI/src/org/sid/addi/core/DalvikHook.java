@@ -65,7 +65,7 @@ public abstract class DalvikHook {
 				System.out.println(" Oggetto : " + obj.toString());
 				if(obj instanceof android.os.Bundle ){
 					Bundle b = (Bundle)obj;
-					if(b==null) continue;
+					if(b==null) break;
 					System.out.println("TRVATO UN BUDLE, CON VALORI: "+b.size());
 					Set<String> s = b.keySet();				
 					if(s.size()>0){
@@ -106,7 +106,7 @@ public abstract class DalvikHook {
 			//e.printStackTrace();
 			;
 		}
-		printArrayObj(args);
+		//printArrayObj(args);
 		return;
 
 	}

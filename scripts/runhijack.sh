@@ -49,15 +49,15 @@ do
 done
 
 #todo: check size
-if [ -e "strmon.log" ];
-then
-	echo "logrotate"
-	./logrotate.sh
-else
-	echo "creo file di log"
-	touch strmon.log; chmod 777 strmon.log;
-fi
-./collectinfo.sh
+#if [ -e "strmon.log" ];
+#then
+#	echo "logrotate"
+#	./logrotate.sh
+#else
+#	echo "creo file di log"
+#	touch strmon.log; chmod 777 strmon.log;
+#fi
+sh collectinfo.sh
 #echo "num ags: $#"
 #for i in $*
 #do

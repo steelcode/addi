@@ -21,6 +21,7 @@ LOCAL_C_INCLUDES   := $(LOCAL_PATH)/../../../adbi/instruments/base/hook.h
 LOCAL_SRC_FILES := coffeecatch.c coffeejni.c dexstuff.c.arm lista.c.arm Misc.c.arm dalvik_hook.c 
 LOCAL_LDLIBS    := -L./libs -ldl -ldvm ../../../adbi/instruments/base/obj/local/armeabi/libbase.a 
 LOCAL_CFLAGS    := -g -O0 -funwind-tables -Wl,--no-merge-exidx-entries
+#LOCAL_CFLAGS    := -g -O0 -funwind-tables --no-merge-exidx-entries
 LOCAL_STATIC_LIBRARIES := $(LOCAL_PATH)/../../../adbi/instruments/base/obj/local/armeabi/libbase.a 
 
                     

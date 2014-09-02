@@ -1,4 +1,4 @@
-#!/usr/bin/bash
+#!/bin/bash
 #	Copia i file necessari sul device
 #	- libdynsec.so
 #	- initenv.sh
@@ -11,7 +11,8 @@
 BASEDIR=`pwd`
 REMOTEDIR=/data/local/tmp
 BLACKFILE="pushfiles.sh"
-DEX=$BASEDIR/../examples/JavaModule/FakeContext/bin/classes.dex
+APIDEX=$BASEDIR/../AddiAPI/bin/classes.dex
+DEX=$BASEDIR/../examples/HooksCode/bin/classes.dex
 LIBSO=$BASEDIR/../examples/dynsec/lib/armeabi/libdynsec.so
 
 for file in `echo *`
@@ -25,5 +26,7 @@ done
 #adb push $DEX $REMOTEDIR
 #adb push $LIBSO $REMOTEDIR
 echo ""
-echo "Ricorda di pushare sul device il file classes.dex e la lib dinamica"
+echo "Ricorda di pushare sul device il file classes.dex e la lib dinamica:"
+echo $APIDEX
+echo $DEX
 echo ""

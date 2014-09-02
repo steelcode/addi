@@ -21,6 +21,11 @@ class ArgumentWrapper
 	public byte[] value;
 }
 
+class ConfigWrapper{
+	String section;
+	String type;
+	String function;
+}
 //An interface to use in CommandWrapper to better define Commands
 //interface Executor { public void execute(List<ArgumentWrapper> argsArray, Session currentSession);}
 

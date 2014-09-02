@@ -150,6 +150,8 @@ typedef void* (*dvmHumanReadableDescriptor_func)(void*);
 typedef void* (*dvmGetMethodThrows_func)(void*);
 typedef void* (*dvmClearException_func)(void*);
 typedef void* (*dvmThrowClassNotFoundException_func)(void*);
+typedef void* (*dvmThrowNullPointerException_func)(void*);
+typedef void* (*dvmThrowIllegalArgumentException_func)(void*);
 typedef void* (*dvmGetRawDexFileDex_func)(struct RawDexFile*);
 typedef void* (*JNI_GetCreatedJavaVMs_func)(void**, void*, void*);
 typedef void* (*dvmFillStackTraceArray_func)(void*,void*,void*);
@@ -258,7 +260,9 @@ struct dexstuff_t
     dvmGetMethodThrows_func dvmGetMethodThrows_fnPtr;
     dvmClearException_func dvmClearException_fnPtr;
     dvmThrowClassNotFoundException_func dvmThrowClassNotFoundException_fnPtr;
+    dvmThrowNullPointerException_func dvmThrowNullPointerException_fnPtr;
     dvmGetRawDexFileDex_func dvmGetRawDexFileDex_fnPtr;
+    dvmThrowIllegalArgumentException_func dvmThrowIllegalArgumentException_fnPtr;
     //dvmCreateStringFromCstr_func dvmCreateStringFromCstr_fnPtr;
     dvmChangeStatus_func dvmChangeStatus_fnPtr;
     JNI_GetCreatedJavaVMs_func JNI_GetCreatedJavaVMs_fnPtr;

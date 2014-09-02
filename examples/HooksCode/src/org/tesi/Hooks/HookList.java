@@ -8,16 +8,16 @@ import org.sid.addi.core.HookT.HookType;
 import org.tesi.core.DalvikHookImpl;
 
 
-
 public class HookList {
 	public static List<?> _hookList = new LinkedList<DalvikHookImpl>(Arrays.asList(
 					
 			//new DalvikHookImpl("Lcourse/labs/activitylab/ActivityOne;", "testJD", "(JD)V", "","", null, HookType.NORMAL_HOOK),
-			new DalvikHookImpl("Lcourse/labs/activitylab/ActivityOne;", "hookMe", "()V", "cippalippa","org/tesi/Hooks/OnlyLogHook", HookType.NORMAL_HOOK),
+			new DalvikHookImpl("Lcourse/labs/activitylab/ActivityOne;", "hookMe", "()V", "","", HookType.NORMAL_HOOK),
+			new DalvikHookImpl("Lcourse/labs/activitylab/ActivityOne;", "testExc", "()V", "","", HookType.NORMAL_HOOK),
 			//new DalvikHookImpl("Lcourse/labs/activitylab/ActivityOne;", "testAll", "(ZBCSIJFDLjava/lang/String;)D", "","", null, HookType.NORMAL_HOOK),
 			//new DalvikHookImpl("Lcourse/labs/activitylab/ActivityOne;", "trovami6", "(ILjava/lang/String;)V", "entrypoint","org/tesi/Hooks/DummyHook", new DummyHook(), HookType.NORMAL_HOOK),	
-			new DalvikHookImpl("Lcom/example/hellojni/HelloJni;", "testStatic", "()V", "","", HookType.NORMAL_HOOK),
-			new DalvikHookImpl("Lcom/example/hellojni/chiaraSuca;", "testException2", "()V", "","",  HookType.NORMAL_HOOK),
+			//new DalvikHookImpl("Lcom/example/hellojni/HelloJni;", "testStatic", "()V", "","", HookType.NORMAL_HOOK),
+			//new DalvikHookImpl("Lcom/example/hellojni/chiaraSuca;", "testException2", "()V", "","",  HookType.NORMAL_HOOK),
 			
 			new DalvikHookImpl("Lcom/android/vending/billing/IInAppBillingService$Stub;", "getBuyIntent", "(ILjava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Landroid/os/Bundle;", "myGetBuyIntent","org/tesi/Hooks/BillingHook", HookType.NORMAL_HOOK),
 			new DalvikHookImpl("Lcom/android/vending/billing/IInAppBillingService$Stub;", "getPurchases", "(ILjava/lang/String;Ljava/lang/String;Ljava/lang/String;)Landroid/os/Bundle;", "","", HookType.NORMAL_HOOK),

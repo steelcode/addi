@@ -129,6 +129,9 @@ void dexstuff_resolv_dvm(struct dexstuff_t *d)
 		d->dvmGetMethodThrows_fnPtr = mydlsym(d->dvm_hand, "_Z18dvmGetMethodThrowsPK6Method");
 		d->dvmClearException_fnPtr = mydlsym(d->dvm_hand, "_Z17dvmClearExceptionP6Thread");
 		d->dvmThrowClassNotFoundException_fnPtr = mydlsym(d->dvm_hand, "_Z30dvmThrowClassNotFoundExceptionPKc");
+		d->dvmThrowNullPointerException_fnPtr = mydlsym(d->dvm_hand, "dvmThrowNullPointerException");
+		d->dvmThrowIllegalArgumentException_fnPtr = mydlsym(d->dvm_hand, "_Z32dvmThrowIllegalArgumentExceptionPKc");
+
 		d->dvmGetRawDexFileDex_fnPtr = mydlsym(d->dvm_hand, "_Z19dvmGetRawDexFileDexP10RawDexFile");
 		//d->dvmCreateStringFromCstr_fnPtr = mydlsym(d->dvm_hand, "_Z23dvmCreateStringFromCstrPKc");
 		d->dvmChangeStatus_fnPtr = mydlsym(d->dvm_hand, "_Z15dvmChangeStatusP6Thread12ThreadStatus");
@@ -253,24 +256,6 @@ void _fillStrackTraceArray(struct dexstuff_t* dex, struct Method** pA, size_t le
 	Thread *t = getSelf(dex);
 	dex->dvmFillStackTraceArray_fnPtr(t->interpSave.curFrame,pA, len);
 }
-struct ClassObject* _getCallerClass(struct dexstuff_t* dex){
-	Thread* t = getSelf(dex);
-	//log("XXX5 THREAD = 0x%x, field = 0x%x\n", t, t->interpSave.curFrame);
-	struct ClassObject* co = dex->dvmGetCallerClass_fnPtr(t->interpSave.curFrame);
-	return co;
-}
-struct ClassObject* _getCaller2Class(struct dexstuff_t* dex){
-	Thread* t = getSelf(dex);
-	//log("XXX5 THREAD = 0x%x, field = 0x%x\n", t, t->interpSave.curFrame);
-	struct ClassObject* co = dex->dvmGetCaller2Class_fnPtr(t->interpSave.curFrame);
-	return co;
-}
-struct ClassObject* _getCaller3Class(struct dexstuff_t* dex){
-	Thread* t = getSelf(dex);
-	//log("XXX5 THREAD = 0x%x, field = 0x%x\n", t, t->interpSave.curFrame);
-	struct ClassObject* co = dex->dvmGetCaller3Class_fnPtr(t->interpSave.curFrame);
-	return co;
-}
 
 void* _mterprintmethod(struct dexstuff_t *dex){
 	struct Method* m = dex->dvmGetCurrentJNIMethod_fnPtr();
@@ -348,7 +333,7 @@ char* _dexCopyDescriptorFromMethodId(struct dexstuff_t* d, const struct DexFile*
     return d->dexProtoCopyMethodDescriptor_fnPtr(&proto);
 }
 
-void _dumpMethod(struct dexstuff_t* d,struct DexFile* pDexFile, const struct DexMethod* pDexMethod, int i , char* classDescriptor, JNIEnv* env){
+void _dumpMethod(struct dexstuff_t* d,struct DexFile* pDexFile, const struct DexMethod* pDexMethod, int i , char* classDescriptor, JNIEnv* env, void* classLoader){
 	//log("DUMP METHOD CHIAMATO \n")
     const struct DexMethodId* pMethodId;
     const char* backDescriptor;
@@ -364,12 +349,12 @@ void _dumpMethod(struct dexstuff_t* d,struct DexFile* pDexFile, const struct Dex
 
     log("DUMP METHOD, name = %s, type = %s \n", name, typeDescriptor)
     if(!strstr(name,"run"))
-    	createAndInsertDhook(env, classDescriptor, name, typeDescriptor);
+    	createHooKFromNative(env, classDescriptor, name, typeDescriptor, classLoader);
 
     
 }
 
-void _dumpClass(struct dexstuff_t* d, struct DexFile* pDexFile, int idx, JNIEnv* env,  char* targetCls){
+void _dumpClass(struct dexstuff_t* d, struct DexFile* pDexFile, int idx, JNIEnv* env,  char* targetCls,void* classLoader){
 	struct DexClassDef* pClassDef;
 	struct DexClassData* pClassData = NULL;
 	const u1* pEncodedData;
@@ -401,15 +386,13 @@ void _dumpClass(struct dexstuff_t* d, struct DexFile* pDexFile, int idx, JNIEnv*
     		log("DUMPCLASS HO TROVATO CLASSE: %s\n", classDescriptor)
     	}
     }
-    log("MARIA, num met vrt: %d\n", (int)pClassData->header.directMethodsSize)
-    log("MARIA num met dir: %d\n", (int)pClassData->header.virtualMethodsSize)
     for (i = 0; i < (int) pClassData->header.directMethodsSize; i++) {
-       _dumpMethod(d,pDexFile, &pClassData->directMethods[i], i,classDescriptor, env);
+       //_dumpMethod(d,pDexFile, &pClassData->directMethods[i], i,classDescriptor, env, classLoader);
     }
     
 
     for (i = 0; i < (int) pClassData->header.virtualMethodsSize; i++) { //
-        _dumpMethod(d,pDexFile, &pClassData->virtualMethods[i], i,classDescriptor,env);
+        _dumpMethod(d,pDexFile, &pClassData->virtualMethods[i], i,classDescriptor,env,classLoader);
     }
 }
 
@@ -490,23 +473,25 @@ void prova2(struct dexstuff_t* d, struct ClassObject* pCo, void* cookie){
 
 void handleAllMethodClass(struct dexstuff_t* d, JNIEnv* env){
 	log("DENTRO HANDLEALLMETHODCLASS\n")
+	//return;
 	jthrowable exc;
-	//struct ClassObject* pp = d->dvmFindLoadedClass_fnPtr("Lcourse/labs/activitylab/ActivityOne;");
-	struct ClassObject* pp = d->dvmFindLoadedClass_fnPtr("Lcom/instagram/android/activity/MainTabActivity;"); //prendo il classloader
+	//struct ClassObject* pp = d->dvmFindLoadedClass_fnPtr("Lcom/instagram/android/activity/MainTabActivity;"); //prendo il classloader
+	struct ClassObject* pp = d->dvmFindLoadedClass_fnPtr("Lcom/whatsapp/App;"); //prendo il classloader
 	//countMethods(pp);
 
 	if(!pp){
-		log("ALLMETHODCLASS NON HO TROVATO MAIN CLASS\n")
+		log("XXX11 ALLMETHODCLASS NON HO TROVATO MAIN CLASS\n")
+		sleep(2);
 		return 0;
 	}
 	size_t i,k;
 	struct DexClassDef* pCd  = NULL;
-	char* targetCls = "Lcom/instagram";
+	char* targetCls = "Lcom/whatsapp";
 
 	//devo fare un  for per ogni metodo in ogni classe
 	//struct Method** ppM =  pp->pDvmDex->pResMethods;
 	for (i = 0; i <  (int)pp->pDvmDex->pDexFile->pHeader->classDefsSize; i++) { //(int)pp->pDvmDex->pDexFile->pHeader->classDefsSize
-        _dumpClass(d,pp->pDvmDex->pDexFile, i, env, targetCls);
+        _dumpClass(d,pp->pDvmDex->pDexFile, i, env, targetCls, pp->classLoader);
     }
     return;
 
@@ -612,34 +597,6 @@ void diosolo(struct dexstuff_t* d, JNIEnv *env){
 			}
 			log("XXX7 DIO SOLO FINITO FOR STATIFIELDS\n")
 
-/**
-		//JNI NON SI CAGA DALVIK
-		log("diosolo ci sono\n")
-		jobject gco =  (*env)->NewGlobalRef(env, co);
-		log("diosolo ci sono1\n")
-		int stringCount = (*env)->GetArrayLength(env, gco);
-		log("diosolo array length = %d\n", stringCount)
-
-
-		//JNI findClass dice java.lang.NoClassDefFoundError
-		jclass cls = (*env)->FindClass(env,"com/whatsapp/Main");
-		log(" diosolo trovata classe con JNI = %p \n", cls)
-		jfieldID fid = (*env)->GetStaticFieldID(env, cls, "z", "[Ljava/lang/String;");
-		log("diosolo trovato fieldID con JNI = %p\n", fid)
-
-		if(pId){
-			log("diosolo trovato static field\n")
-			void* pCinit = d->dvmFindDirectMethodByDescriptor_fnPtr(pC, "<clinit>", "()V");
-			struct Method* pM = (struct Method*)pCinit;
-			log("diosolo shorty = %s\n", pM->shorty)
-			if(pCinit){
-				log("diosolo trovato clinit 0x%x\n", pCinit)
-				void* pResult;
-				//d->dvmCallMethod_fnPtr(getSelf(d),pCinit, NULL, false,NULL,NULL);
-				log("diosolo dopo invoke method\n");
-			}
-		}
-		*/
 		}
 		else{
 			log("diosolo classe non trovata %s!!!!\n", ptr)
@@ -795,4 +752,52 @@ void _dalvik_dump_class(struct dexstuff_t *dex, void *cls){
 	dex->dvmDumpClass_fnPtr((struct ClassObject*)cls,(void*)1);
 }
 
+/*
+struct ClassObject* _getCallerClass(struct dexstuff_t* dex){
+	Thread* t = getSelf(dex);
+	//log("XXX5 THREAD = 0x%x, field = 0x%x\n", t, t->interpSave.curFrame);
+	struct ClassObject* co = dex->dvmGetCallerClass_fnPtr(t->interpSave.curFrame);
+	return co;
+}
+struct ClassObject* _getCaller2Class(struct dexstuff_t* dex){
+	Thread* t = getSelf(dex);
+	//log("XXX5 THREAD = 0x%x, field = 0x%x\n", t, t->interpSave.curFrame);
+	struct ClassObject* co = dex->dvmGetCaller2Class_fnPtr(t->interpSave.curFrame);
+	return co;
+}
+struct ClassObject* _getCaller3Class(struct dexstuff_t* dex){
+	Thread* t = getSelf(dex);
+	//log("XXX5 THREAD = 0x%x, field = 0x%x\n", t, t->interpSave.curFrame);
+	struct ClassObject* co = dex->dvmGetCaller3Class_fnPtr(t->interpSave.curFrame);
+	return co;
+}
+*/
 
+/**
+		//JNI NON SI CAGA DALVIK
+		log("diosolo ci sono\n")
+		jobject gco =  (*env)->NewGlobalRef(env, co);
+		log("diosolo ci sono1\n")
+		int stringCount = (*env)->GetArrayLength(env, gco);
+		log("diosolo array length = %d\n", stringCount)
+
+
+		//JNI findClass dice java.lang.NoClassDefFoundError
+		jclass cls = (*env)->FindClass(env,"com/whatsapp/Main");
+		log(" diosolo trovata classe con JNI = %p \n", cls)
+		jfieldID fid = (*env)->GetStaticFieldID(env, cls, "z", "[Ljava/lang/String;");
+		log("diosolo trovato fieldID con JNI = %p\n", fid)
+
+		if(pId){
+			log("diosolo trovato static field\n")
+			void* pCinit = d->dvmFindDirectMethodByDescriptor_fnPtr(pC, "<clinit>", "()V");
+			struct Method* pM = (struct Method*)pCinit;
+			log("diosolo shorty = %s\n", pM->shorty)
+			if(pCinit){
+				log("diosolo trovato clinit 0x%x\n", pCinit)
+				void* pResult;
+				//d->dvmCallMethod_fnPtr(getSelf(d),pCinit, NULL, false,NULL,NULL);
+				log("diosolo dopo invoke method\n");
+			}
+		}
+		*/

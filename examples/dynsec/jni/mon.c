@@ -131,15 +131,18 @@ static void my_add_trace(void* self, void* method, int action){
 	pthread_mutex_unlock(&hookm);
 	return;
 }
-static bool my_dvmInitClass(jclass* clazz){
+static void* my_dvmInitClass(jclass* clazz){
 	log("XXX7 dentro hook dvminitclass = %p\n", clazz)
-	bool (*origin_dvmInitClass)(jclass*);
+	/*
+	void* (*origin_dvmInitClass)(jclass*);
+	log("original: %p \n", eph2.orig)
 	origin_dvmInitClass = (void*)eph2.orig;
 	hook_precall(&eph2);
-	bool res = origin_dvmInitClass(clazz);
-	hook_postcall(&eph2);
+	void* res = origin_dvmInitClass(clazz);
+	//hook_postcall(&eph2);
 	log("XXX7 esco da hook dvminitclass %p, %x\n",res,res)
 	return res;
+	*/
 }
 static int my_epoll_wait(int epfd, struct epoll_event *events, int maxevents, int timeout)
 {
@@ -148,15 +151,13 @@ static int my_epoll_wait(int epfd, struct epoll_event *events, int maxevents, in
 	orig_epoll_wait = (void*)eph.orig;
 	// remove hook for epoll_wait
 	hook_precall(&eph);
-	lancia_consumer_producer();
 	my_ddi_init();
-	
+	lancia_consumer_producer();
 	_createPTY();
 	//_newThread();
-	
-
 	// call original function
 	int res = orig_epoll_wait(epfd, events, maxevents, timeout);    
+	//hook_postcall(&eph);
 	return res;
 }
 
@@ -175,11 +176,12 @@ void my_init(void)
 	set_logfunction(my_log2);
 	// set log function for libdalvikhook (very important!)
 	dalvikhook_set_logfunction(logmsgtofile);
+	dalvikhook_set_stacklogfunction(logstacktofile);
 	//dalvikhook_set_logfunction(my_log2);
 	log("DDI: started, pid: %d logname: %s\n", getpid(),logname);
 	//hook(&addTraceh, getpid(), "libdvm.", "_Z17dvmMethodTraceAddP6ThreadPK6Methodi", my_add_trace, my_add_trace);
     hook(&eph, getpid(), "libc.", "epoll_wait", my_epoll_wait, 0);
-   // hook(&eph2, getpid(), "libdvm.", "dvmInitClass", 0, my_dvmInitClass);
+   // hook(&eph2, getpid(), "libdvm.", "_Z14dvmCallMethodAP6ThreadPK6MethodP6ObjectbP6JValuePK6jvalue", 0, my_dvmInitClass);
     
    // hook(&eph2, getpid(), "libwhatsapp.", "connect", my_connect	, 0);
 

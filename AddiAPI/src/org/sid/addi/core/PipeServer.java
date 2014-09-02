@@ -35,12 +35,12 @@ public class PipeServer {
 			System.out.println("PORCODIOPORCODIO DENTRO COSTRUTTORE SESSION");
 			Log.i(_TAG,  "------------ DENTRO SESSION con req = " +request+" e res = "+response);
 			
-				//req = new File(request);
-				//res = new File(response);
-				req = request;
-				res = response;
-				data = new StringBuilder();
-				Commands.init();
+			//req = new File(request);
+			//res = new File(response);
+			req = request;
+			res = response;
+			data = new StringBuilder();
+			Commands.init();
 				
 			/**	
 				sfifo_name = fifoserver;
@@ -78,10 +78,10 @@ public class PipeServer {
 		}
 		public void start(){
 			System.out.println("DIOPORCODIOPORCODIOPORCO "+Class.class.getClassLoader());
-			Log.i(_TAG, "------------DENTRO START");
 			manageADDI.suspendALL();
 			manageADDI.handleAllMethods();
 			manageADDI.resumeALL();
+			Log.i(_TAG, "------------DENTRO START");
 			String line = null;
 			for(;;){
 				try {
@@ -119,12 +119,6 @@ public class PipeServer {
 		public void handleCommand(String xmlInput)
 		{
 			Log.i(_TAG, "-------- CLIENT FIFO RICEVUTO = "+xmlInput);
-//			sendFullTransmission("", "Command not found on Mercury server");
-//			return;
-			
-			//s.init();
-			
-			
 			//List<CommandWrapper> tmp = Commands.getCommands();
 			//Create an array of commands from xml request received
 			List<RequestWrapper> parsedCommands = new XML(xmlInput).getCommands();

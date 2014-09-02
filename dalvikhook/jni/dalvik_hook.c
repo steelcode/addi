@@ -4,7 +4,7 @@
  *
  *  (c) 2012,2013
  * 
- *	Sid's Advanced DDI
+ *	Valerio's Advanced DDI
  *	(c) 2014
  *
  *  License: LGPL v2.1
@@ -36,24 +36,26 @@
 #define HOOKCLASS "Lorg/tesi"
 #define APICLASS2 "org.sid"
 #define HOOKCLASS2 "org.tesi"
+
 #define DALVIKHOOKCLS "org/sid/addi/core/DalvikHook" //used by env->findclass()
 #define DALVIKHOOKCLS_2 "Lorg/sid/addi/core/DalvikHook;"
-#define LOADER"/data/local/tmp/loader.dex"
+
+#define LOADER "/data/local/tmp/loader.dex"
 #define APIFILE "/data/local/tmp/apiclasses.dex"
-#define AFILE  "/data/local/tmp/stacktraces.txt"
 
 
 struct dexstuff_t d;
-lista L; //dalvikhook list
+lista L; // lista di dalvik_hook_t
 pthread_mutex_t mutex; //list mutex
 pthread_mutex_t cop; //list mutex
 static int debug = 0;
-static int cookie = NULL; 
+static int cookie = 0; 
+static int cookie2 = 0;
 pthread_t pty_t;
 pthread_t tmp_t;
 char working_dir[256] = {0};
 static JavaVM* g_JavaVM = NULL;
-static int cookie2 = NULL;
+
 
 /* reference a classi utilizzate dal codice */
 struct ClassObject* dalvikHookCls=NULL;
@@ -73,27 +75,20 @@ int dalvik_hook_setup(struct dalvik_hook_t *h, char *cls, char *meth, char *sig,
 {
 	if (!h)
 		return EXIT_FAILURE;
-
 	pthread_mutex_init(&h->mutexh, NULL);
 	strcpy(h->clname, cls);
-	
 	strncpy(h->clnamep, cls+1, strlen(cls)-2);
 	h->clnamep[strlen(cls)-2] = '\0';
-
 	strcpy(h->method_name, meth);
 	strcpy(h->method_sig, sig);
 	h->n_iss = 0; //ns
 	h->n_rss = 0; //ns
 	h->n_oss = 0;
 	h->native_func = func;
-
 	h->sm = 0; // set by hand if needed
-
 	h->af = 0x0100; // native, modify by hand if needed
-	
 	h->resolvm = 0; // don't resolve method on-the-fly, change by hand if needed
-
-	h->debug_me = 1;
+	h->debug_me = 0;
 	h->dump = 0;
 	return EXIT_SUCCESS;
 }
@@ -109,13 +104,14 @@ int dalvik_hook(struct dexstuff_t *dex, struct dalvik_hook_t *h)
 	// in caso negativo fail
 	if (!target_cls) {
 		if (h->debug_me)		
-			log("ERROR non ho trovato la classe: %s\n", h->clname)
-		return EXIT_FAILURE;
+			log("XXX11 ERROR non ho trovato la classe: %s\n", h->clname)
+		//target_cls = dex->dvmFindClass_fnPtr(h->clname, (struct Object*)classLoader);
+		return EXIT_FAILURE;		
 	}
 	if(h->debug_me){
 		log("DENTRO DALVIK HOOK MAIN, cerco classe = %s\n",h->clname)
 		log("dalvik_hook: class %s\n", h->clname)
-		log("class = 0x%x, classLoaader = %p\n", target_cls, target_cls->classLoader)
+		log("class = 0x%p, classLoaader = %p\n", target_cls, target_cls->classLoader)
 	}	
 	// print class in logcat
 	if (h->dump && dex && target_cls)
@@ -135,19 +131,20 @@ int dalvik_hook(struct dexstuff_t *dex, struct dalvik_hook_t *h)
             return EXIT_FAILURE;
         }
 	}
+    //metodo nativo, no hook
     if(d.dvmIsNativeMethod_fnPtr(h->method) == 1){
         //if(debug)
-        log("errore dalvik_hook metodo nativo!!! \n")
+        log("errore dalvik_hook metodo nativo, nativeFunc: %p!!! \n", h->method->nativeFunc)
         return EXIT_FAILURE;
     }
 	// constructor workaround, see "dalvik_prepare" below
 	if (!h->resolvm) {
 		h->cls = target_cls;
 		h->mid = (void*)h->method;
-		log("XXXD: h->method vale: 0x%08x, 0x%08x\n", h->method, h->mid)
+		log("XXXD: h->method vale: 0x%p, 0x%p\n", h->method, h->mid)
 	}	
 	if (h->debug_me)
-		log("%s(%s) = 0x%x\n", h->method_name, h->method_sig, h->method)
+		log("%s(%s) = 0x%p\n", h->method_name, h->method_sig, h->method)
 	if (h->method) {
 		if (h->debug_me)
 			log("DALVIK HOOK COPIO METHOD %p %s\n", h->method, h->method_name)
@@ -161,10 +158,10 @@ int dalvik_hook(struct dexstuff_t *dex, struct dalvik_hook_t *h)
 		//bytecode del metodo
 		h->insns = h->method->insns;
 		if (h->debug_me) {
-			log("DALVIK_HOOK h->method->nativeFunc 0x%x, h->nativefunc: 0x%x\n", h->method->nativeFunc, h->native_func)		
-			log("DALVIK_HOOK insSize = 0x%x  registersSize = 0x%x  outsSize = 0x%x\n", h->method->insSize, h->method->registersSize, h->method->outsSize)
+			log("DALVIK_HOOK h->method->nativeFunc 0x%p, h->nativefunc: 0x%p\n", h->method->nativeFunc, h->native_func)		
+			log("DALVIK_HOOK insSize = %d  registersSize = %d  outsSize = %d\n", h->method->insSize, h->method->registersSize, h->method->outsSize)
 		}
-		//imposto valori di grandezza registri, argomenti in ingresso, etc..
+		//imposto grandezza registri, argomenti in ingresso, outs
 		h->iss = h->method->insSize;
 		h->rss = h->method->registersSize;
 		h->oss = h->method->outsSize;
@@ -180,16 +177,6 @@ int dalvik_hook(struct dexstuff_t *dex, struct dalvik_hook_t *h)
 		}
 
 		h->method->a = h->method->a | h->af; // make method native
-        int k = d.dvmIsNativeMethod_fnPtr(h->method);
-        log("porcodio ritornato isnative: %d\n", k)
-		if (h->debug_me)
-			log("access %x\n", h->method->a)
-		if (h->debug_me) {
-			log("DALVIK_HOOK nativeFunc %p, dalvin_hook_t: %p, method->insns = %p\n", h->method->nativeFunc, h->native_func, h->method->insns)		
-			log("DALVIK_HOOK insSize = 0x%x  registersSize = 0x%x  outsSize = 0x%x\n", h->method->insSize, h->method->registersSize, h->method->outsSize)
-			log("DALVIK HOOK ORIGINAL nativeFunc %p,  method->insns = %p\n", h->originalMethod->nativeFunc, h->originalMethod->insns)		
-			log("DALVIK HOOK ORIGINAL insSize = 0x%x  registersSize = 0x%x  outsSize = 0x%x\n", h->originalMethod->insSize, h->originalMethod->registersSize, h->originalMethod->outsSize)
-		}
 		//imposto la funzione nativa
 		h->method->nativeFunc = h->native_func;
 		h->method->insns = (const u2*)  cippa;
@@ -200,12 +187,12 @@ int dalvik_hook(struct dexstuff_t *dex, struct dalvik_hook_t *h)
 		if (h->debug_me){
 			log("METODO CON %d ARGOMENTI \n", res)
 			log("DALVIK_HOOK nativeFunc %p, dalvin_hook_t: %p, method->insns = %p\n", h->method->nativeFunc, h->native_func, h->method->insns)		
-			log("DALVIK_HOOK insSize = 0x%x  registersSize = 0x%x  outsSize = 0x%x\n", h->method->insSize, h->method->registersSize, h->method->outsSize)
+			log("DALVIK_HOOK insSize = %d  registersSize = %d  outsSize = %d\n", h->method->insSize, h->method->registersSize, h->method->outsSize)
 			log("DALVIK HOOK ORIGINAL nativeFunc %p,  method->insns = %p\n", h->originalMethod->nativeFunc, h->originalMethod->insns)		
-			log("DALVIK HOOK ORIGINAL insSize = 0x%x  registersSize = 0x%x  outsSize = 0x%x\n", h->originalMethod->insSize, h->originalMethod->registersSize, h->originalMethod->outsSize)
-			log("patched %s to: 0x%x\n", h->method_name, h->native_func)
-			log("DALVIK_HOOK nativeFunc 0x%x, dalvin_hook_t: 0x%x  method->insns = %p\n", h->method->nativeFunc, h->native_func, h->method->insns)		
-			log("DALVIK_HOOK insSize = 0x%x  registersSize = 0x%x  outsSize = 0x%x\n", h->method->insSize, h->method->registersSize, h->method->outsSize)
+			log("DALVIK HOOK ORIGINAL insSize = 0x%p  registersSize = 0x%p  outsSize = 0x%p\n", h->originalMethod->insSize, h->originalMethod->registersSize, h->originalMethod->outsSize)
+			log("patched %s to: 0x%p\n", h->method_name, h->native_func)
+			log("DALVIK_HOOK nativeFunc 0x%p, dalvin_hook_t: 0x%p  method->insns = %p\n", h->method->nativeFunc, h->native_func, h->method->insns)		
+			log("DALVIK_HOOK insSize = 0x%p  registersSize = 0x%p  outsSize = 0x%p\n", h->method->insSize, h->method->registersSize, h->method->outsSize)
 		}		
 	}
 	else {
@@ -215,7 +202,6 @@ int dalvik_hook(struct dexstuff_t *dex, struct dalvik_hook_t *h)
 	}
 	return EXIT_SUCCESS;
 }
-
 
 /*
  * Return a new Object[] array with the contents of "args".  We determine
@@ -237,8 +223,8 @@ static struct ArrayObject* boxMethodArgs(struct Method* method, const u4* args)
     /* count args */
     size_t argCount = d.dexProtoGetParameterCount_fnPtr(&method->prototype);
     if(!is_static(&d,method)){
-    	argCount++;
-    	mstatic = 1;
+        argCount++;
+        mstatic = 1;
     }
     log("BOXMETHODARGS: %d\n", argCount)
     ClassObject* coa = d.dvmFindSystemClass_fnPtr("[Ljava/lang/Object;");
@@ -250,9 +236,9 @@ static struct ArrayObject* boxMethodArgs(struct Method* method, const u4* args)
         return NULL;
     struct Object** argObjects = (struct Object**)(void*)argArray->contents;
     if(mstatic){
-    	log("BOX copio thiz: %x\n", args[0])
-    	//copy thiz
-    	argObjects[dstIndex++] =  (Object*) args[srcIndex++];
+        log("BOX copio thiz: %p\n", args[0])
+        //copy thiz
+        argObjects[dstIndex++] =  (Object*) args[srcIndex++];
     }
 
 
@@ -273,7 +259,7 @@ static struct ArrayObject* boxMethodArgs(struct Method* method, const u4* args)
         case 'B':
         case 'S':
         case 'I':
-        	log("box I e compagnia\n")
+            log("box I e compagnia\n")
             value.i = args[srcIndex++];
             argObjects[dstIndex] = (struct Object*) d.dvmBoxPrimitive_fnPtr(value,
                 d.dvmFindPrimitiveClass_fnPtr(descChar));
@@ -292,7 +278,7 @@ static struct ArrayObject* boxMethodArgs(struct Method* method, const u4* args)
             break;
         case '[':
         case 'L':
-        	log("box L\n")
+            log("box L\n")
             argObjects[dstIndex++] = (Object*) args[srcIndex++];
             break;
         }
@@ -305,6 +291,7 @@ static struct ArrayObject* boxMethodArgs(struct Method* method, const u4* args)
 //static void __attribute__ ((constructor)) dalvikhook_my_init(void);
 
 static char logfile[256] = "/data/local/tmp/dynsec";
+static char stacklogfile[256] = "/data/local/tmp/dynsec";
 
 void logmsgtofile(char *msg)
 {
@@ -317,7 +304,17 @@ void logmsgtofile(char *msg)
     fprintf(fp,"%s",msg);
     fclose(fp);
 }
-
+void logstacktofile(char *msg)
+{
+	/*
+    int fp = open(logfile, O_WRONLY|O_APPEND);
+    write(fp, msg, strlen(msg));
+    close(fp);
+    */
+    FILE* fp = fopen(stacklogfile, "a+");
+    fprintf(fp,"%s",msg);
+    fclose(fp);
+}
 static void logmsgtostdout(char *msg)
 {
 	write(1, msg, strlen(msg));
@@ -330,7 +327,13 @@ void* dalvikhook_set_logfunction(void *func)
     //logmsgtofile("dalvik_set_logfunction called\n");
     return old;
 }
-
+void* dalvikhook_set_stacklogfunction(void *func)
+{
+    void *old = libdalvikhook_log_function;
+    libdalvikhook_stacklog_function = func;
+    //logmsgtofile("dalvik_set_logfunction called\n");
+    return old;
+}
 static void dalvikhook_my_init(void)
 {
     // set the log_function
@@ -356,7 +359,7 @@ static void dalvikhook_my_init(void)
 	@self
 	@oldargs
 */
-struct Object* eseguiDex2(JNIEnv*env,struct Method* original, struct Object* thiz, JValue* margs, struct dalvik_hook_t* dh, Thread* self, u4* oldargs){
+struct Object* runJavaControlCode(JNIEnv*env,struct Method* original, struct Object* thiz, struct dalvik_hook_t* dh, Thread* self, u4* oldargs){
 	//return;
 	/*
 	if(thiz!=NULL){
@@ -373,31 +376,10 @@ struct Object* eseguiDex2(JNIEnv*env,struct Method* original, struct Object* thi
 	//prendo il riferimento all'oggetto DalvikHook contenuto nella struttura degli hook
 	struct Object* oo = d.dvmDecodeIndirectRef_fnPtr(self, dh->ref);
 	if(debug){
-		log("CONTROLLO thiz = %p, self = %p, original = %p , dh = %p , margs = %p \n", thiz, self, original, dh, margs)
-		log("ESEGUIDEX2 metodo %s ha %d argomenti, margs = %p, margs0 = %p\n", original->name, real_args, margs, margs->l)
 		log("ESEGUIDEX2 decodificata ref = %p, risultato = %p \n", dh->ref, oo)
 		log("ESEGUIDEX2 ho un dex method da chiamare = %s!!!\n", dh->dex_meth)
 	}
-	//se esiste il this per il metodo lo prendo e lo salvo
-	/*
-	TODO: tolto per risolvere dalvikjitcache segfault
-	if(thiz != NULL){
-		log("ESEGUIDEX2 DENTRO SET THIZ, cerco in classe = %p \n",dh->DexHookCls)
-		struct Method* set_thiz = d.dvmFindVirtualMethodHierByDescriptor_fnPtr(dh->DexHookCls, "setThiz" , "(Ljava/lang/Object;)V");
-		log("ESEGUIDEX2 trovato setThiz = %p, chiamo con oo=%p, result = %p, thiz = %p \n", set_thiz, oo, &result, thiz)
-		jvalue arg[1];
-		arg[0].l = thiz;
-		if(set_thiz){
-			d.dvmCallMethodA_fnPtr(self,set_thiz,oo,false,&result, arg);
-			if(debug)
-				log("ESEGUIDEX2 chiamato setThiz\n")
-		}
-	}
-	*/
-	// inizializzo l'oggetto DalvikHook con i valori  dell'hook
-	//struct Method* initid = d.dvmFindVirtualMethodHierByDescriptor_fnPtr(dh->DexHookCls, "initFunc" , "()V");
-	//d.dvmCallMethodA_fnPtr(self,initid,oo,false,&result, NULL);
-
+	
 	//cerco l'entry point del codice DEX
 	struct Method* dex_meth = d.dvmFindVirtualMethodHierByDescriptor_fnPtr(dh->DexHookCls, "myexecute" , "([Ljava/lang/Object;)V");
 	//struct Method* dex_meth = d.dvmFindVirtualMethodHierByDescriptor_fnPtr(dh->DexHookCls, "myexecute" , "()V");
@@ -455,7 +437,7 @@ void ArrayObjectHelper(void* aobj){
 	@pResult
 	@margs
 */
-int callOriginalV2(struct Method* original, struct Object* thiz, Thread* self, JValue* pResult, JValue* margs){
+int callOriginalMethod(struct Method* original, struct Object* thiz, Thread* self, JValue* pResult, JValue* margs){
 	JValue result;
 	void *old = d.dvmChangeStatus_fnPtr(self, THREAD_RUNNING);
 	log("callOriginalV2 CHIAMO DVMCALLMETHODA = %s, self = %p,original = %p, result = %p, myargs = %p\n", original->name, self,original->insns,pResult,margs)
@@ -466,42 +448,10 @@ int callOriginalV2(struct Method* original, struct Object* thiz, Thread* self, J
     	log("ERROR callOriginalV2 TROVATA EXCEPTION!!! \n")
     	Object* excep = d.dvmGetException_fnPtr(self);
     	if(excep != NULL){
-    		log("XXX8 dio cane presa exception %p desc: %s\n", excep, excep->clazz->descriptor)
-    		/**
-    		struct ArrayObject* pAo = NULL;//d.dvmGetMethodThrows_fnPtr(original); //getmethodthrows se ne va a male
-    		log("XXX8 dopo dvmgetmethodthrows\n")
-    		if( pAo != NULL){
-    			log("XXX8 ARRAYOBJECT EXCEPTION NOT NULL! \n")
-				log("diosolo arrayobj length = %d\n", pAo->length)
-				struct Object** argsArray = (struct Object**)(void*)pAo->contents;
-				size_t i = 0;
-				char* c= NULL;
-			    for (i = 0; i < pAo->length; ++i) {
-			        //log("pos[%d] = %s \n",i,argsArray[i]->clazz->descriptor);
-			        //log("diosolo provo a ottenere char*\n")
-			        c = d.dvmCreateCstrFromString_fnPtr((struct StringObject*)argsArray[i]);
-			        log("diosolo [%d] preso char = %s\n", i, c)
-			    }
-    		}
-    		else{
-    			log("XXX8 ARRAYOBJECT EXCEPTION NULL! \n")
-    		}
-    		//void* str = d.dvmHumanReadableDescriptor_fnPtr(excep->clazz->descriptor);
-    		//log("XXX8 exception name: %s\n", (char*)str);
-    		
-	    	//d.dvmWrapException_fnPtr("Ljava/lang/Exception;");
-	    	//log("XXX8 dopo wrap exception \n")
-	    	*/
-	    	if( strcmp(excep->clazz->descriptor, "Ljava/lang/ClassNotFoundException;") == 0){
-	    		log("XXX8 lancio class not found exception\n")
-	    		d.dvmThrowClassNotFoundException_fnPtr("Class Not found!!");
-	    	}else if (strcmp(excep->clazz->descriptor, "Ljava/io/FileNotFoundException;") == 0){
-	    		d.dvmThrowFileNotFoundException_fnPtr("PORCODIOOOOOO");
-	    	}
-	    	else{
-	    		d.dvmClearException_fnPtr(self);
-	    	}
+    		log("XXX8 presa exception %p desc: %s\n", excep, excep->clazz->descriptor)
+ 
 	    	d.dvmChangeStatus_fnPtr(self, old);
+	    	log("XXX111 lanciata except esco con -1\n")
 	        return -1;
         }
 
@@ -545,42 +495,6 @@ int callOriginalV2(struct Method* original, struct Object* thiz, Thread* self, J
 }
 
 
-int checkCaller(JNIEnv *env){
-
-	
-	jmethodID toS = (*env)->GetMethodID(env, stackelem, "toString", "()Ljava/lang/String;");
-	
-	//log("trovata clase thread: %p\n", th)
-	jmethodID currid = (*env)->GetStaticMethodID(env, th, "currentThread", "()Ljava/lang/Thread;");
-	//log("trovato mid: %p\n", currid)
-	jobject cth = (*env)->CallStaticObjectMethod(env, th, currid);
-	//log("trovata static m: %p\n", cth)
-	jmethodID getST = (*env)->GetMethodID(env, th, "getStackTrace", "()[Ljava/lang/StackTraceElement;");
-	//log("trovata m2: %p\n", getST)
-	jobject arr = (*env)->CallObjectMethod(env, cth, getST);
-	jsize len = (*env)->GetArrayLength(env, arr);
-	int i = 0;
-	//log("trovato array: %p, di len: %d\n", arr, len)
-	jobject tmp;
-	
-	for(i=0; i < len; i++){
-		tmp = (*env)->GetObjectArrayElement(env,arr,i);
-		//log("preso elem[%d]: %p\n", i, tmp)
-		jstring str = (*env)->CallObjectMethod(env, tmp, toS);
-		//log("chiamo printstring con: %p\n", str)
-		const char *buf = (*env)->GetStringUTFChars(env, str, 0);
-		//log("preso buf: %s\n",buf)
-		if(strstr(buf, HOOKCLASS2) != NULL || strstr(buf, APICLASS2) != NULL ){
-			//log("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA CHIAMATO DA DIOOO\n")
-			return 1;
-		}
-		(*env)->ReleaseStringUTFChars(env, str, buf);
-		(*env)->DeleteLocalRef(env,tmp);
-		(*env)->DeleteLocalRef(env,str);
-		//printString(env, "valore: ", str);
-	}
-	return 0;
-}
 /*
 	Funzione ausiliaria per copiare i dex tra le diverse istanze
 */
@@ -624,7 +538,7 @@ struct threadargs
 };
 
 
-
+/*
 void mylog2(char * msg, int flag){
     FILE* afp = fopen(AFILE,"a+");
     fprintf(afp,"%s",msg);
@@ -632,14 +546,19 @@ void mylog2(char * msg, int flag){
         fprintf(afp, "\n");
     fclose(afp);
 }
-
+*/
+typedef struct my_message{
+	struct Method** obj;
+	int size;
+	void* thread;
+}my_message;
 void consumer();
 
 void lancia_consumer_producer(){
       // create inter-thread communication pipe
-        mylog2("LANCIATO CONSUMER PRODUCER\n",0);
+        mylog2("LANCIATO CONSUMER PRODUCER\n");
      if (pipe(pipefd) != 0) {
-        mylog2("pipe error\n",0);
+        mylog2("pipe error\n");
         exit(1);
       }
 
@@ -657,51 +576,65 @@ void lancia_consumer_producer(){
 
       // in the real world, we'd do pthread_join(), etc. here to clean up.
 }
-void producer(void* obj){
+void producer(my_message *m){
 
-    int rc = write(pipefd[1],&obj,sizeof(struct Method*));
-    if(rc != sizeof(struct Method*)){
-        mylog2("producer error\n",0);
+    int rc = write(pipefd[1],&m,sizeof(struct my_message*));
+    if(rc != sizeof(struct my_message* )){
+        mylog2("producer error\n");
         exit(1);
     }
+}
+void saveStackTrace(struct Method** ppM, int len){
+	struct Method* tmp;
+	int i = 0;
+	mylog2("%d\n", len);
+	for(i=0;i<len;i++){
+		tmp = ppM[i];
+		//log("analyze, descriptor: %s, name: %s, shorty %s, native: %p\n",  tmp->clazz->descriptor,tmp->name, tmp->shorty, tmp->nativeFunc)
+		mylog2("%s:%s:%s\n", tmp->clazz->descriptor, tmp->name, tmp->shorty);
+	}
 }
 
 void consumer(){
   // set up file descriptors to do i/o on. In this example, just our
   // pipe from the consumer.
-    mylog2("LANCIATO CONSUMER CON FD\n",0);
     prctl(PR_SET_NAME,"consumer-addi");
     int fd = pipefd[0];
 	struct pollfd fds[1];
 	fds[0].fd = fd;
 	fds[0].events = POLLIN;
+
 	for (;;) {
 
 		// wait for an event from one of our producer(s)
 
 		if (poll(fds, 1, -1) != 1) {
-		  mylog2("poll error\n",0);
+		  mylog2("poll error\n");
 		  exit(1);
 		}
 
 		if (fds[0].revents != POLLIN) {
 		  //mylog2("unexpected poll revents: %hd\n", fds[0].revents);
-            mylog2("unexpected poll revents\n",0);
+            mylog2("unexpected poll revents\n");
 		  exit(1);
 		}
 
 		// read pointer to object from producer thread from pipe
 
-		struct Method* bar;
-		if (read(fds[0].fd, &bar, sizeof(bar)) != sizeof(bar)) {
-		  mylog2("consumer read error\n",0);
+		//struct Method** bar;
+		my_message *m;
+		if (read(fds[0].fd, &m, sizeof(m)) != sizeof(m)) {
+		  mylog2("consumer read error\n");
 		  exit(1);
 		}
 
-		mylog2("ricevuto oggetto!!\n",0);
-        mylog2(bar->clazz->descriptor,0);
-        mylog2(bar->name,0);
-        mylog2(bar->shorty,1);
+		//log("XXX11 obj ricevuto: 0x%p\n", m->obj)
+		//struct Method**pp = m->obj;
+		//struct Method*p = pp[0];
+        //mylog2(bar->shorty,1);
+        saveStackTrace(m->obj, m->size);
+        //analyzeStackTrace((struct Method**) m->obj, m->size, 1);
+		free(m);
 		// the consumer owns the allocated object now, so it must delete it.		
 	}  
 }
@@ -711,7 +644,10 @@ int analyzeStackTrace(struct Method** pM, size_t len){
 	int i = 0;
 	for(i=0;i<len;i++){
 		tmp = pM[i];
-		log("analyze, descriptor: %s, name: %s, shorty %s, native: %x\n",  tmp->clazz->descriptor,tmp->name, tmp->shorty, tmp->nativeFunc)
+		//
+		if(debug){
+			log("analyze, descriptor: %s, name: %s, shorty %s, native: %p\n",  tmp->clazz->descriptor,tmp->name, tmp->shorty, tmp->nativeFunc)
+		}
 		if(strstr(tmp->clazz->descriptor, HOOKCLASS) != NULL || strstr(tmp->clazz->descriptor, APICLASS) != NULL ){
 			//log("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA CHIAMATO DA DIOOO\n")
 			return 1;
@@ -752,11 +688,11 @@ void* onetoall2(u4* args, JValue* pResult, struct Method* method, struct Thread*
 	struct ClassObject* co3 = _getCaller3Class(&d);
 	if(debug){
 		if(co)
-			log("XXX6 GETCALLERCLASS = 0x%x, name = %s \n", co, co->descriptor)
+			log("XXX6 GETCALLERCLASS = 0x%p, name = %s \n", co, co->descriptor)
 		if(co2)
-			log("XXX6 GETCALLERCLASS = 0x%x, name = %s \n", co2, co2->descriptor)
+			log("XXX6 GETCALLERCLASS = 0x%p, name = %s \n", co2, co2->descriptor)
 		if(co3)
-			log("XXX6 GETCALLERCLASS = 0x%x, name = %s \n", co3, co3->descriptor)
+			log("XXX6 GETCALLERCLASS = 0x%p, name = %s \n", co3, co3->descriptor)
 	}
 
 	//debug code
@@ -851,53 +787,30 @@ void* onetoall2(u4* args, JValue* pResult, struct Method* method, struct Thread*
 		}
 	}
 	int num = _computeStackFrameDepth(&d);
-	log("XXX10 frame depth: %d\n", num)
 	struct Method** provami = malloc(sizeof(struct Method*)*num);
-	log("XXX10 chiamo fillstack\n")
 	_fillStrackTraceArray(&d,provami,num);
 	int flag = analyzeStackTrace(provami, num);
-	log("XXX10 flag di dio vale: %d\n", flag)
-    producer(original);
-	//usare lo stacktrace e' na merca in termini di performance
-    //int flag = checkCaller(env);
+
 	if(flag){
 		log("XXX7 SONO STATO CHIAMATO DAL FRAMEWORK\n")
-		callOriginalV2(original, thiz, self, pResult, margs);
+		callOriginalMethod(original, thiz, self, pResult, margs);
 		log("ONETOALL2 FROM FRAMEWORK FINITO!!!\n")
 		goto SAFE;
 	}
-    /*
-    //se il metodo e' stato chiamato dal Framework devo eseguire la chiamata originale e terminare
-	if(co){
-		if( strstr(co->descriptor, HOOKCLASS) != NULL || strstr(co->descriptor, APICLASS) != NULL ){
-			flag = 1;
-		} 
-		if(co2){
-			if( strstr(co2->descriptor, HOOKCLASS) != NULL || strstr(co2->descriptor, APICLASS) != NULL ){
-				flag = 1;
-			}	 
-		}
-		if(co3){
-			if( strstr(co3->descriptor, HOOKCLASS) != NULL || strstr(co3->descriptor, APICLASS) != NULL ){
-				flag = 1;
-			}	 
-		}
-		if(flag){
-			log("XXX7 SONO STATO CHIAMATO DAL FRAMEWORK\n")
-			callOriginalV2(original, thiz, self, pResult, margs);
-			log("ONETOALL2 FROM FRAMEWORK FINITO!!!\n")
-			goto SAFE;
-		}
-	}
-	*/
+	my_message *m = malloc(sizeof(struct my_message));
+	log("XXX10 flag di dio vale: %d\n", flag)
+	log("XXX11 obj vale 0x%p\n", provami)
+	m->obj = provami;
+	m->size = num;
+    producer(m);
 	struct Object* tmp = NULL;
 	//switch sui diversi tipi di Hook
 	switch(res->type){
 		case NORMAL_HOOK: 
-			//prima eseguo il DEX
+			//prima eseguo il codice java
 			if(strlen(res->dex_meth) > 0){
 				d.dvmChangeStatus_fnPtr(self, THREAD_RUNNING);
-				eseguiDex2(env, original, thiz, margs, res, self, args);
+				runJavaControlCode(env, original, thiz,  res, self, args);
 				d.dvmChangeStatus_fnPtr(self, THREAD_NATIVE);
 			}
 			break;
@@ -910,7 +823,7 @@ void* onetoall2(u4* args, JValue* pResult, struct Method* method, struct Thread*
 		case NOX_HOOK:
 			if(strlen(res->dex_meth) > 0){
 				d.dvmChangeStatus_fnPtr(self, THREAD_RUNNING);
-				tmp = eseguiDex2(env, original, thiz, margs, res, self, args);
+				tmp = runJavaControlCode(env, original, thiz, res, self, args);
 				d.dvmChangeStatus_fnPtr(self, THREAD_NATIVE);
 			}
 			if(tmp != NULL){
@@ -924,22 +837,13 @@ void* onetoall2(u4* args, JValue* pResult, struct Method* method, struct Thread*
 			}
 			break;
 		case AFTER_HOOK:
-			/*
-			exc = (*env)->ExceptionOccurred(env);
-	  		if (exc) {
-	  			log("ERROR ONETOALL2  CATTURA EXCEPTION\n")
-	  			(*env)->ExceptionDescribe(env);
-	  			(*env)->ExceptionClear(env);
-	  		}
-	  		**/
-
-	  		log("AFTER HOOK, original meth = %x, hooked meth = %x \n", original->insns, method->insns)
-			if(callOriginalV2(original, thiz, self, pResult, margs) == -1){
+	  		log("AFTER HOOK, original meth = %p, hooked meth = %p \n", original->insns, method->insns)
+			if(callOriginalMethod(original, thiz, self, pResult, margs) == -1){
 				log("ORIGINAL CALL FALLITA\n")
 				goto SAFE;
 			}
 			d.dvmChangeStatus_fnPtr(self, THREAD_RUNNING);
-			eseguiDex2(env, original, thiz, margs, res, self, args);
+			runJavaControlCode(env, original, thiz, res, self, args);
 			d.dvmChangeStatus_fnPtr(self, THREAD_NATIVE);
 
 			goto SAFE;	
@@ -952,7 +856,7 @@ void* onetoall2(u4* args, JValue* pResult, struct Method* method, struct Thread*
 			break;
 	}
 	//chiamata del metodo originale
-	callOriginalV2(original, thiz, self, pResult, margs);
+	callOriginalMethod(original, thiz, self, pResult, margs);
 
 /*	
 	
@@ -993,10 +897,12 @@ int callIntMethod(Thread* self, Method* m, Object* oo){
 	return result.i;
 }
 
+
+
 /**
 	Funzione richiamata da Java e utilizzata per impostare gli hook
 */
-static int _createStruct( JNIEnv* env, jobject thiz, jobject clazz )
+static int createHookFromJava( JNIEnv* env, jobject thiz, jobject clazz )
 {
 	pthread_mutex_lock(&mutex);
 	struct Thread* self = getSelf(&d);
@@ -1031,7 +937,7 @@ static int _createStruct( JNIEnv* env, jobject thiz, jobject clazz )
 	Method* dexskip;
 
 	if(debug)
-		log("------------ CREATE STRUCT!!! --------  clazz = 0x%x, thiz = 0x%x\n", clazz, thiz)
+		log("------------ CREATE STRUCT!!! --------  clazz = 0x%p, thiz = 0x%p\n", clazz, thiz)
 	
 	if(dalvikHookCls){
 		 clname = d.dvmFindVirtualMethodHierByDescriptor_fnPtr(dalvikHookCls, "get_clname","()Ljava/lang/String;");
@@ -1054,12 +960,7 @@ static int _createStruct( JNIEnv* env, jobject thiz, jobject clazz )
 			dex_type = callIntMethod(self, dext, oo);
 			dex_isSkip = callIntMethod(self, dexskip, oo);
 		}
-		
-		
-
 	}
-
-
 	dh = (struct dalvik_hook_t *)malloc(sizeof(struct dalvik_hook_t));
 	if(!dh){
 		log("ERROR malloc dalvik_hook_t!!\n");
@@ -1081,7 +982,6 @@ static int _createStruct( JNIEnv* env, jobject thiz, jobject clazz )
 		pthread_mutex_unlock(&mutex);
 		return  EXIT_FAILURE;
 		//hook a method that return jfloat
-	
 	}
 	else if(*pointer == 'J'){
 		pthread_mutex_unlock(&mutex);
@@ -1091,7 +991,7 @@ static int _createStruct( JNIEnv* env, jobject thiz, jobject clazz )
 		if(dalvik_hook_setup(dh, dex_clname,dex_mname,dex_msig,&onetoall2))
 			log("----------- HOOK SETUP FALLITO ------------- : %s, %s\n", clname,mname)
 		check =  dalvik_hook(&d, dh);
-		log("XXX7  check vale = 0x%x, %d\n",check, check)
+		log("XXX7  check vale = 0x%p, %d\n",check, check)
 		if(check == 0x1){
 			log("----------- HOOK VOID FALLITO ------------- : %s, %s\n", dex_clname,dex_mname)
 			free(dh);
@@ -1105,7 +1005,7 @@ static int _createStruct( JNIEnv* env, jobject thiz, jobject clazz )
 		if(dalvik_hook_setup(dh, dex_clname,dex_mname,dex_msig,&onetoall2))
 			log("----------- HOOK SETUP FALLITO ------------- : %s, %s\n", clname,mname)
 		check =  dalvik_hook(&d, dh);
-		log("XXX7  check vale = 0x%x, %d\n",check, check)
+		log("XXX7  check vale = 0x%p, %d\n",check, check)
 		if(check == 0x1){
 			log("----------- HOOK FALLITO ------------- : %s, %s\n", dex_clname,dex_mname)
 			free(dh);
@@ -1114,10 +1014,10 @@ static int _createStruct( JNIEnv* env, jobject thiz, jobject clazz )
 		}
 		else
 			log("HOOK PLACED\n")	
-		//log("XXX5 class loader = 0x%x\n", dh->method->clazz->classLoader)
+		//log("XXX5 class loader = 0x%p\n", dh->method->clazz->classLoader)
 	}
 	if(debug)
-		log("XXXD inserisco dh = 0x%x 0x%x, %s,%s,%s, hash = %s\n", &dh, dh, dex_clname,dex_mname,dex_msig,dex_hash)
+		log("XXXD inserisco dh = 0x%p 0x%p, %s,%s,%s, hash = %s\n", &dh, dh, dex_clname,dex_mname,dex_msig,dex_hash)
 	int i = inserisci(&L,dh,dex_clname,dex_mname,dex_msig,dex_hash);
 	if(debug)
 		log("stampo lista: %d, dex_method = %s\n", i, dh->dex_meth)
@@ -1145,22 +1045,26 @@ void* ptyServer(){
         else	
         	log("XXX5 attach success = %d\n", status)
     }
-	log("XXX5 preso env  = 0x%x, jvm = 0x%x\n", envLocal, 	 g_JavaVM)
+	log("XXX5 preso env  = 0x%p, jvm = 0x%p\n", envLocal, 	 g_JavaVM)
 
 	//XXX
 	//jclass mycls2 = (*envLocal)->FindClass(envLocal, "org/sid/addi/core/Session");
 	//jclass mycls2 = (*envLocal)->FindClass(envLocal, "org/sid/addi/core/PipeServer");
-	//log("XXX5 trovata classe controller = 0x%x\n", mycls2)
+	//log("XXX5 trovata classe controller = 0x%p\n", mycls2)
 	//jmethodID constructor2 = (*envLocal)->GetMethodID(envLocal, mycls2, "<init>", "(Ljava/lang/String;Ljava/lang/String;)V");
 	
 	
 	//void *mycls = _dvmFindLoadedClass(&d, "Lorg/sid/addi/core/Session;");
+	log("xxx11 cerco classe pipe server\n")
 	struct ClassObject *mycls = _dvmFindLoadedClass(&d, "Lorg/sid/addi/core/PipeServer;");
+	log("XXX11 class pipeserver: %p\n", mycls)
 	while(mycls->status != 7){
+		log("Dentro while status not 7!! 0x%p  \n", mycls->status)
 		sleep(10);
 		log("PTYSERVER status class: %d\n", mycls->status);
 		_dvmInitClass(&d,mycls);
 	}
+	log("cerco costruttore e start\n")
 	void *constructor = d.dvmFindDirectMethodHierByDescriptor_fnPtr(mycls, "<init>" , "(Ljava/lang/String;Ljava/lang/String;)V");
 	void *start = d.dvmFindVirtualMethodHierByDescriptor_fnPtr(mycls, "start" , "()V");
 	log("XXX9 trovato pipeserver: %p, <init>: %p, start: %p\n", mycls, constructor,start)
@@ -1215,7 +1119,7 @@ void* ptyServer(){
 	log("XXX5 CHIAMO NEW OBJECT\n")
 	jobject mobj = (*envLocal)->NewObject(envLocal, mycls, constructor, gstr, gstr1); 
 	jmethodID start = (*envLocal)->GetMethodID(envLocal, mycls, "start", "()V");
-	log("XXX5 chiamo metodo su obj = 0x%x, start = 0x%x\n", mobj, start)
+	log("XXX5 chiamo metodo su obj = 0x%p, start = 0x%p\n", mobj, start)
 	(*envLocal)->CallVoidMethod(envLocal, mobj, start, NULL);
 	*/
 
@@ -1236,7 +1140,7 @@ void* _createPTY(){
     	log("XXX3 ERROR PTHREAD CREATE: %d\n", rc)
     }
     else{
-    	log("XXX4 CREATO THREAD  = 0x%x\n", rc)
+    	log("XXX4 CREATO THREAD  = 0x%p\n", rc)
     }
 }
 
@@ -1254,9 +1158,9 @@ void* _th_wrapper(){
         else	
         	log("XXX5 attach success = %d\n", status)
     }
-	log("XXX5 preso env  = 0x%x, myenv = 0x%x, jvm = 0x%x\n", envLocal, envLocal, g_JavaVM)
+	log("XXX5 preso env  = 0x%p, myenv = 0x%p, jvm = 0x%p\n", envLocal, envLocal, g_JavaVM)
 	//_suspendAllT(&d);
-	handleAllMethodClass(&d,envLocal);
+	//handleAllMethodClass(&d,envLocal);
 	//_resumeAllT(&d);
 	(*g_JavaVM)->DetachCurrentThread(g_JavaVM);
 	log("XXX5 ESCO DA THREAD\n")
@@ -1295,7 +1199,7 @@ void* startMagic(JNIEnv *env){
 	//devo aprire il DEX
 	struct DexOrJar* dexfd = dexstuff_loaddex(&d, "/mnt/sdcard/whatsapp.dex");
 	if(dexfd){
-		log("XXX7 PROVA PROVA dex at = 0x%x, 0x%x, 0x%x, %s\n", dexfd->pDexMemory, dexfd->isDex,dexfd->pRawDexFile,dexfd->fileName)
+		log("XXX7 PROVA PROVA dex at = 0x%p, 0x%p, 0x%p, %s\n", dexfd->pDexMemory, dexfd->isDex,dexfd->pRawDexFile,dexfd->fileName)
 		struct RawDexFile* p = dexfd->pRawDexFile;
 		log("CI SONO1\n")
 		if(p){
@@ -1306,7 +1210,7 @@ void* startMagic(JNIEnv *env){
 				log("CI SONO4\n")
 				if(p2){
 					log("CI SONO5\n")
-					log("XXX7 p2 = %p, pp = %p, memmap = 0x%x, dexfile = 0x%x\n", p2, p->pDvmDex,  p2->memMap, p2->pDexFile)
+					log("XXX7 p2 = %p, pp = %p, memmap = 0x%p, dexfile = 0x%p\n", p2, p->pDvmDex,  p2->memMap, p2->pDexFile)
 					struct MemMapping mm = p2->memMap;
 					log("CI SONO6\n")
 					log("memmap add = %p,%p length = %d\n", mm.addr, p2->memMap, mm.length)
@@ -1329,7 +1233,7 @@ void* startMagic(JNIEnv *env){
 			}
 		}
 		log("CI SONO END\n")
-		//log("memmap = 0x%x, dexfile = 0x%x, base =0x%x\n",dexfd->pRawDexFile->pDvmDex->memMap, dexfd->pRawDexFile->pDvmDex->pDexFile,
+		//log("memmap = 0x%p, dexfile = 0x%p, base =0x%p\n",dexfd->pRawDexFile->pDvmDex->memMap, dexfd->pRawDexFile->pDvmDex->pDexFile,
 		//			dexfd->pRawDexFile->pDvmDex->pDexFile->baseAddr)	
 	}
 	
@@ -1341,13 +1245,17 @@ void* startMagic(JNIEnv *env){
 	TODO:
 	aggiungere HookType tra gli argomenti
 */
-int createAndInsertDhook(JNIEnv *env, char* clsname, char* methodname, char* methodsig){
+int createHooKFromNative(JNIEnv *env, char* clsname, char* methodname, char* methodsig, void* classLoader){
 	log("DENTRO CREATE AND INSERT DHOOK, clanme = %s, mname = %s, msid = %s\n", clsname, methodname, methodsig)
 	pthread_mutex_lock(&cop);
 	char * cl = calloc(1024, sizeof(char));
 	char * name = calloc(1024, sizeof(char));
 	char * descriptor = calloc(1024,sizeof(char));
-	
+	if(cl == NULL || name == NULL || descriptor == NULL){
+        log("MEMORY ERROR\n")
+        return EXIT_FAILURE;
+    }
+
 	memcpy(cl, clsname, sizeof(clsname)*strlen(clsname));
 	memcpy(name, methodname, sizeof(methodname)*strlen(methodname));
 	memcpy(descriptor, methodsig, sizeof(methodsig)*strlen(methodsig));
@@ -1357,6 +1265,10 @@ int createAndInsertDhook(JNIEnv *env, char* clsname, char* methodname, char* met
 	struct dalvik_hook_t *dh;
 	jobject clazz = NULL;
 	dh = malloc(sizeof(struct dalvik_hook_t));
+    if(dh == NULL){
+        log("ERROR MEMORY \n")
+        return EXIT_FAILURE;
+    }
 	//dh->real_args = args;
 	dh->loaded = 0;
 	dh->ok =1;
@@ -1367,49 +1279,59 @@ int createAndInsertDhook(JNIEnv *env, char* clsname, char* methodname, char* met
 	pointer = parse_signature(methodsig);	
 	int  check;
 	if(*pointer == 'F'){
-		pthread_mutex_unlock(&cop);
 		free(dh);
+        free(cl);
+        free(name);
+        free(descriptor);
+        pthread_mutex_unlock(&cop);
 		return EXIT_FAILURE;
 		//hook a method that return jfloat
 	}
 	else if(*pointer == 'J'){
 		free(dh);
+        free(cl);
+        free(name);
+        free(descriptor);
 		pthread_mutex_unlock(&cop);
 		return EXIT_FAILURE;
 	}
 	else if(*pointer == 'I'){
 		free(dh);
+        free(cl);
+        free(name);
+        free(descriptor);
 		pthread_mutex_unlock(&cop);
 		return 0;
 	}
-	else if(*pointer == 'V'){
+	else{
 		if(dalvik_hook_setup(dh, cl, name,descriptor,&onetoall2))
-			log("----------- HOOK SETUP FALLITO ------------- : %s, %s\n", clsname, methodname)
+			log("----------- createAndInsertDhook HOOK SETUP FALLITO ------------- : %s, %s\n", clsname, methodname)
 		check =  dalvik_hook(&d, dh);
-		log("XXX7  check vale = 0x%x, %d\n",check, check)
+		log("XXX7  check vale = 0x%p, %d\n",check, check)
 		if(check == 0x1){
-			log("----------- HOOK FALLITO ------------- : %s, %s\n",clsname, methodname)
+			log("----------- createAndInsertDhook HOOK FALLITO ------------- : %s, %s\n",clsname, methodname)
 			free(dh);
+            free(cl);
+            free(name);
+            free(descriptor);
 			pthread_mutex_unlock(&cop);
 			return EXIT_FAILURE;
 		}
 		else
-			log("HOOK PLACED\n")	
-		//log("XXX5 class loader = 0x%x\n", dh->method->clazz->classLoader)
+			log("createAndInsertDhook HOOK PLACED\n")	
+		//log("XXX5 class loader = 0x%p\n", dh->method->clazz->classLoader)
 	}
-	else{
-		pthread_mutex_unlock(&cop);
-		free(dh);
-		return;		
-	}
+
 	log("DENTRO CREATE AND INSERT DHOOK22222, clanme = %s, mname = %s, msid = %s\n", cl, name, descriptor)
 	char* hash = calloc(2048 , sizeof(char));
+    assert(hash != NULL);
 	strcpy(hash,cl);
 	strcat(hash,name);
 	strcat(hash, descriptor);
 	log("CREATE AND INSERT DHOOK INSERISCO HASH = %s\n", hash)
 	pthread_mutex_lock(&mutex);
 	int i = inserisci(&L,dh,cl, name, descriptor, hash);
+    pthread_mutex_unlock(&mutex);
 	if(debug)
 		log("stampo lista: %d, dex_method = %s\n", i, dh->dex_meth)
 	log("createAndInsertDhook Ho inserito: name = %s, mname = %s, sig = %s \n", dh->clname, dh->method_name, dh->method_sig)
@@ -1417,7 +1339,6 @@ int createAndInsertDhook(JNIEnv *env, char* clsname, char* methodname, char* met
 	free(cl);
 	free(name);
 	free(descriptor);
-	pthread_mutex_unlock(&mutex);
 	pthread_mutex_unlock(&cop);
 	return EXIT_SUCCESS;
 }
@@ -1483,8 +1404,8 @@ void* _dumpJavaClass(JNIEnv *env, jobject thiz, jobject str, jobject st2){
 	}
 	else{
 		//dalvik_dump_class(&d,"Ljavax/crypto/spec/PBEKeySpec;");
-		log("XXX7 dumpjavaclass res = 0x%x, classloader = 0x%x\n", res, res->classLoader)
-		log(" dvmdex = 0x%x\n",  res->pDvmDex)
+		log("XXX7 dumpjavaclass res = 0x%p, classloader = 0x%p\n", res, res->classLoader)
+		log(" dvmdex = 0x%p\n",  res->pDvmDex)
 		log("XXX7 cerco %s\n", clsnew)
 		dalvik_dump_class(&d, clsnew);
 		//_dvmFindStaticField(res, "z", "[Ljava/lang/String;");
@@ -1539,7 +1460,7 @@ JNINativeMethod method_table[] = {
 */
 JNINativeMethod method_table[] = {
     { "createStruct", "(Lorg/sid/addi/core/DalvikHook;)I",
-        (void*) _createStruct },
+        (void*) createHookFromJava },
     {"suspendALL","()V",
 		(void*)_wrapperSuspendAll},
     {"handleAllMethods","()V",
@@ -1605,6 +1526,8 @@ void createWorkingDir(pid_t p){
 		}
 		sprintf(logfile,"%s", working_dir);
 		strcat(logfile,"/dynsec.log");
+		sprintf(stacklogfile,"%s", working_dir);
+		strcat(stacklogfile,"/stacktraces.log");
 	}
 }
 
@@ -1643,7 +1566,9 @@ jint my_ddi_init(){
 	jclass *clazz61 =(jclass*) dexstuff_defineclass(&d, "org/sid/addi/core/CommandWrapper", cookie);
 	jclass *clazz62 =(jclass*) dexstuff_defineclass(&d, "org/sid/addi/core/ArgumentWrapper", cookie);
 	jclass *clazz63 =(jclass*) dexstuff_defineclass(&d, "org/sid/addi/core/RequestWrapper", cookie);
+	jclass *pConfWrapperC =(jclass*) dexstuff_defineclass(&d, "org/sid/addi/core/ConfigWrapper", cookie);
 	jclass *clazz64 =(jclass*) dexstuff_defineclass(&d, "org/sid/addi/core/Commands", cookie);
+	jclass *pConfigC =(jclass*) dexstuff_defineclass(&d, "org/sid/addi/core/Config", cookie);
 	
 	jclass *clazz66 =(jclass*) dexstuff_defineclass(&d, "org/sid/addi/core/XML", cookie);
 
@@ -1654,8 +1579,7 @@ jint my_ddi_init(){
 	jclass *clazz55 =(jclass*) dexstuff_defineclass(&d, "org/tesi/utils/StringHelper", cookieHooks);
 	jclass* hashhook =(jclass*) dexstuff_defineclass(&d, "org/tesi/Hooks/HashHook", cookieHooks);
 	jclass *networkHook =(jclass*) dexstuff_defineclass(&d, "org/tesi/Hooks/NetworkHook", cookieHooks);
-
-
+	
 	/* new way
 	//XXX
 	struct ClassObject* pCo = dexstuff_defineclass(&d, "org/tesi/bootloader/BootLoader", cookie2);	
@@ -1674,7 +1598,6 @@ jint my_ddi_init(){
 	jclass *clazz65 =(jclass*) dexstuff_defineclass(&d, "org/sid/addi/core/Session", cookie);
 	jclass *clazz66 =(jclass*) dexstuff_defineclass(&d, "org/sid/addi/core/XML", cookie);
 	jclass *clazz333 =(jclass*) dexstuff_defineclass(&d, "org/sid/addi/core/manageADDI", cookie);
-
 	jclass *clazz59 =(jclass*) dexstuff_defineclass(&d, "org/sid/addi/Logs/LoggerConfig", cookie);
 	jclass *clazz58 =(jclass*) dexstuff_defineclass(&d, "org/sid/addi/Logs/LogTraces", cookie);
 	jclass *clazz99 =(jclass*) dexstuff_defineclass(&d, "org/sid/addi/Logs/LogToSQLiteHelper", cookie);
@@ -1735,8 +1658,9 @@ jint my_ddi_init(){
 	JNIEnv *env = (JNIEnv*) get_jni_for_thread(&d);
 	
 	if(debug)
-		log("ddi XXX6 init preso env = 0x%x\n", env)	
+		log("ddi XXX6 init preso env = 0x%p\n", env)	
 	if(env){	
+		
 		/* new way
 		struct stat st = {0};
 		if (stat("/data/local/tmp/odex", &st) == -1) {
@@ -1764,16 +1688,22 @@ jint my_ddi_init(){
 		stackelem = (*env)->NewGlobalRef(env, (*env)->FindClass(env,"java/lang/StackTraceElement"));
 		th = (*env)->NewGlobalRef(env,(*env)->FindClass(env, "java/lang/Thread"));
 		
+		//load configuration
+		pConfigC = (*env)->FindClass(env, "org/sid/addi/core/Config");
+		jmethodID confInit = (*env)->GetStaticMethodID(env, pConfigC, "init", "()V");
+		(*env)->CallStaticVoidMethod(env,pConfigC, confInit);
+		log("XXX11 letta config\n")
 		dalvikHookCls = (struct ClassObject*) _dvmFindLoadedClass(&d, DALVIKHOOKCLS_2);
         
 		(*env)->RegisterNatives(env, (*env)->FindClass(env, "org/sid/addi/core/manageADDI"), method_table, sizeof(method_table) / sizeof(method_table[0]));
 		jclass mycls = (*env)->FindClass(env, "org/tesi/core/MyInit");
 		if(debug)
-			log("XXX4 trovata classe myinit = 0x%x, dalvikhookcls: %p\n", mycls, dalvikHookCls)
+			log("XXX4 trovata classe myinit = 0x%p, dalvikhookcls: %p\n", mycls, dalvikHookCls)
 		//jmethodID constructor = (*env)->GetStaticMethodID(env, mycls, "<init>", "()V");
 		jmethodID place_hook = (*env)->GetStaticMethodID(env, mycls, "place_hook", "()V");
 		//jobject obj = (*env)->NewObject(env, mycls, constructor);
 		(*env)->CallStaticVoidMethod(env,mycls,place_hook);
+		
 	} 
 	if(debug)
 		log("------------------- FINE LOAD DEX INIT ---------------------\n")
@@ -1794,7 +1724,7 @@ void _unhook(JNIEnv *env, jobject thiz, jobject str)
 		log("XXX5 errore RES = 0\n")
 		return;
 	}
-	log("XXX5 trovato hook %s at 0x%x\n", res->clname, res)
+	log("XXX5 trovato hook %s at 0x%p\n", res->clname, res)
 	log("XXX5 trovato hook %s\n", res->method_name)
 	res->type = UNUSED_HOOK;
 	//dalvik_prepare(&d,res,env);
@@ -1804,6 +1734,95 @@ void _unhook(JNIEnv *env, jobject thiz, jobject str)
 	log("XXX5 FINITO UNHOOK ------------------- \n")    
 }
 
-void* setJavaVM(JavaVM* ajvm){
-	g_JavaVM = ajvm;
+void* setJavaVM(JavaVM* yajvm){
+	g_JavaVM = yajvm;
 }
+
+
+        /**
+            struct ArrayObject* pAo = NULL;//d.dvmGetMethodThrows_fnPtr(original); //getmethodthrows se ne va a male
+            log("XXX8 dopo dvmgetmethodthrows\n")
+            if( pAo != NULL){
+                log("XXX8 ARRAYOBJECT EXCEPTION NOT NULL! \n")
+                log("diosolo arrayobj length = %d\n", pAo->length)
+                struct Object** argsArray = (struct Object**)(void*)pAo->contents;
+                size_t i = 0;
+                char* c= NULL;
+                for (i = 0; i < pAo->length; ++i) {
+                    //log("pos[%d] = %s \n",i,argsArray[i]->clazz->descriptor);
+                    //log("diosolo provo a ottenere char*\n")
+                    c = d.dvmCreateCstrFromString_fnPtr((struct StringObject*)argsArray[i]);
+                    log("diosolo [%d] preso char = %s\n", i, c)
+                }
+            }
+            else{
+                log("XXX8 ARRAYOBJECT EXCEPTION NULL! \n")
+            }
+            //void* str = d.dvmHumanReadableDescriptor_fnPtr(excep->clazz->descriptor);
+            //log("XXX8 exception name: %s\n", (char*)str);
+            
+            //d.dvmWrapException_fnPtr("Ljava/lang/Exception;");
+            //log("XXX8 dopo wrap exception \n")
+            */
+            /*
+            if( strcmp(excep->clazz->descriptor, "Ljava/lang/ClassNotFoundException;") == 0){
+                log("XXX8 lancio class not found exception\n")
+                d.dvmThrowClassNotFoundException_fnPtr("Class Not found!!");
+            }else if (strcmp(excep->clazz->descriptor, "Ljava/io/FileNotFoundException;") == 0){
+                d.dvmThrowFileNotFoundException_fnPtr("aaaa");
+            }
+        
+            else if(strcmp(excep->clazz->descriptor, "Ljava/lang/NullPointerException;") == 0){
+                d.dvmThrowNullPointerException_fnPtr("Class Not found!!");
+            }
+            
+            else if(strcmp(excep->clazz->descriptor, "Ljava/lang/IllegalArgumentException;") == 0){
+                log("XXX11 lancio illegal argument excep \n")
+                d.dvmThrowIllegalArgumentException_fnPtr("Class Not found!!");
+            }
+            else{
+                ;//d.dvmClearException_fnPtr(self);
+            }
+            */
+
+
+
+
+
+
+/*
+int checkCaller(JNIEnv *env){
+    
+    jmethodID toS = (*env)->GetMethodID(env, stackelem, "toString", "()Ljava/lang/String;");
+    
+    //log("trovata clase thread: %p\n", th)
+    jmethodID currid = (*env)->GetStaticMethodID(env, th, "currentThread", "()Ljava/lang/Thread;");
+    //log("trovato mid: %p\n", currid)
+    jobject cth = (*env)->CallStaticObjectMethod(env, th, currid);
+    //log("trovata static m: %p\n", cth)
+    jmethodID getST = (*env)->GetMethodID(env, th, "getStackTrace", "()[Ljava/lang/StackTraceElement;");
+    //log("trovata m2: %p\n", getST)
+    jobject arr = (*env)->CallObjectMethod(env, cth, getST);
+    jsize len = (*env)->GetArrayLength(env, arr);
+    int i = 0;
+    //log("trovato array: %p, di len: %d\n", arr, len)
+    jobject tmp;
+    
+    for(i=0; i < len; i++){
+        tmp = (*env)->GetObjectArrayElement(env,arr,i);
+        //log("preso elem[%d]: %p\n", i, tmp)
+        jstring str = (*env)->CallObjectMethod(env, tmp, toS);
+        //log("chiamo printstring con: %p\n", str)
+        const char *buf = (*env)->GetStringUTFChars(env, str, 0);
+        //log("preso buf: %s\n",buf)
+        if(strstr(buf, HOOKCLASS2) != NULL || strstr(buf, APICLASS2) != NULL ){
+            //log("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA CHIAMATO DA DIOOO\n")
+            return 1;
+        }
+        (*env)->ReleaseStringUTFChars(env, str, buf);
+        (*env)->DeleteLocalRef(env,tmp);
+        (*env)->DeleteLocalRef(env,str);
+        //printString(env, "valore: ", str);
+    }
+    return 0;
+}*/

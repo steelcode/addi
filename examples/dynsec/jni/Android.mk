@@ -17,9 +17,9 @@ LOCAL_PATH := $(call my-dir)
 include $(CLEAR_VARS)
 
 LOCAL_MODULE    := libdynsec
-LOCAL_SRC_FILES := mon.c.arm 
-LOCAL_C_INCLUDES := ../../../../adbi/instruments/base/ ../../../dalvikhook/jni/ 
-LOCAL_LDLIBS    := -L../../../dalvikhook/jni/libs -ldl -ldvm 
+LOCAL_SRC_FILES := mon.c.arm
+LOCAL_C_INCLUDES := ../../../../adbi/instruments/base/ ../../../dalvikhook/jni/
+LOCAL_LDLIBS    := -L../../../dalvikhook/jni/libs -ldl,
 LOCAL_LDLIBS    := -Wl,--start-group ../../../../adbi/instruments/base/obj/local/armeabi/libbase.a ../../../dalvikhook/obj/local/armeabi/libdalvikhook.a -Wl,--end-group
 LOCAL_CFLAGS    := -g -O0 -funwind-tables -Wl,--no-merge-exidx-entries
 
